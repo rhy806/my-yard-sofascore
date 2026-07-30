@@ -15,6 +15,7 @@
       --hint: var(--tg-theme-hint-color, #a1a1aa);
       --accent: #22c55e;
       --danger: #ef4444;
+      --gold: #f59e0b;
     }
 
     body {
@@ -109,6 +110,19 @@
       text-align: right;
     }
 
+    /* Стили для лучшего игрока */
+    .mvp-row {
+      margin-top: 10px;
+      padding-top: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gold);
+      text-align: center;
+      background: rgba(245, 158, 11, 0.1);
+      border-radius: 6px;
+      padding: 6px;
+    }
+
     .admin-match-item {
       display: flex;
       justify-content: space-between;
@@ -167,6 +181,7 @@
       <input type="text" id="match_date" placeholder="Дата/время (например, Сегодня в 18:00)">
       <input type="text" id="goals1" placeholder="Голы Команды 1 (например, Иванов, Петров-2)">
       <input type="text" id="goals2" placeholder="Голы Команды 2 (например, Сидоров)">
+      <input type="text" id="best_player" placeholder="⭐ Лучший игрок (например, Алексей Иванов)">
       <button class="form-btn" onclick="addMatch()">Сохранить матч</button>
     </div>
 
@@ -222,12 +237,13 @@
       const match_date = document.getElementById('match_date').value;
       const goals1 = document.getElementById('goals1').value;
       const goals2 = document.getElementById('goals2').value;
+      const best_player = document.getElementById('best_player').value;
 
       if (!team1 || !team2) return alert('Заполните названия команд');
 
       const { data, error } = await _supabase
         .from('matches')
-        .insert([{ team1, team2, score, match_date, goals1, goals2 }]);
+        .insert([{ team1, team2, score, match_date, goals1, goals2, best_player }]);
 
       if (error) {
         alert('Ошибка при сохранении: ' + error.message);
@@ -239,6 +255,7 @@
         document.getElementById('match_date').value = '';
         document.getElementById('goals1').value = '';
         document.getElementById('goals2').value = '';
+        document.getElementById('best_player').value = '';
         loadMatches();
       }
     }
@@ -293,6 +310,7 @@
                 <div class="goals-col right">⚽ ${m.goals2 || '—'}</div>
               </div>
             ` : ''}
+            ${m.best_player ? `<div class="mvp-row">🏅 Лучший игрок: ${m.best_player}</div>` : ''}
           </div>
         `;
       }).join('');
