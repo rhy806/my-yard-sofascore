@@ -251,7 +251,7 @@
     .form-circle.loss { background-color: var(--danger); color: #fff; }
     .form-circle.draw { background-color: var(--gold); color: #000; }
 
-    /* СОСТАВ КОМАНДЫ (КАК НА ФОТО 2) */
+    /* СОСТАВ КОМАНДЫ */
     .squad-group-title { font-size: 14px; font-weight: 800; color: var(--hint); margin: 18px 0 10px 0; text-transform: uppercase; }
     .player-row-card {
       display: flex;
@@ -365,7 +365,7 @@
       text-align: center;
     }
 
-    /* ДИЗАЙН ГОЛОВ В СТИЛЕ ФОТО 1 */
+    /* ДИЗАЙН ГОЛОВ */
     .hero-goals-summary-row {
       display: flex;
       justify-content: center;
@@ -398,7 +398,7 @@
       margin-top: 2px;
     }
 
-    /* ХРОНОЛОГИЯ ГОЛОВ (КАК В НИЖНЕЙ ЧАСТИ ФОТО 1) */
+    /* ХРОНОЛОГИЯ ГОЛОВ */
     .timeline-container { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
     .timeline-goal-card {
       display: flex;
@@ -662,7 +662,7 @@
       <div style="width: 24px;"></div>
     </div>
 
-    <!-- ШАПКА МАТЧА (КАК НА ФОТО 1) -->
+    <!-- ШАПКА МАТЧА -->
     <div class="hero-scoreboard">
       <div class="hero-date" id="m-date">Завершен</div>
       <div class="hero-teams">
@@ -677,7 +677,7 @@
         </div>
       </div>
 
-      <!-- БЛОК ГОЛОВ ПО ЦЕНТРУ (КАК НА ФОТО 1) -->
+      <!-- БЛОК ГОЛОВ ПО ЦЕНТРУ -->
       <div class="hero-goals-summary-row" id="m-hero-goals-summary">
         <div class="hero-goals-col left" id="m-hero-goals1"></div>
         <div class="hero-goals-ball-icon">⚽</div>
@@ -713,7 +713,7 @@
           </button>
         </div>
 
-        <div class="pitch-container">
+        <div class="pitch-container" id="viewer-pitch">
           <div class="pitch-line-center"></div>
           <div class="pitch-circle-center"></div>
           <div class="pitch-box-top"></div>
@@ -768,7 +768,6 @@
       'LB':  { label: 'Левый защитник', category: 'DF', code: 'LB' },
       'RB':  { label: 'Правый защитник', category: 'DF', code: 'RB' },
       'GK':  { label: 'Вратарь', category: 'GK', code: 'GK' },
-      // Старые значения
       'FW':  { label: 'Центр-Форвард', category: 'FW', code: 'FW' },
       'MF':  { label: 'Полузащитник', category: 'MF', code: 'MF' },
       'DF':  { label: 'Защитник', category: 'DF', code: 'DF' }
@@ -780,7 +779,7 @@
     let editingMatchId = null;
     let editingSquadPlayerId = null;
 
-    let adminGoalsList = []; // Динамический список голов для админки
+    let adminGoalsList = []; 
     let adminLineup1 = getDefaultLineup("Команда 1");
     let adminLineup2 = getDefaultLineup("Команда 2");
     let currentAdminTeam = 1;
@@ -899,7 +898,7 @@
     }
 
     // ------------------------------------
-    // СОСТАВ КОМАНДЫ (КАК НА ФОТО 2)
+    // СОСТАВ КОМАНДЫ 
     // ------------------------------------
     async function loadSquad() {
       const { data, error } = await _supabase.from('squad').select('*').order('id', { ascending: true });
@@ -939,7 +938,6 @@
           group.players.forEach(p => {
             const mainConf = POSITIONS_CONFIG[p.position] || { code: p.position };
             
-            // Собираем все позиции через запятую (как на фото 2)
             let posList = [mainConf.code];
             let subPositionsArr = [];
             
@@ -1188,7 +1186,51 @@
     }
 
     // ------------------------------------
-    // АДМИНКА РАССТАНОВКИ (DRAG AND DROP)
+    // УНИВЕРСАЛЬНОЕ МЕНЮ ВЫБОРА ИГРОКА ИЗ БД
+    // ------------------------------------
+    function openPlayerSelectMenu(callback) {
+      if (!allSquad || allSquad.length === 0) {
+        alert('Состав пуст! Сначала добавьте игроков во вкладке "Состав".');
+        return;
+      }
+
+      const modalHtml = `
+        <div id="player-select-modal" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center; z-index:9999;">
+          <div style="background:var(--card-bg); border: 1px solid rgba(255,255,255,0.1); border-radius:12px; padding:16px; width:90%; max-width:320px; color:var(--text);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <h4 style="margin:0; font-size:16px;">Выберите игрока</h4>
+              <button onclick="document.getElementById('player-select-modal').remove()" style="border:none; background:none; font-size:20px; color:var(--hint); cursor:pointer; padding:0;">✕</button>
+            </div>
+            <div style="max-height:300px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; padding-right:4px;">
+              ${allSquad.map(p => {
+                // Экранируем кавычки в имени на случай ошибок
+                const safeName = p.name.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                const pos = POSITIONS_CONFIG[p.position]?.code || p.position;
+                return `
+                <div style="padding:12px; background:var(--card-inner); border-radius:8px; cursor:pointer; display:flex; align-items:center; gap:10px;" 
+                     onclick="window.handleSelectPlayer('${safeName}', '${p.number || ''}')">
+                  <div style="width:30px; height:30px; background:#323238; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:12px;">${p.number || '?'}</div>
+                  <div>
+                    <div style="font-weight:700; font-size:14px;">${p.name}</div>
+                    <div style="font-size:11px; color:var(--hint);">${pos}</div>
+                  </div>
+                </div>
+              `}).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+      window.handleSelectPlayer = function(name, num) {
+        document.getElementById('player-select-modal').remove();
+        callback(name, num);
+      };
+    }
+
+    // ------------------------------------
+    // АДМИНКА РАССТАНОВКИ (DRAG AND DROP + LONG PRESS)
     // ------------------------------------
     function selectAdminLineupTeam(teamNum) {
       saveAdminPitchStateToMemory();
@@ -1215,8 +1257,8 @@
 
       container.innerHTML = activeLineup.startingXI.map(p => `
         <div class="pitch-player-abs" id="p-item-${p.id}" style="left:${p.x}%; top:${p.y}%;">
-          <div class="player-avatar-circle ${p.isGk ? 'gk' : ''}">${p.num}</div>
-          <div class="player-name-label">${p.name}</div>
+          <div class="player-avatar-circle ${p.isGk ? 'gk' : ''}">${p.num || '?'}</div>
+          <div class="player-name-label">${p.name || 'Пусто'}</div>
         </div>
       `).join('');
 
@@ -1226,47 +1268,63 @@
       });
     }
 
-   function setupPointerDrag(el, playerObj) {
-  let isDragging = false;
-  let hasMoved = false; // Отслеживаем, было ли движение
-  const pitch = document.getElementById('admin-pitch');
+    function setupPointerDrag(el, playerObj) {
+      let isDragging = false;
+      let hasMoved = false;
+      let longPressTimerAdmin = null;
+      const pitch = document.getElementById('admin-pitch');
 
-  el.onpointerdown = function(e) {
-    isDragging = true;
-    hasMoved = false;
-    el.setPointerCapture(e.pointerId);
-  };
+      const startAdminPress = (e) => {
+        isDragging = true;
+        hasMoved = false;
+        el.setPointerCapture(e.pointerId);
 
-  el.onpointermove = function(e) {
-    if (!isDragging) return;
-    hasMoved = true; // Считаем это драгом
-    const rect = pitch.getBoundingClientRect();
-    let x = ((e.clientX - rect.left) / rect.width) * 100;
-    let y = ((e.clientY - rect.top) / rect.height) * 100;
+        // Таймер долгого зажатия (2 секунды) для админки
+        longPressTimerAdmin = setTimeout(() => {
+          if (!hasMoved) {
+            isDragging = false;
+            openPlayerSelectMenu((name, num) => {
+              playerObj.name = name;
+              playerObj.num = num;
+              renderAdminPitch();
+            });
+          }
+        }, 2000); 
+      };
 
-    x = Math.max(5, Math.min(95, x));
-    y = Math.max(5, Math.min(95, y));
+      const cancelAdminPress = () => {
+        if (longPressTimerAdmin) {
+          clearTimeout(longPressTimerAdmin);
+          longPressTimerAdmin = null;
+        }
+      };
 
-    playerObj.x = Math.round(x);
-    playerObj.y = Math.round(y);
+      el.onpointerdown = startAdminPress;
 
-    el.style.left = playerObj.x + '%';
-    el.style.top = playerObj.y + '%';
-  };
+      el.onpointermove = function(e) {
+        if (!isDragging) return;
+        hasMoved = true;
+        cancelAdminPress(); // Отменяем вызов меню, если игрок начал двигать фишку
 
-  el.onpointerup = el.onpointercancel = function(e) {
-    isDragging = false;
-    
-    // Если игрок нажал и отпустил (не перетаскивая) — выбираем игрока из базы
-    if (!hasMoved) {
-      openPlayerSelectMenu((name, num) => {
-        playerObj.name = name;
-        playerObj.num = num;
-        renderAdminPitch();
-      });
+        const rect = pitch.getBoundingClientRect();
+        let x = ((e.clientX - rect.left) / rect.width) * 100;
+        let y = ((e.clientY - rect.top) / rect.height) * 100;
+
+        x = Math.max(5, Math.min(95, x));
+        y = Math.max(5, Math.min(95, y));
+
+        playerObj.x = Math.round(x);
+        playerObj.y = Math.round(y);
+
+        el.style.left = playerObj.x + '%';
+        el.style.top = playerObj.y + '%';
+      };
+
+      el.onpointerup = el.onpointercancel = function(e) {
+        isDragging = false;
+        cancelAdminPress();
+      };
     }
-  };
-}
 
     // ------------------------------------
     // УПРАВЛЕНИЕ МАТЧАМИ И ФОРМОЙ
@@ -1511,7 +1569,7 @@
     }
 
     // ------------------------------------
-    // ДЕТАЛИ МАТЧА (МОДАЛЬНОЕ ОКНО)
+    // ДЕТАЛИ МАТЧА (МОДАЛЬНОЕ ОКНО) И ПРОСМОТР РАССТАНОВКИ
     // ------------------------------------
     function switchMatchSubTab(tabName, btn) {
       document.querySelectorAll('.modal-nav-tabs .modal-tab-btn').forEach(b => b.classList.remove('active'));
@@ -1533,172 +1591,106 @@
       renderLineupView();
     }
 
- // Переменная для хранения таймера зажатия
-let longPressTimer = null;
+    let longPressTimerView = null;
 
-function renderLineupView() {
-  if (!currentMatchObject) return;
+    function renderLineupView() {
+      if (!currentMatchObject) return;
 
-  const teamName = currentLineupTeam === 1 ? currentMatchObject.team1 : currentMatchObject.team2;
-  const rawData = currentLineupTeam === 1 ? currentMatchObject.lineup1 : currentMatchObject.lineup2;
+      const teamName = currentLineupTeam === 1 ? currentMatchObject.team1 : currentMatchObject.team2;
+      const rawData = currentLineupTeam === 1 ? currentMatchObject.lineup1 : currentMatchObject.lineup2;
 
-  let lineup = null;
-  try { if (rawData) lineup = JSON.parse(rawData); } catch(e) { }
-  if (!lineup) lineup = getDefaultLineup(teamName);
+      let lineup = null;
+      try { if (rawData) lineup = JSON.parse(rawData); } catch(e) { }
+      if (!lineup) lineup = getDefaultLineup(teamName);
 
-  const pitchContainer = document.getElementById('viewer-pitch-players');
-  
-  // 1. Отрисовываем игроков на поле с сохранением индекса
-  pitchContainer.innerHTML = lineup.startingXI.map((p, index) => `
-    <div class="pitch-player-abs" 
-         data-index="${index}" 
-         style="left:${p.x}%; top:${p.y}%;">
-      <div class="player-avatar-circle ${p.isGk ? 'gk' : ''}">${p.num || '?'}</div>
-      <div class="player-name-label">${p.name || 'Пусто'}</div>
-    </div>
-  `).join('');
-
-// 2. Навешиваем долгое зажатие (только для админа)
-  if (userId === ADMIN_TELEGRAM_ID) { 
-    document.querySelectorAll('.pitch-player-abs').forEach(playerEl => {
+      const pitchContainer = document.getElementById('viewer-pitch-players');
       
-      const startPress = (e) => {
-        // Уменьшил таймер до 600мс (2 секунды — слишком долго для мобилок)
-        longPressTimer = setTimeout(() => {
-          const playerIndex = playerEl.getAttribute('data-index');
+      pitchContainer.innerHTML = lineup.startingXI.map((p, index) => `
+        <div class="pitch-player-abs" 
+             data-index="${index}" 
+             style="left:${p.x}%; top:${p.y}%;">
+          <div class="player-avatar-circle ${p.isGk ? 'gk' : ''}">${p.num || '?'}</div>
+          <div class="player-name-label">${p.name || 'Пусто'}</div>
+        </div>
+      `).join('');
+
+      // Долгое зажатие в деталях матча (только для админа)
+      if (userId === ADMIN_TELEGRAM_ID) { 
+        document.querySelectorAll('#viewer-pitch-players .pitch-player-abs').forEach(playerEl => {
           
-          openPlayerSelectMenu(async (name, num) => {
-            // Обновляем локальный объект
-            lineup.startingXI[playerIndex].name = name;
-            lineup.startingXI[playerIndex].num = num;
-            
-            const updatedLineupStr = JSON.stringify(lineup);
-            if (currentLineupTeam === 1) {
-              currentMatchObject.lineup1 = updatedLineupStr;
-            } else {
-              currentMatchObject.lineup2 = updatedLineupStr;
-            }
-            
-            // Перерисовываем интерфейс сразу
-            renderLineupView();
-            
-            // Сохраняем в Supabase, чтобы изменение не пропало после обновления
-            const updatePayload = currentLineupTeam === 1 
-              ? { lineup1: updatedLineupStr } 
-              : { lineup2: updatedLineupStr };
+          const startPress = (e) => {
+            // Таймер долгого зажатия (2 секунды)
+            longPressTimerView = setTimeout(() => {
+              const playerIndex = playerEl.getAttribute('data-index');
               
-            await _supabase.from('matches').update(updatePayload).eq('id', currentMatchObject.id);
-          });
-        }, 600); 
-      };
+              openPlayerSelectMenu(async (name, num) => {
+                lineup.startingXI[playerIndex].name = name;
+                lineup.startingXI[playerIndex].num = num;
+                
+                const updatedLineupStr = JSON.stringify(lineup);
+                if (currentLineupTeam === 1) {
+                  currentMatchObject.lineup1 = updatedLineupStr;
+                } else {
+                  currentMatchObject.lineup2 = updatedLineupStr;
+                }
+                
+                renderLineupView(); // сразу обновляем UI
+                
+                // Сразу улетает в Supabase
+                const updatePayload = currentLineupTeam === 1 
+                  ? { lineup1: updatedLineupStr } 
+                  : { lineup2: updatedLineupStr };
+                  
+                await _supabase.from('matches').update(updatePayload).eq('id', currentMatchObject.id);
+              });
+            }, 2000); 
+          };
 
-      const cancelPress = () => {
-        if (longPressTimer) {
-          clearTimeout(longPressTimer);
-          longPressTimer = null;
-        }
-      };
+          const cancelPress = () => {
+            if (longPressTimerView) {
+              clearTimeout(longPressTimerView);
+              longPressTimerView = null;
+            }
+          };
 
-      playerEl.addEventListener('pointerdown', startPress);
-      playerEl.addEventListener('pointerup', cancelPress);
-      playerEl.addEventListener('pointerleave', cancelPress);
-      playerEl.addEventListener('touchmove', cancelPress); // отменяем при свайпе
-    });
-  }
-      
-      const startPress = (e) => {
-        // Таймер на 2 секунды (2000 мс)
-        longPressTimer = setTimeout(() => {
-          const playerIndex = playerEl.getAttribute('data-index');
-          openPlayerSelectMenu(playerIndex, lineup);
-        }, 2000);
-      };
+          playerEl.addEventListener('pointerdown', startPress);
+          playerEl.addEventListener('pointerup', cancelPress);
+          playerEl.addEventListener('pointerleave', cancelPress);
+          playerEl.addEventListener('touchmove', cancelPress);
+        });
+      }
 
-      const cancelPress = () => {
-        if (longPressTimer) {
-          clearTimeout(longPressTimer);
-          longPressTimer = null;
-        }
-      };
+      // Отрисовка замен
+      const subsContainer = document.getElementById('subs-list');
+      const subsRaw = (lineup.subsText || '').trim();
+      if (!subsRaw) {
+        subsContainer.innerHTML = '<div style="color:var(--hint); font-size:13px; font-style:italic;">Замены не проводились</div>';
+      } else {
+        const subsArray = subsRaw.split(/,|\n/).map(s => s.trim()).filter(Boolean);
+        subsContainer.innerHTML = subsArray.map(s => `
+          <div class="sub-item">
+            <span style="font-size:15px;">🟢</span>
+            <span style="font-weight:600;">${s}</span>
+          </div>
+        `).join('');
+      }
 
-      playerEl.addEventListener('pointerdown', startPress);
-      playerEl.addEventListener('pointerup', cancelPress);
-      playerEl.addEventListener('pointerleave', cancelPress);
-      playerEl.addEventListener('touchmove', cancelPress);
-    });
-  }
+      // Отрисовка отсутствующих
+      const absContainer = document.getElementById('absences-list');
+      const absRaw = (lineup.absencesText || '').trim();
+      if (!absRaw) {
+        absContainer.innerHTML = '<div style="color:var(--hint); font-size:13px; font-style:italic;">Пропускающих матч нет</div>';
+      } else {
+        const absArray = absRaw.split(/,|\n/).map(s => s.trim()).filter(Boolean);
+        absContainer.innerHTML = absArray.map(a => `
+          <div class="absence-item">
+            <span style="font-size:15px;">🩹</span>
+            <span style="font-weight:600; color:var(--danger);">${a}</span>
+          </div>
+        `).join('');
+      }
+    }
 
-  // Отрисовка замен
-  const subsContainer = document.getElementById('subs-list');
-  const subsRaw = (lineup.subsText || '').trim();
-  if (!subsRaw) {
-    subsContainer.innerHTML = '<div style="color:var(--hint); font-size:13px; font-style:italic;">Замены не проводились</div>';
-  } else {
-    const subsArray = subsRaw.split(/,|\n/).map(s => s.trim()).filter(Boolean);
-    subsContainer.innerHTML = subsArray.map(s => `
-      <div class="sub-item">
-        <span style="font-size:15px;">🟢</span>
-        <span style="font-weight:600;">${s}</span>
-      </div>
-    `).join('');
-  }
-
-  // Отрисовка отсутствующих
-  const absContainer = document.getElementById('absences-list');
-  const absRaw = (lineup.absencesText || '').trim();
-  if (!absRaw) {
-    absContainer.innerHTML = '<div style="color:var(--hint); font-size:13px; font-style:italic;">Пропускающих матч нет</div>';
-  } else {
-    const absArray = absRaw.split(/,|\n/).map(s => s.trim()).filter(Boolean);
-    absContainer.innerHTML = absArray.map(a => `
-      <div class="absence-item">
-        <span style="font-size:15px;">🩹</span>
-        <span style="font-weight:600; color:var(--danger);">${a}</span>
-      </div>
-    `).join('');
-  }
-}
-
-// Вспомогательная функция выбора игрока (использует реальный состав allSquad)
-function openPlayerSelectMenu(callback) {
-  if (!allSquad || allSquad.length === 0) {
-    alert('Состав пуст! Сначала добавьте игроков во вкладке "Состав".');
-    return;
-  }
-
-  const modalHtml = `
-    <div id="player-select-modal" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center; z-index:9999;">
-      <div style="background:var(--card-bg); border: 1px solid rgba(255,255,255,0.1); border-radius:12px; padding:16px; width:90%; max-width:320px; color:var(--text);">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-          <h4 style="margin:0; font-size:16px;">Выберите игрока</h4>
-          <button onclick="document.getElementById('player-select-modal').remove()" style="border:none; background:none; font-size:20px; color:var(--hint); cursor:pointer; padding:0;">✕</button>
-        </div>
-        <div style="max-height:300px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; padding-right:4px;">
-          ${allSquad.map(p => {
-            const safeName = p.name.replace(/'/g, "\\'"); // Защита от кавычек в имени
-            const pos = POSITIONS_CONFIG[p.position]?.code || p.position;
-            return `
-            <div style="padding:12px; background:var(--card-inner); border-radius:8px; cursor:pointer; display:flex; align-items:center; gap:10px;" 
-                 onclick="window.handleSelectPlayer('${safeName}', '${p.number || '?'}')">
-              <div style="width:30px; height:30px; background:#323238; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:12px;">${p.number || '?'}</div>
-              <div>
-                <div style="font-weight:700; font-size:14px;">${p.name}</div>
-                <div style="font-size:11px; color:var(--hint);">${pos}</div>
-              </div>
-            </div>
-          `}).join('')}
-        </div>
-      </div>
-    </div>
-  `;
-
-  document.body.insertAdjacentHTML('beforeend', modalHtml);
-
-  window.handleSelectPlayer = function(name, num) {
-    document.getElementById('player-select-modal').remove();
-    callback(name, num);
-  };
-}
     // РАЗБОР ГОЛОВ И ХРОНОЛОГИИ (БЕЗ МИНУТ)
     function parseGoalsSequence(goals1Str, goals2Str) {
       const goals = [];
@@ -1744,7 +1736,6 @@ function openPlayerSelectMenu(callback) {
       document.getElementById('btn-t1-name').innerText = match.team1 || 'Ком. 1';
       document.getElementById('btn-t2-name').innerText = match.team2 || 'Ком. 2';
 
-      // ОЧИСТКА ИМЕН ОТ МИНУТ И НУМЕРАЦИИ
       const cleanName = str => str.replace(/\d+['’]?/g, '').replace(/^\d+[\.\)]\s*/, '').trim();
 
       const g1List = match.goals1 ? match.goals1.split(/,|\n/).map(s => cleanName(s)).filter(Boolean) : [];
@@ -1762,7 +1753,6 @@ function openPlayerSelectMenu(callback) {
         summaryRow.style.display = 'none';
       }
 
-      // ХРОНОЛОГИЯ ГОЛОВ (ДИЗАЙН В СТИЛЕ ФОТО 1, БЕЗ МИНУТ)
       const timelineContainer = document.getElementById('m-timeline-container');
       const parsedGoals = parseGoalsSequence(match.goals1, match.goals2);
 
