@@ -269,6 +269,9 @@
       border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
       font-weight: 800; font-size: 13px; color: #fff;
+      overflow: hidden;
+      background-size: cover;
+      background-position: center;
     }
     .player-info-name { font-weight: 700; font-size: 14px; }
     .player-info-meta { font-size: 12px; color: var(--hint); margin-top: 2px; font-weight: 600; }
@@ -351,6 +354,9 @@
       font-weight: 800; font-size: 13px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.5);
       border: 2px solid #ffffff;
+      overflow: hidden;
+      background-size: cover;
+      background-position: center;
     }
     .player-avatar-circle.gk { background: var(--gold); }
     .player-name-label {
@@ -506,7 +512,24 @@
       display: flex;
       gap: 16px;
       font-size: 18px;
+      align-items: center;
     }
+    .pp-star {
+      color: #fff;
+      cursor: pointer;
+      font-size: 20px;
+      line-height: 1;
+      text-shadow: 0 0 2px rgba(0,0,0,0.5);
+    }
+    .pp-star.active {
+      color: var(--gold);
+    }
+    .pp-edit-icon {
+      cursor: pointer;
+      display: none; /* Показывать только админу */
+      font-size: 18px;
+    }
+
     .pp-profile-row {
       display: flex;
       align-items: center;
@@ -530,6 +553,9 @@
       font-weight: 800;
       border: 2px solid rgba(255,255,255,0.1);
       box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      overflow: hidden;
+      background-size: cover;
+      background-position: center;
     }
     .pp-player-name {
       font-size: 20px;
@@ -614,6 +640,9 @@
       justify-content: center;
       gap: 4px;
     }
+
+    /* Модалка редактирования игрока */
+    #player-details-edit-modal { z-index: 1100; }
   </style>
 </head>
 <body>
@@ -867,9 +896,8 @@
       <div class="pp-top-nav">
         <button class="back-btn" onclick="closePlayerProfile()">←</button>
         <div class="pp-top-actions">
-          <span>👥</span>
-          <span>🔔</span>
-          <span>⭐</span>
+          <span class="pp-edit-icon" id="pp-edit-btn" onclick="openPlayerEditModal()">✏️</span>
+          <span class="pp-star" id="pp-star-btn" onclick="toggleStar(this)">☆</span>
         </div>
       </div>
 
@@ -894,7 +922,6 @@
         <button class="top-tab-btn active">Детали</button>
         <button class="top-tab-btn" onclick="alert('Раздел в разработке')">Сезон</button>
         <button class="top-tab-btn" onclick="alert('Раздел в разработке')">Матчи</button>
-        <button class="top-tab-btn" onclick="alert('Раздел в разработке')">Карьера</button>
         <button class="top-tab-btn" onclick="alert('Раздел в разработке')">Медиа</button>
       </div>
     </div>
@@ -935,6 +962,37 @@
           <div class="pp-stat-label">НОМЕР</div>
           <div class="pp-stat-value" id="pp-number">10</div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- МОДАЛЬНОЕ ОКНО РЕДАКТИРОВАНИЯ ДЕТАЛЕЙ ИГРОКА (ДЛЯ АДМИНА) -->
+  <div id="player-details-edit-modal" class="match-modal">
+    <div class="modal-top-bar">
+      <button class="back-btn" onclick="closePlayerEditModal()">←</button>
+      <span style="font-weight: bold; font-size: 15px;">Редактирование профиля</span>
+      <div style="width: 24px;"></div>
+    </div>
+    <div style="padding: 16px;">
+      <div class="card">
+        <input type="hidden" id="edit-profile-id">
+        
+        <label style="font-size:12px; color:var(--hint);">Ссылка на фото (URL)</label>
+        <input type="text" id="edit-profile-photo" placeholder="https://example.com/photo.jpg">
+        
+        <label style="font-size:12px; color:var(--hint);">Национальность (например, 🇷🇺 RUS)</label>
+        <input type="text" id="edit-profile-nat" placeholder="🇷🇺 RUS">
+        
+        <label style="font-size:12px; color:var(--hint);">Возраст (например, 22 ГОДА)</label>
+        <input type="text" id="edit-profile-age" placeholder="22 ГОДА">
+        
+        <label style="font-size:12px; color:var(--hint);">Рост (например, 180 cm)</label>
+        <input type="text" id="edit-profile-height" placeholder="180 cm">
+        
+        <label style="font-size:12px; color:var(--hint);">Рабочая нога</label>
+        <input type="text" id="edit-profile-foot" placeholder="Правая / Левая / Обе">
+        
+        <button class="form-btn" onclick="savePlayerProfileDetails()">Сохранить изменения</button>
       </div>
     </div>
   </div>
@@ -990,6 +1048,7 @@
     let currentAdminTeam = 1;
     let currentMatchObject = null;
     let currentLineupTeam = 1;
+    let currentPlayerViewing = null;
 
     const userId = tg.initDataUnsafe?.user?.id;
     if (userId === ADMIN_TELEGRAM_ID) {
@@ -1000,6 +1059,17 @@
       const card = document.getElementById(cardId);
       if (card) {
         card.classList.toggle('open');
+      }
+    }
+
+    function toggleStar(element) {
+      if (element.innerText === '☆') {
+        element.innerText = '⭐';
+        element.classList.add('active');
+        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+      } else {
+        element.innerText = '☆';
+        element.classList.remove('active');
       }
     }
 
@@ -1164,11 +1234,12 @@
 
             const positionsString = posList.join(', ');
             const safeName = p.name.replace(/'/g, "\\'");
+            const avatarStyle = p.photo_url ? `background-image: url('${p.photo_url}'); color: transparent;` : '';
 
             html += `
               <div class="player-row-card clickable-card" onclick="openPlayerProfileByName('${safeName}')">
                 <div class="player-left">
-                  <div class="player-avatar">${p.number || '•'}</div>
+                  <div class="player-avatar" style="${avatarStyle}">${p.number || '•'}</div>
                   <div>
                     <div class="player-info-name">${p.name}</div>
                     <div class="player-info-meta">
@@ -1411,10 +1482,11 @@
               ${allSquad.map(p => {
                 const safeName = p.name.replace(/'/g, "\\'").replace(/"/g, "&quot;");
                 const pos = POSITIONS_CONFIG[p.position]?.code || p.position;
+                const avatarStyle = p.photo_url ? `background-image:url('${p.photo_url}'); background-size:cover; color:transparent;` : '';
                 return `
                 <div style="padding:12px; background:var(--card-inner); border-radius:8px; cursor:pointer; display:flex; align-items:center; gap:10px;" 
                      onclick="window.handleSelectPlayer('${safeName}', '${p.number || ''}')">
-                  <div style="width:30px; height:30px; background:#323238; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:12px;">${p.number || '?'}</div>
+                  <div style="width:30px; height:30px; background:#323238; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:12px; ${avatarStyle}">${p.number || '?'}</div>
                   <div>
                     <div style="font-weight:700; font-size:14px;">${p.name}</div>
                     <div style="font-size:11px; color:var(--hint);">${pos}</div>
@@ -1460,12 +1532,17 @@
       const container = document.getElementById('admin-pitch-players');
       const activeLineup = currentAdminTeam === 1 ? adminLineup1 : adminLineup2;
 
-      container.innerHTML = activeLineup.startingXI.map(p => `
+      container.innerHTML = activeLineup.startingXI.map(p => {
+        // Подтягиваем фото игрока, если оно есть в общем составе
+        const squadPlayer = allSquad.find(sq => sq.name === p.name);
+        const avatarStyle = (squadPlayer && squadPlayer.photo_url) ? `background-image: url('${squadPlayer.photo_url}'); color: transparent;` : '';
+
+        return `
         <div class="pitch-player-abs" id="p-item-${p.id}" style="left:${p.x}%; top:${p.y}%;">
-          <div class="player-avatar-circle ${p.isGk ? 'gk' : ''}">${p.num || '?'}</div>
+          <div class="player-avatar-circle ${p.isGk ? 'gk' : ''}" style="${avatarStyle}">${p.num || '?'}</div>
           <div class="player-name-label">${p.name || 'Пусто'}</div>
         </div>
-      `).join('');
+      `}).join('');
 
       activeLineup.startingXI.forEach(p => {
         const el = document.getElementById(`p-item-${p.id}`);
@@ -1810,18 +1887,20 @@
       
       pitchContainer.innerHTML = lineup.startingXI.map((p, index) => {
         const safeName = (p.name || 'Пусто').replace(/'/g, "\\'");
+        const squadPlayer = allSquad.find(sq => sq.name === p.name);
+        const avatarStyle = (squadPlayer && squadPlayer.photo_url) ? `background-image: url('${squadPlayer.photo_url}'); color: transparent;` : '';
+
         return `
           <div class="pitch-player-abs clickable-card" 
                data-index="${index}" 
                style="left:${p.x}%; top:${p.y}%;"
                onclick="openPlayerProfileByName('${safeName}', '${teamName}')">
-            <div class="player-avatar-circle ${p.isGk ? 'gk' : ''}">${p.num || '?'}</div>
+            <div class="player-avatar-circle ${p.isGk ? 'gk' : ''}" style="${avatarStyle}">${p.num || '?'}</div>
             <div class="player-name-label">${p.name || 'Пусто'}</div>
           </div>
         `;
       }).join('');
 
-      // Долгое зажатие в деталях матча (только для админа)
       if (userId === ADMIN_TELEGRAM_ID) { 
         document.querySelectorAll('#viewer-pitch-players .pitch-player-abs').forEach(playerEl => {
           
@@ -2014,7 +2093,7 @@
     }
 
     // ------------------------------------
-    // СТРАНИЦА ПРОФИЛЯ ИГРОКА (SOFASCORE STYLE)
+    // СТРАНИЦА ПРОФИЛЯ ИГРОКА И РЕДАКТИРОВАНИЕ
     // ------------------------------------
     function openPlayerProfileByName(playerName, teamNameOverride = null) {
       if (!playerName || playerName === 'Пусто') return;
@@ -2022,22 +2101,42 @@
       if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
 
       const foundPlayer = allSquad.find(p => p.name.toLowerCase().trim() === playerName.toLowerCase().trim());
+      currentPlayerViewing = foundPlayer; // Запоминаем для окна редактирования
 
       const teamName = teamNameOverride || 'ФК Яйц';
       const number = foundPlayer?.number || '7';
       const posCode = foundPlayer?.position || 'FW';
       const posConf = POSITIONS_CONFIG[posCode] || { code: posCode };
 
+      // Показ кнопки редактирования только админу
+      if (userId === ADMIN_TELEGRAM_ID && foundPlayer) {
+        document.getElementById('pp-edit-btn').style.display = 'inline-block';
+      } else {
+        document.getElementById('pp-edit-btn').style.display = 'none';
+      }
+
       document.getElementById('pp-name').innerText = playerName;
       document.getElementById('pp-team-name').innerText = teamName;
       document.getElementById('pp-club-title').innerText = teamName;
-      document.getElementById('pp-avatar').innerText = number ? number : '⚽';
       document.getElementById('pp-followers').innerText = (Math.floor(Math.random() * 80) + 20) + 'k';
 
-      document.getElementById('pp-nationality').innerHTML = '🇷🇺 RUS';
-      document.getElementById('pp-age').innerText = '22 ГОДА';
-      document.getElementById('pp-height').innerText = '182 cm';
-      document.getElementById('pp-foot').innerText = 'Правая';
+      // Фото в профиле
+      const avatarEl = document.getElementById('pp-avatar');
+      if (foundPlayer && foundPlayer.photo_url) {
+        avatarEl.style.backgroundImage = `url('${foundPlayer.photo_url}')`;
+        avatarEl.style.color = 'transparent';
+        avatarEl.innerText = number; 
+      } else {
+        avatarEl.style.backgroundImage = 'none';
+        avatarEl.style.color = '#fff';
+        avatarEl.innerText = number ? number : '⚽';
+      }
+
+      // Дополнительные данные профиля
+      document.getElementById('pp-nationality').innerHTML = foundPlayer?.nationality || '🇷🇺 RUS';
+      document.getElementById('pp-age').innerText = foundPlayer?.age || '20 ЛЕТ';
+      document.getElementById('pp-height').innerText = foundPlayer?.height || '180 cm';
+      document.getElementById('pp-foot').innerText = foundPlayer?.foot || 'Правая';
       document.getElementById('pp-position').innerText = posConf.code;
       document.getElementById('pp-number').innerText = number;
 
@@ -2051,6 +2150,7 @@
 
     function closePlayerProfile() {
       document.getElementById('player-profile-modal').classList.remove('active');
+      currentPlayerViewing = null;
       
       const isMatchModalOpen = document.getElementById('match-details-modal').classList.contains('active');
       if (tg.BackButton) {
@@ -2061,6 +2161,53 @@
           tg.BackButton.hide();
           tg.BackButton.offClick(closePlayerProfile);
         }
+      }
+    }
+
+    function openPlayerEditModal() {
+      if (!currentPlayerViewing) return;
+      
+      document.getElementById('edit-profile-id').value = currentPlayerViewing.id;
+      document.getElementById('edit-profile-photo').value = currentPlayerViewing.photo_url || '';
+      document.getElementById('edit-profile-nat').value = currentPlayerViewing.nationality || '';
+      document.getElementById('edit-profile-age').value = currentPlayerViewing.age || '';
+      document.getElementById('edit-profile-height').value = currentPlayerViewing.height || '';
+      document.getElementById('edit-profile-foot').value = currentPlayerViewing.foot || '';
+
+      document.getElementById('player-details-edit-modal').classList.add('active');
+      
+      if (tg.BackButton) {
+        tg.BackButton.onClick(closePlayerEditModal);
+      }
+    }
+
+    function closePlayerEditModal() {
+      document.getElementById('player-details-edit-modal').classList.remove('active');
+      if (tg.BackButton) {
+        tg.BackButton.offClick(closePlayerEditModal);
+        tg.BackButton.onClick(closePlayerProfile);
+      }
+    }
+
+    async function savePlayerProfileDetails() {
+      const id = document.getElementById('edit-profile-id').value;
+      const photo_url = document.getElementById('edit-profile-photo').value.trim();
+      const nationality = document.getElementById('edit-profile-nat').value.trim();
+      const age = document.getElementById('edit-profile-age').value.trim();
+      const height = document.getElementById('edit-profile-height').value.trim();
+      const foot = document.getElementById('edit-profile-foot').value.trim();
+
+      const payload = { photo_url, nationality, age, height, foot };
+
+      const { error } = await _supabase.from('squad').update(payload).eq('id', id);
+
+      if (error) {
+        alert('Ошибка при сохранении профиля: ' + error.message + '\nУбедитесь, что добавили новые колонки в базу данных.');
+      } else {
+        alert('Профиль обновлен!');
+        closePlayerEditModal();
+        await loadSquad(); // Обновляем данные
+        openPlayerProfileByName(currentPlayerViewing.name); // Перерисовываем профиль
       }
     }
 
