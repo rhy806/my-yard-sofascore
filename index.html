@@ -461,7 +461,7 @@
     .mvp-row { margin-top: 10px; font-size: 12px; font-weight: 600; color: var(--gold); text-align: center; background: rgba(245, 158, 11, 0.1); border-radius: 6px; padding: 6px; }
     .admin-match-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
 
-    /* МОДАЛЬНОЕ ОКНО */
+    /* МОДАЛЬНЫЕ ОКНА */
     .match-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--bg); z-index: 1000; display: none; overflow-y: auto; padding-bottom: 30px; }
     .match-modal.active { display: block; }
     .modal-top-bar { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background-color: var(--card-bg); border-bottom: 1px solid rgba(255,255,255,0.05); }
@@ -487,6 +487,133 @@
     .nav-item.active { color: var(--accent); }
     .nav-item span { font-size: 20px; }
     #admin-nav-btn { display: none; }
+
+    /* ПРОФИЛЬ ИГРОКА (SOFASCORE СТИЛЬ) */
+    #player-profile-modal {
+      z-index: 1050;
+    }
+    .pp-header {
+      padding: 16px;
+      background: linear-gradient(180deg, #282830 0%, var(--bg) 100%);
+    }
+    .pp-top-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .pp-top-actions {
+      display: flex;
+      gap: 16px;
+      font-size: 18px;
+    }
+    .pp-profile-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .pp-profile-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .pp-avatar-lg {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: var(--card-inner);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      font-weight: 800;
+      border: 2px solid rgba(255,255,255,0.1);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+    .pp-player-name {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: 0.2px;
+    }
+    .pp-team-sub {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--hint);
+      margin-top: 4px;
+      font-weight: 600;
+    }
+    .pp-badge-card {
+      background: var(--card-bg);
+      border: 1px solid rgba(255,255,255,0.08);
+      padding: 8px 12px;
+      border-radius: 12px;
+      text-align: center;
+    }
+    .pp-badge-count {
+      font-size: 13px;
+      font-weight: 800;
+      color: #fff;
+    }
+    .pp-badge-label {
+      font-size: 10px;
+      color: var(--hint);
+      margin-top: 2px;
+      font-weight: 600;
+    }
+
+    .pp-club-banner {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--card-bg);
+      border-radius: 14px;
+      padding: 14px 16px;
+      border: 1px solid rgba(255,255,255,0.05);
+      margin-bottom: 12px;
+    }
+    .pp-club-icon {
+      width: 38px;
+      height: 38px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    .pp-club-title { font-weight: 800; font-size: 15px; }
+    .pp-club-contract { font-size: 12px; color: var(--hint); margin-top: 2px; font-weight: 600; }
+
+    .pp-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px 8px;
+      background: var(--card-bg);
+      border-radius: 14px;
+      padding: 16px;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+    .pp-stat-cell { text-align: center; }
+    .pp-stat-label {
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--hint);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .pp-stat-value {
+      font-size: 15px;
+      font-weight: 800;
+      margin-top: 6px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
   </style>
 </head>
 <body>
@@ -734,6 +861,84 @@
     </div>
   </div>
 
+  <!-- МОДАЛЬНОЕ ОКНО ПРОФИЛЯ ИГРОКА (SOFASCORE STYLE) -->
+  <div id="player-profile-modal" class="match-modal">
+    <div class="pp-header">
+      <div class="pp-top-nav">
+        <button class="back-btn" onclick="closePlayerProfile()">←</button>
+        <div class="pp-top-actions">
+          <span>👥</span>
+          <span>🔔</span>
+          <span>⭐</span>
+        </div>
+      </div>
+
+      <div class="pp-profile-row">
+        <div class="pp-profile-left">
+          <div class="pp-avatar-lg" id="pp-avatar">⚽</div>
+          <div>
+            <div class="pp-player-name" id="pp-name">Имя Игрока</div>
+            <div class="pp-team-sub">
+              <span>⚽</span> <span id="pp-team-name">ФК Яйц</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="pp-badge-card">
+          <div class="pp-badge-count" id="pp-followers">100k</div>
+          <div class="pp-badge-label">Подписчиков</div>
+        </div>
+      </div>
+
+      <div class="top-nav-tabs">
+        <button class="top-tab-btn active">Детали</button>
+        <button class="top-tab-btn" onclick="alert('Раздел в разработке')">Сезон</button>
+        <button class="top-tab-btn" onclick="alert('Раздел в разработке')">Матчи</button>
+        <button class="top-tab-btn" onclick="alert('Раздел в разработке')">Карьера</button>
+        <button class="top-tab-btn" onclick="alert('Раздел в разработке')">Медиа</button>
+      </div>
+    </div>
+
+    <div style="padding: 16px;">
+      <!-- КЛУБНАЯ ПЛАШКА -->
+      <div class="pp-club-banner">
+        <div class="pp-club-icon">⚽</div>
+        <div>
+          <div class="pp-club-title" id="pp-club-title">ФК Яйц</div>
+          <div class="pp-club-contract" id="pp-club-contract">Контракт до 30 июня 2027</div>
+        </div>
+      </div>
+
+      <!-- СЕТКА ХАРАКТЕРИСТИК -->
+      <div class="pp-stats-grid">
+        <div class="pp-stat-cell">
+          <div class="pp-stat-label">НАЦИОНАЛЬНОСТЬ</div>
+          <div class="pp-stat-value" id="pp-nationality">🇷🇺 RUS</div>
+        </div>
+        <div class="pp-stat-cell">
+          <div class="pp-stat-label">ВОЗРАСТ</div>
+          <div class="pp-stat-value" id="pp-age">20 ЛЕТ</div>
+        </div>
+        <div class="pp-stat-cell">
+          <div class="pp-stat-label">РОСТ</div>
+          <div class="pp-stat-value" id="pp-height">180 cm</div>
+        </div>
+        <div class="pp-stat-cell">
+          <div class="pp-stat-label">РАБОЧАЯ НОГА</div>
+          <div class="pp-stat-value" id="pp-foot">Правая</div>
+        </div>
+        <div class="pp-stat-cell">
+          <div class="pp-stat-label">ПОЗИЦИЯ</div>
+          <div class="pp-stat-value" id="pp-position">FW</div>
+        </div>
+        <div class="pp-stat-cell">
+          <div class="pp-stat-label">НОМЕР</div>
+          <div class="pp-stat-value" id="pp-number">10</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- НИЖНЯЯ НАВИГАЦИЯ -->
   <nav class="bottom-nav">
     <button class="nav-item active" onclick="switchMainTab('details', this)">
@@ -958,9 +1163,10 @@
             });
 
             const positionsString = posList.join(', ');
+            const safeName = p.name.replace(/'/g, "\\'");
 
             html += `
-              <div class="player-row-card">
+              <div class="player-row-card clickable-card" onclick="openPlayerProfileByName('${safeName}')">
                 <div class="player-left">
                   <div class="player-avatar">${p.number || '•'}</div>
                   <div>
@@ -1203,7 +1409,6 @@
             </div>
             <div style="max-height:300px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; padding-right:4px;">
               ${allSquad.map(p => {
-                // Экранируем кавычки в имени на случай ошибок
                 const safeName = p.name.replace(/'/g, "\\'").replace(/"/g, "&quot;");
                 const pos = POSITIONS_CONFIG[p.position]?.code || p.position;
                 return `
@@ -1279,7 +1484,6 @@
         hasMoved = false;
         el.setPointerCapture(e.pointerId);
 
-        // Таймер долгого зажатия (2 секунды) для админки
         longPressTimerAdmin = setTimeout(() => {
           if (!hasMoved) {
             isDragging = false;
@@ -1304,7 +1508,7 @@
       el.onpointermove = function(e) {
         if (!isDragging) return;
         hasMoved = true;
-        cancelAdminPress(); // Отменяем вызов меню, если игрок начал двигать фишку
+        cancelAdminPress();
 
         const rect = pitch.getBoundingClientRect();
         let x = ((e.clientX - rect.left) / rect.width) * 100;
@@ -1515,7 +1719,6 @@
       document.getElementById('match_date').value = match.match_date || '';
       document.getElementById('best_player').value = match.best_player || '';
 
-      // Загрузка последовательности голов в конструктор
       adminGoalsList = parseGoalsToBuilderList(match.goals1, match.goals2);
       renderAdminGoalsBuilder();
 
@@ -1569,7 +1772,7 @@
     }
 
     // ------------------------------------
-    // ДЕТАЛИ МАТЧА (МОДАЛЬНОЕ ОКНО) И ПРОСМОТР РАССТАНОВКИ
+    // ДЕТАЛИ МАТЧА И ПРОСМОТР РАССТАНОВКИ
     // ------------------------------------
     function switchMatchSubTab(tabName, btn) {
       document.querySelectorAll('.modal-nav-tabs .modal-tab-btn').forEach(b => b.classList.remove('active'));
@@ -1605,21 +1808,24 @@
 
       const pitchContainer = document.getElementById('viewer-pitch-players');
       
-      pitchContainer.innerHTML = lineup.startingXI.map((p, index) => `
-        <div class="pitch-player-abs" 
-             data-index="${index}" 
-             style="left:${p.x}%; top:${p.y}%;">
-          <div class="player-avatar-circle ${p.isGk ? 'gk' : ''}">${p.num || '?'}</div>
-          <div class="player-name-label">${p.name || 'Пусто'}</div>
-        </div>
-      `).join('');
+      pitchContainer.innerHTML = lineup.startingXI.map((p, index) => {
+        const safeName = (p.name || 'Пусто').replace(/'/g, "\\'");
+        return `
+          <div class="pitch-player-abs clickable-card" 
+               data-index="${index}" 
+               style="left:${p.x}%; top:${p.y}%;"
+               onclick="openPlayerProfileByName('${safeName}', '${teamName}')">
+            <div class="player-avatar-circle ${p.isGk ? 'gk' : ''}">${p.num || '?'}</div>
+            <div class="player-name-label">${p.name || 'Пусто'}</div>
+          </div>
+        `;
+      }).join('');
 
       // Долгое зажатие в деталях матча (только для админа)
       if (userId === ADMIN_TELEGRAM_ID) { 
         document.querySelectorAll('#viewer-pitch-players .pitch-player-abs').forEach(playerEl => {
           
           const startPress = (e) => {
-            // Таймер долгого зажатия (2 секунды)
             longPressTimerView = setTimeout(() => {
               const playerIndex = playerEl.getAttribute('data-index');
               
@@ -1634,9 +1840,8 @@
                   currentMatchObject.lineup2 = updatedLineupStr;
                 }
                 
-                renderLineupView(); // сразу обновляем UI
+                renderLineupView();
                 
-                // Сразу улетает в Supabase
                 const updatePayload = currentLineupTeam === 1 
                   ? { lineup1: updatedLineupStr } 
                   : { lineup2: updatedLineupStr };
@@ -1691,7 +1896,7 @@
       }
     }
 
-    // РАЗБОР ГОЛОВ И ХРОНОЛОГИИ (БЕЗ МИНУТ)
+    // РАЗБОР ГОЛОВ И ХРОНОЛОГИИ
     function parseGoalsSequence(goals1Str, goals2Str) {
       const goals = [];
       const cleanName = (str) => str.replace(/\d+['’]?/g, '').replace(/^\d+[\.\)]\s*/, '').trim();
@@ -1747,8 +1952,8 @@
 
       if (g1List.length > 0 || g2List.length > 0) {
         summaryRow.style.display = 'flex';
-        heroG1.innerHTML = g1List.map(g => `<div>${g}</div>`).join('') || '—';
-        heroG2.innerHTML = g2List.map(g => `<div>${g}</div>`).join('') || '—';
+        heroG1.innerHTML = g1List.map(g => `<div class="clickable-card" onclick="openPlayerProfileByName('${g.replace(/'/g, "\\'")}', '${match.team1}')">${g}</div>`).join('') || '—';
+        heroG2.innerHTML = g2List.map(g => `<div class="clickable-card" onclick="openPlayerProfileByName('${g.replace(/'/g, "\\'")}', '${match.team2}')">${g}</div>`).join('') || '—';
       } else {
         summaryRow.style.display = 'none';
       }
@@ -1763,9 +1968,11 @@
         timelineContainer.innerHTML = `
           <div class="timeline-container">
             ${reversedGoals.map(g => {
+              const teamNameForGoal = g.team === 1 ? match.team1 : match.team2;
+              const safePlayer = g.player.replace(/'/g, "\\'");
               if (g.team === 1) {
                 return `
-                  <div class="timeline-goal-card left">
+                  <div class="timeline-goal-card left clickable-card" onclick="openPlayerProfileByName('${safePlayer}', '${teamNameForGoal}')">
                     <span style="font-size:16px;">⚽</span>
                     <span class="timeline-score-badge">${g.runningScore}</span>
                     <span style="font-weight:700; font-size:14px; color:#fff;">${g.player}</span>
@@ -1773,7 +1980,7 @@
                 `;
               } else {
                 return `
-                  <div class="timeline-goal-card right">
+                  <div class="timeline-goal-card right clickable-card" onclick="openPlayerProfileByName('${safePlayer}', '${teamNameForGoal}')">
                     <span style="font-weight:700; font-size:14px; color:#fff;">${g.player}</span>
                     <span class="timeline-score-badge">${g.runningScore}</span>
                     <span style="font-size:16px;">⚽</span>
@@ -1800,9 +2007,60 @@
 
     function closeMatchModal() {
       document.getElementById('match-details-modal').classList.remove('active');
-      if (tg.BackButton) {
+      if (tg.BackButton && !document.getElementById('player-profile-modal').classList.contains('active')) {
         tg.BackButton.hide();
         tg.BackButton.offClick(closeMatchModal);
+      }
+    }
+
+    // ------------------------------------
+    // СТРАНИЦА ПРОФИЛЯ ИГРОКА (SOFASCORE STYLE)
+    // ------------------------------------
+    function openPlayerProfileByName(playerName, teamNameOverride = null) {
+      if (!playerName || playerName === 'Пусто') return;
+
+      if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+
+      const foundPlayer = allSquad.find(p => p.name.toLowerCase().trim() === playerName.toLowerCase().trim());
+
+      const teamName = teamNameOverride || 'ФК Яйц';
+      const number = foundPlayer?.number || '7';
+      const posCode = foundPlayer?.position || 'FW';
+      const posConf = POSITIONS_CONFIG[posCode] || { code: posCode };
+
+      document.getElementById('pp-name').innerText = playerName;
+      document.getElementById('pp-team-name').innerText = teamName;
+      document.getElementById('pp-club-title').innerText = teamName;
+      document.getElementById('pp-avatar').innerText = number ? number : '⚽';
+      document.getElementById('pp-followers').innerText = (Math.floor(Math.random() * 80) + 20) + 'k';
+
+      document.getElementById('pp-nationality').innerHTML = '🇷🇺 RUS';
+      document.getElementById('pp-age').innerText = '22 ГОДА';
+      document.getElementById('pp-height').innerText = '182 cm';
+      document.getElementById('pp-foot').innerText = 'Правая';
+      document.getElementById('pp-position').innerText = posConf.code;
+      document.getElementById('pp-number').innerText = number;
+
+      document.getElementById('player-profile-modal').classList.add('active');
+
+      if (tg.BackButton) {
+        tg.BackButton.show();
+        tg.BackButton.onClick(closePlayerProfile);
+      }
+    }
+
+    function closePlayerProfile() {
+      document.getElementById('player-profile-modal').classList.remove('active');
+      
+      const isMatchModalOpen = document.getElementById('match-details-modal').classList.contains('active');
+      if (tg.BackButton) {
+        if (isMatchModalOpen) {
+          tg.BackButton.show();
+          tg.BackButton.onClick(closeMatchModal);
+        } else {
+          tg.BackButton.hide();
+          tg.BackButton.offClick(closePlayerProfile);
+        }
       }
     }
 
