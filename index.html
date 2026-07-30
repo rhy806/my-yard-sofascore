@@ -141,9 +141,7 @@
       word-wrap: break-word;
     }
 
-    .goals-col.right {
-      text-align: right;
-    }
+    .goals-col.right { text-align: right; }
 
     .mvp-row {
       margin-top: 10px;
@@ -162,6 +160,53 @@
       align-items: center;
       padding: 10px 0;
       border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    /* ------------------------------------ */
+    /* РЕДАКТОР ГОЛОВ В АДМИНКЕ */
+    /* ------------------------------------ */
+    .goal-editor-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,0.04);
+      padding: 6px 8px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .goal-team-badge {
+      font-size: 11px;
+      font-weight: bold;
+      padding: 4px 8px;
+      border-radius: 6px;
+      white-space: nowrap;
+      min-width: 70px;
+      text-align: center;
+    }
+
+    .goal-team-badge.t1 { background: rgba(34, 197, 94, 0.2); color: var(--accent); }
+    .goal-team-badge.t2 { background: rgba(59, 130, 246, 0.2); color: var(--blue); }
+
+    .goal-editor-input {
+      flex: 1;
+      margin: 0 !important;
+      padding: 8px !important;
+      font-size: 13px;
+    }
+
+    .icon-btn {
+      background: none;
+      border: 1px solid rgba(255,255,255,0.15);
+      color: var(--text);
+      border-radius: 6px;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 12px;
     }
 
     /* ------------------------------------ */
@@ -248,7 +293,7 @@
       letter-spacing: 2px;
     }
 
-    /* АВТОРЫ ГОЛОВ ПОД СЧЕТОМ (ФОТО 1) */
+    /* АВТОРЫ ГОЛОВ ПОД СЧЕТОМ */
     .hero-goals-summary {
       display: flex;
       justify-content: center;
@@ -272,35 +317,9 @@
     .hero-goals-col.right { text-align: left; }
     .hero-goals-icon { font-size: 16px; padding-top: 2px; }
 
-    /* ВКАЛАДКИ МОДАЛКИ */
-    .modal-tabs {
-      display: flex;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-      margin-bottom: 16px;
-      background: var(--card-bg);
-    }
+    .modal-content-area { padding: 16px; }
 
-    .modal-tab-btn {
-      flex: 1;
-      padding: 12px;
-      text-align: center;
-      background: none;
-      border: none;
-      color: var(--hint);
-      font-weight: 600;
-      font-size: 14px;
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-    }
-
-    .modal-tab-btn.active {
-      color: var(--accent);
-      border-bottom-color: var(--accent);
-    }
-
-    .modal-content-area { padding: 0 16px; }
-
-    /* ХРОНОЛОГИЯ ГОЛОВ В СТИЛЕ ФОТО 2 (БЕЗ МИНУТ) */
+    /* ХРОНОЛОГИЯ ГОЛОВ В СТИЛЕ ФОТО 2 */
     .timeline-container {
       display: flex;
       flex-direction: column;
@@ -383,8 +402,18 @@
       <input type="text" id="team2" placeholder="Команда 2 (например, Европа)">
       <input type="text" id="score" placeholder="Счет (например, 4 - 1)">
       <input type="text" id="match_date" placeholder="Дата/время (например, 24.07.26 • 21:00)">
-      <input type="text" id="goals1" placeholder="Голы Команды 1 (например, И. Диарра 13', Г. Форт 29')">
-      <input type="text" id="goals2" placeholder="Голы Команды 2 (например, F. Ribeiro 40')">
+      
+      <!-- Редактор последовательности голов -->
+      <label style="font-size:13px; font-weight:bold; color:var(--hint); margin-top:8px; display:block;">
+        ⚽ Последовательность голов (в порядке забивания):
+      </label>
+      <div id="goal-editor-list" style="display:flex; flex-direction:column; gap:8px; margin:10px 0;"></div>
+      
+      <div style="display:flex; gap:8px; margin-bottom:12px;">
+        <button type="button" class="cancel-btn" style="flex:1; border-color:var(--accent); color:var(--accent);" onclick="addGoalToEditor(1)">+ Гол Команды 1</button>
+        <button type="button" class="cancel-btn" style="flex:1; border-color:var(--blue); color:var(--blue);" onclick="addGoalToEditor(2)">+ Гол Команды 2</button>
+      </div>
+
       <input type="text" id="best_player" placeholder="⭐ Лучший игрок (например, А. Янес)">
       
       <button class="form-btn" id="save-btn" onclick="saveMatch()">Сохранить матч</button>
@@ -401,7 +430,7 @@
   <div id="match-details-modal" class="match-modal">
     <div class="modal-top-bar">
       <button class="back-btn" onclick="closeMatchModal()">←</button>
-      <span style="font-weight: bold; font-size: 15px;">Обзор матча</span>
+      <span style="font-weight: bold; font-size: 15px;">Детали матча</span>
       <div style="width: 24px;"></div>
     </div>
 
@@ -428,30 +457,18 @@
       </div>
     </div>
 
-    <!-- Вкладки -->
-    <div class="modal-tabs">
-      <button class="modal-tab-btn active" onclick="switchModalTab('m-tab-details', this)">Детали</button>
-      <button class="modal-tab-btn" onclick="switchModalTab('m-tab-goals', this)">MVP</button>
-    </div>
-
-    <!-- Содержимое -->
+    <!-- Содержимое матча -->
     <div class="modal-content-area">
-      <!-- Вкладка 1: Хронология голов (Фото 2) -->
-      <div id="m-tab-details">
-        <div class="card">
-          <h4 style="margin-top:0; margin-bottom: 12px;">⚽ Последовательность голов</h4>
-          <div id="m-timeline-container">
-            <!-- Динамическая последовательность голов без минут -->
-          </div>
-        </div>
+      <!-- 1. Последовательность голов (Фото 2) -->
+      <div class="card">
+        <h4 style="margin-top:0; margin-bottom: 12px;">⚽ Последовательность голов</h4>
+        <div id="m-timeline-container"></div>
       </div>
 
-      <!-- Вкладка 2: MVP -->
-      <div id="m-tab-goals" style="display: none;">
-        <div class="card" id="m-mvp-card">
-          <h4 style="margin-top:0; color:var(--gold);">🏅 Игрок матча</h4>
-          <div id="m-mvp-name" style="font-size: 16px; font-weight: bold;">Не указан</div>
-        </div>
+      <!-- 2. Игрок матча (MVP под последовательностью голов) -->
+      <div class="card" id="m-mvp-card">
+        <h4 style="margin-top:0; color:var(--gold);">🏅 Игрок матча</h4>
+        <div id="m-mvp-name" style="font-size: 16px; font-weight: bold;">Не указан</div>
       </div>
     </div>
   </div>
@@ -479,6 +496,7 @@
 
     let allMatches = [];
     let editingMatchId = null;
+    let goalItems = []; // Массив для редактирования последовательности голов
 
     const userId = tg.initDataUnsafe?.user?.id;
     if (userId === ADMIN_TELEGRAM_ID) {
@@ -492,16 +510,85 @@
       btn.classList.add('active');
     }
 
+    // ------------------------------------
+    // ЛОГИКА РЕДАКТОРА ПОСЛЕДОВАТЕЛЬНОСТИ ГОЛОВ
+    // ------------------------------------
+    function addGoalToEditor(team) {
+      goalItems.push({
+        id: Date.now() + Math.random(),
+        team: team,
+        player: ''
+      });
+      renderGoalEditor();
+    }
+
+    function updateGoalPlayer(index, val) {
+      if (goalItems[index]) {
+        goalItems[index].player = val;
+      }
+    }
+
+    function moveGoal(index, direction) {
+      const newIndex = index + direction;
+      if (newIndex < 0 || newIndex >= goalItems.length) return;
+      const temp = goalItems[index];
+      goalItems[index] = goalItems[newIndex];
+      goalItems[newIndex] = temp;
+      renderGoalEditor();
+    }
+
+    function deleteGoal(index) {
+      goalItems.splice(index, 1);
+      renderGoalEditor();
+    }
+
+    function renderGoalEditor() {
+      const container = document.getElementById('goal-editor-list');
+      if (goalItems.length === 0) {
+        container.innerHTML = '<div style="font-size:12px; color:var(--hint);">Голы пока не добавлены. Нажмите кнопки ниже.</div>';
+        return;
+      }
+
+      const team1Name = document.getElementById('team1').value || 'Ком. 1';
+      const team2Name = document.getElementById('team2').value || 'Ком. 2';
+
+      container.innerHTML = goalItems.map((g, i) => `
+        <div class="goal-editor-row">
+          <span class="goal-team-badge ${g.team === 1 ? 't1' : 't2'}">
+            ${g.team === 1 ? team1Name : team2Name}
+          </span>
+          <input type="text" class="goal-editor-input" value="${g.player}" 
+                 placeholder="Имя игрока" oninput="updateGoalPlayer(${i}, this.value)">
+          <button type="button" class="icon-btn" onclick="moveGoal(${i}, -1)">▲</button>
+          <button type="button" class="icon-btn" onclick="moveGoal(${i}, 1)">▼</button>
+          <button type="button" class="icon-btn" style="color:var(--danger);" onclick="deleteGoal(${i})">✖</button>
+        </div>
+      `).join('');
+    }
+
+    // Сохранение матча
     async function saveMatch() {
       const team1 = document.getElementById('team1').value;
       const team2 = document.getElementById('team2').value;
       const score = document.getElementById('score').value;
       const match_date = document.getElementById('match_date').value;
-      const goals1 = document.getElementById('goals1').value;
-      const goals2 = document.getElementById('goals2').value;
       const best_player = document.getElementById('best_player').value;
 
       if (!team1 || !team2) return alert('Заполните названия команд');
+
+      // Формируем строки голов с сохранением порядка (минуты кодируют хронологию)
+      let g1List = [];
+      let g2List = [];
+      goalItems.forEach((g, idx) => {
+        const min = (idx + 1) * 10;
+        const name = g.player.trim();
+        if (!name) return;
+        if (g.team === 1) g1List.push(`${name} ${min}'`);
+        else g2List.push(`${name} ${min}'`);
+      });
+
+      const goals1 = g1List.join(', ');
+      const goals2 = g2List.join(', ');
 
       const matchData = { team1, team2, score, match_date, goals1, goals2, best_player };
 
@@ -532,9 +619,17 @@
       document.getElementById('team2').value = match.team2 || '';
       document.getElementById('score').value = match.score || '';
       document.getElementById('match_date').value = match.match_date || '';
-      document.getElementById('goals1').value = match.goals1 || '';
-      document.getElementById('goals2').value = match.goals2 || '';
       document.getElementById('best_player').value = match.best_player || '';
+
+      // Парсим сохраненную последовательность голов
+      const parsed = parseGoalsSequence(match.goals1, match.goals2);
+      goalItems = parsed.map(g => ({
+        id: Math.random(),
+        team: g.team,
+        player: g.player.replace(/\s*\(?\d+['’]?\)?\s*/g, '').trim()
+      }));
+
+      renderGoalEditor();
 
       document.getElementById('form-title').innerText = '✏️ Редактировать матч';
       document.getElementById('save-btn').innerText = 'Сохранить изменения';
@@ -547,13 +642,14 @@
 
     function resetForm() {
       editingMatchId = null;
+      goalItems = [];
       document.getElementById('team1').value = '';
       document.getElementById('team2').value = '';
       document.getElementById('score').value = '';
       document.getElementById('match_date').value = '';
-      document.getElementById('goals1').value = '';
-      document.getElementById('goals2').value = '';
       document.getElementById('best_player').value = '';
+
+      renderGoalEditor();
 
       document.getElementById('form-title').innerText = '➕ Добавить новый матч';
       document.getElementById('save-btn').innerText = 'Сохранить матч';
@@ -583,7 +679,7 @@
         const items = str.split(/,|\n/).map(s => s.trim()).filter(Boolean);
         items.forEach((item, idx) => {
           const matchMin = item.match(/(\d+)['’]?/);
-          const min = matchMin ? parseInt(matchMatch[1] || matchMin[1], 10) : (idx + 1) * 10;
+          const min = matchMin ? parseInt(matchMin[1], 10) : (idx + 1) * 10;
           goals.push({
             team: teamNum,
             player: item,
@@ -595,10 +691,8 @@
       extract(goals1Str, 1);
       extract(goals2Str, 2);
 
-      // Сортируем по минутам по возрастанию (13', 29', 40'...)
       goals.sort((a, b) => a.minute - b.minute);
 
-      // Рассчитываем текущий счет
       let score1 = 0;
       let score2 = 0;
       goals.forEach(g => {
@@ -619,13 +713,13 @@
       document.getElementById('m-score').innerText = match.score || 'vs';
       document.getElementById('m-date').innerText = match.match_date ? '📅 ' + match.match_date : 'Завершен';
 
-      // 1. Отображение авторов под счетом (Как на Фото 1)
+      // 1. Отображение авторов под счетом (Фото 1)
       const heroGoalsContainer = document.getElementById('m-hero-goals');
       const heroG1 = document.getElementById('m-hero-goals1');
       const heroG2 = document.getElementById('m-hero-goals2');
 
-      const g1List = match.goals1 ? match.goals1.split(/,|\n/).map(s => s.trim()).filter(Boolean) : [];
-      const g2List = match.goals2 ? match.goals2.split(/,|\n/).map(s => s.trim()).filter(Boolean) : [];
+      const g1List = match.goals1 ? match.goals1.split(/,|\n/).map(s => s.trim().replace(/\s*\(?\d+['’]?\)?\s*/g, '')).filter(Boolean) : [];
+      const g2List = match.goals2 ? match.goals2.split(/,|\n/).map(s => s.trim().replace(/\s*\(?\d+['’]?\)?\s*/g, '')).filter(Boolean) : [];
 
       if (g1List.length > 0 || g2List.length > 0) {
         heroGoalsContainer.style.display = 'flex';
@@ -635,19 +729,17 @@
         heroGoalsContainer.style.display = 'none';
       }
 
-      // 2. Последовательность голов без минут (Как на Фото 2)
+      // 2. Последовательность голов без минут (Фото 2)
       const timelineContainer = document.getElementById('m-timeline-container');
       const parsedGoals = parseGoalsSequence(match.goals1, match.goals2);
 
       if (parsedGoals.length === 0) {
         timelineContainer.innerHTML = '<p style="color:var(--hint); font-size:13px; margin:0;">Голов в матче не было.</p>';
       } else {
-        // Отображение от последних голов к первым (как на 2 фото)
         const reversedGoals = [...parsedGoals].reverse();
         timelineContainer.innerHTML = `
           <div class="timeline-container">
             ${reversedGoals.map(g => {
-              // Убираем минусы/минуты из имени игрока
               const cleanName = g.player.replace(/\s*\(?\d+['’]?\)?\s*/g, '').trim();
               if (g.team === 1) {
                 return `
@@ -679,14 +771,6 @@
       document.getElementById('match-details-modal').classList.remove('active');
     }
 
-    function switchModalTab(tabId, btn) {
-      document.getElementById('m-tab-details').style.display = 'none';
-      document.getElementById('m-tab-goals').style.display = 'none';
-      document.querySelectorAll('.modal-tab-btn').forEach(b => b.classList.remove('active'));
-      document.getElementById(tabId).style.display = 'block';
-      btn.classList.add('active');
-    }
-
     // Загрузка списка матчей
     async function loadMatches() {
       const { data: matches, error } = await _supabase
@@ -707,7 +791,10 @@
       allMatches = matches;
 
       container.innerHTML = matches.map(m => {
-        const hasGoals = m.goals1 || m.goals2;
+        const cleanG1 = m.goals1 ? m.goals1.split(/,|\n/).map(s => s.trim().replace(/\s*\(?\d+['’]?\)?\s*/g, '')).join(', ') : '';
+        const cleanG2 = m.goals2 ? m.goals2.split(/,|\n/).map(s => s.trim().replace(/\s*\(?\d+['’]?\)?\s*/g, '')).join(', ') : '';
+        const hasGoals = cleanG1 || cleanG2;
+
         return `
           <div class="card clickable-card" onclick="openMatchDetails('${m.id}')">
             ${m.match_date ? `<div class="match-header">📅 ${m.match_date}</div>` : ''}
@@ -718,8 +805,8 @@
             </div>
             ${hasGoals ? `
               <div class="goals-row">
-                <div class="goals-col">⚽ ${m.goals1 || '—'}</div>
-                <div class="goals-col right">⚽ ${m.goals2 || '—'}</div>
+                <div class="goals-col">⚽ ${cleanG1 || '—'}</div>
+                <div class="goals-col right">⚽ ${cleanG2 || '—'}</div>
               </div>
             ` : ''}
             ${m.best_player ? `<div class="mvp-row">🏅 Лучший игрок: ${m.best_player}</div>` : ''}
