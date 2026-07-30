@@ -67,6 +67,11 @@
       font-family: inherit;
     }
 
+    textarea {
+      resize: vertical;
+      min-height: 60px;
+    }
+
     button.form-btn {
       background: var(--accent);
       color: white;
@@ -396,7 +401,7 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.3);
     }
 
-    /* ФУТБОЛЬНОЕ ПОЛЕ (ФОРМАТ 5+1 С АБСОЛЮТНЫМ ПОЗИЦИОНИРОВАНИЕМ) */
+    /* ФУТБОЛЬНОЕ ПОЛЕ */
     .pitch-card {
       background-color: var(--pitch-bg);
       border-radius: 14px;
@@ -447,7 +452,7 @@
       align-items: center;
       width: 70px;
       text-align: center;
-      touch-action: none; /* Важно для тач-скрина */
+      touch-action: none;
     }
 
     .player-avatar-circle {
@@ -484,47 +489,20 @@
       border-radius: 4px;
     }
 
-    /* ТРЕНЕР И ЗАМЕНЫ */
-    .coach-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .list-item-avatar {
-      width: 38px;
-      height: 38px;
-      border-radius: 50%;
-      background: #2a2a2e;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-      font-weight: bold;
-      flex-shrink: 0;
-    }
-
-    .sub-list {
+    .sub-list, .absence-list {
       display: flex;
       flex-direction: column;
       gap: 8px;
       margin-top: 8px;
     }
 
-    .sub-item {
+    .sub-item, .absence-item {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       padding: 6px 0;
       border-bottom: 1px solid rgba(255,255,255,0.04);
-    }
-
-    .absence-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 8px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.04);
+      font-size: 13px;
     }
 
     .bottom-nav {
@@ -590,10 +568,10 @@
 
       <input type="text" id="best_player" placeholder="⭐ Игрок матча">
 
-      <!-- ВИНТАЖНЫЙ ИНТЕРАКТИВНЫЙ КОНСТРУКТОР СОСТАВА В АДМИНКЕ -->
+      <!-- РЕДАКТОР СОСТАВА И ЗАМЕН -->
       <hr style="border:0; border-top:1px solid rgba(255,255,255,0.1); margin:16px 0;">
-      <h4 style="margin:0 0 8px 0;">📋 Интерактивный редактор расстановки (5+1)</h4>
-      <p style="font-size:12px; color:var(--hint); margin-top:0;">Перетаскивайте круги игроков по полю пальцем или мышкой!</p>
+      <h4 style="margin:0 0 8px 0;">📋 Интерактивная расстановка и замены (5+1)</h4>
+      <p style="font-size:12px; color:var(--hint); margin-top:0;">Перетаскивайте круги игроков по полю!</p>
 
       <div class="lineup-team-toggle">
         <button type="button" id="admin-t1-btn" class="lineup-toggle-btn active" onclick="selectAdminEditTeam(1)">
@@ -604,6 +582,7 @@
         </button>
       </div>
 
+      <!-- Поле -->
       <div class="pitch-card" id="admin-pitch-box">
         <div class="pitch-lines">
           <div class="pitch-center-circle"></div>
@@ -613,6 +592,17 @@
         </div>
         <div id="admin-pitch-players"></div>
       </div>
+
+      <!-- Ввод Замен и Травм -->
+      <label style="font-size:12px; font-weight:bold; color:var(--hint); display:block; margin-top:10px;">
+        🔄 Замены для выбранной команды (каждая с новой строки или через запятую):
+      </label>
+      <textarea id="admin-subs-text" placeholder="Например: Иван (20'), Алексей (35')" oninput="saveCurrentTeamExtraData()"></textarea>
+
+      <label style="font-size:12px; font-weight:bold; color:var(--hint); display:block; margin-top:6px;">
+        🩹 Пропускающие матч / Травмы (каждый с новой строки):
+      </label>
+      <textarea id="admin-absences-text" placeholder="Например: Сергей (Травма), Димон (Дисквалификация)" oninput="saveCurrentTeamExtraData()"></textarea>
       
       <!-- Скрытые текстовые поля для сохранения JSON -->
       <textarea id="lineup1_data" style="display:none;"></textarea>
@@ -628,7 +618,7 @@
     </div>
   </div>
 
-  <!-- МОДАЛЬНОЕ ОКНО МАТЧА (FLASHSCORE UI) -->
+  <!-- МОДАЛЬНОЕ ОКНО МАТЧА -->
   <div id="match-details-modal" class="match-modal">
     <div class="modal-top-bar">
       <button class="back-btn" onclick="closeMatchModal()">←</button>
@@ -699,17 +689,6 @@
         <div id="viewer-pitch-players"></div>
       </div>
 
-      <!-- Карточка тренера -->
-      <div class="card">
-        <div class="coach-row">
-          <div class="list-item-avatar">👔</div>
-          <div>
-            <div style="font-weight:bold; font-size:14px;" id="coach-name">Главный тренер</div>
-            <div style="font-size:12px; color:var(--hint);">Тренер команды</div>
-          </div>
-        </div>
-      </div>
-
       <!-- Список замен -->
       <div class="card">
         <h4 style="margin-top:0; margin-bottom:10px;">Замены</h4>
@@ -769,11 +748,10 @@
     }
 
     // ------------------------------------
-    // ДЕФОЛТНЫЙ СОСТАВ (ФОРМАТ 5+1: 1 ВРАТАРЬ + 5 ПОЛЕВЫХ)
+    // ДЕФОЛТНЫЙ СОСТАВ (5+1)
     // ------------------------------------
     function getDefaultLineup(teamName) {
       return {
-        coach: "Главный тренер",
         formation: "5 + 1",
         startingXI: [
           { id: 1, num: 1, name: "Вратарь", isGk: true, x: 50, y: 86 },
@@ -783,11 +761,8 @@
           { id: 5, num: 5, name: "Нап Л", isGk: false, x: 28, y: 22 },
           { id: 6, num: 6, name: "Нап П", isGk: false, x: 72, y: 22 }
         ],
-        subs: [
-          { num: 7, name: "Замена 1", subInfo: "20' Замена" },
-          { num: 8, name: "Замена 2", subInfo: "30' Замена" }
-        ],
-        absences: []
+        subsText: "",
+        absencesText: ""
       };
     }
 
@@ -800,10 +775,31 @@
     }
 
     function selectAdminEditTeam(teamNum) {
+      saveCurrentTeamExtraData(); // сохраняем данные предыдущей команды перед переключением
+
       adminCurrentTeam = teamNum;
       document.getElementById('admin-t1-btn').classList.toggle('active', teamNum === 1);
       document.getElementById('admin-t2-btn').classList.toggle('active', teamNum === 2);
+      
+      const currentObj = adminCurrentTeam === 1 ? adminLineup1 : adminLineup2;
+      document.getElementById('admin-subs-text').value = currentObj.subsText || '';
+      document.getElementById('admin-absences-text').value = currentObj.absencesText || '';
+
       renderAdminPitch();
+    }
+
+    function saveCurrentTeamExtraData() {
+      const subsVal = document.getElementById('admin-subs-text').value;
+      const absVal = document.getElementById('admin-absences-text').value;
+
+      if (adminCurrentTeam === 1 && adminLineup1) {
+        adminLineup1.subsText = subsVal;
+        adminLineup1.absencesText = absVal;
+      } else if (adminCurrentTeam === 2 && adminLineup2) {
+        adminLineup2.subsText = subsVal;
+        adminLineup2.absencesText = absVal;
+      }
+      syncAdminLineupsToInputs();
     }
 
     function initAdminLineups() {
@@ -817,7 +813,7 @@
       if (!adminLineup2) adminLineup2 = getDefaultLineup(document.getElementById('team2').value || 'Команда 2');
 
       onAdminTeamNameChange();
-      renderAdminPitch();
+      selectAdminEditTeam(1);
     }
 
     function syncAdminLineupsToInputs() {
@@ -832,7 +828,7 @@
 
       container.innerHTML = '';
 
-      lineup.startingXI.forEach((p, idx) => {
+      lineup.startingXI.forEach((p) => {
         const pEl = document.createElement('div');
         pEl.className = 'pitch-player-abs';
         pEl.style.left = p.x + '%';
@@ -843,7 +839,6 @@
           <div class="player-name-label">${p.name}</div>
         `;
 
-        // Логика тач/мыши для перетаскивания (Pointer Events)
         let isDragging = false;
 
         pEl.addEventListener('pointerdown', (e) => {
@@ -858,7 +853,6 @@
           let newX = ((e.clientX - rect.left) / rect.width) * 100;
           let newY = ((e.clientY - rect.top) / rect.height) * 100;
 
-          // Ограничение движения внутри поля
           newX = Math.max(8, Math.min(92, newX));
           newY = Math.max(8, Math.min(92, newY));
 
@@ -932,6 +926,8 @@
 
     // Сохранение матча
     async function saveMatch() {
+      saveCurrentTeamExtraData();
+
       const team1 = document.getElementById('team1').value;
       const team2 = document.getElementById('team2').value;
       const score = document.getElementById('score').value;
@@ -1022,6 +1018,8 @@
       document.getElementById('best_player').value = '';
       document.getElementById('lineup1_data').value = '';
       document.getElementById('lineup2_data').value = '';
+      document.getElementById('admin-subs-text').value = '';
+      document.getElementById('admin-absences-text').value = '';
 
       renderGoalEditor();
       initAdminLineups();
@@ -1076,8 +1074,6 @@
       try { if (rawData) lineup = JSON.parse(rawData); } catch(e) { }
       if (!lineup) lineup = getDefaultLineup(teamName);
 
-      document.getElementById('coach-name').innerText = lineup.coach || 'Главный тренер';
-
       // Рендер 5+1 на поле
       const pitchContainer = document.getElementById('viewer-pitch-players');
       pitchContainer.innerHTML = lineup.startingXI.map(p => `
@@ -1087,35 +1083,32 @@
         </div>
       `).join('');
 
-      // Рендер замен (БЕЗ ОЦЕНОК)
+      // Рендер замен
       const subsContainer = document.getElementById('subs-list');
-      if (!lineup.subs || lineup.subs.length === 0) {
-        subsContainer.innerHTML = '<div style="color:var(--hint); font-size:12px;">Замен не было</div>';
+      const subsRaw = (lineup.subsText || '').trim();
+      if (!subsRaw) {
+        subsContainer.innerHTML = '<div style="color:var(--hint); font-size:13px; font-style:italic;">Замены не проводились</div>';
       } else {
-        subsContainer.innerHTML = lineup.subs.map(s => `
+        const subsArray = subsRaw.split(/,|\n/).map(s => s.trim()).filter(Boolean);
+        subsContainer.innerHTML = subsArray.map(s => `
           <div class="sub-item">
-            <div class="list-item-avatar">${s.num}</div>
-            <div>
-              <div style="font-weight:600; font-size:13px;">${s.name}</div>
-              <div style="font-size:11px; color:var(--hint);">🟢 ${s.subInfo}</div>
-            </div>
+            <span style="font-size:15px;">🟢</span>
+            <span style="font-weight:600;">${s}</span>
           </div>
         `).join('');
       }
 
-      // Травмы
+      // Рендер пропускающих матч / травм
       const absContainer = document.getElementById('absences-list');
-      if (!lineup.absences || lineup.absences.length === 0) {
-        absContainer.innerHTML = '<div style="color:var(--hint); font-size:12px;">Пропускающих матч нет</div>';
+      const absRaw = (lineup.absencesText || '').trim();
+      if (!absRaw) {
+        absContainer.innerHTML = '<div style="color:var(--hint); font-size:13px; font-style:italic;">Пропускающих матч нет</div>';
       } else {
-        absContainer.innerHTML = lineup.absences.map(a => `
+        const absArray = absRaw.split(/,|\n/).map(s => s.trim()).filter(Boolean);
+        absContainer.innerHTML = absArray.map(a => `
           <div class="absence-item">
-            <div class="list-item-avatar" style="color:var(--danger);">🩹</div>
-            <div>
-              <div style="font-weight:bold; font-size:13px;">${a.name}</div>
-              <div style="font-size:11px; font-weight:700; color:var(--danger);">${a.status}</div>
-              <div style="font-size:11px; color:var(--hint);">${a.reason}</div>
-            </div>
+            <span style="font-size:15px;">🩹</span>
+            <span style="font-weight:600; color:var(--danger);">${a}</span>
           </div>
         `).join('');
       }
