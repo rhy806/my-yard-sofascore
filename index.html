@@ -87,7 +87,7 @@
       border: 1px solid var(--blue);
       border-radius: 6px;
       padding: 6px 10px;
-      font-size: 12px;
+      font-size: 14px;
       font-weight: bold;
       cursor: pointer;
     }
@@ -98,7 +98,7 @@
       border: 1px solid var(--danger);
       border-radius: 6px;
       padding: 6px 10px;
-      font-size: 12px;
+      font-size: 14px;
       font-weight: bold;
       cursor: pointer;
     }
@@ -304,8 +304,11 @@
 
     // Запуск режима редактирования
     function editMatch(id) {
-      const match = allMatches.find(m => m.id === id);
-      if (!match) return;
+      const match = allMatches.find(m => String(m.id) === String(id));
+      if (!match) {
+        alert('Не удалось найти данные матча');
+        return;
+      }
 
       editingMatchId = match.id;
       document.getElementById('team1').value = match.team1 || '';
@@ -320,8 +323,9 @@
       document.getElementById('save-btn').innerText = 'Сохранить изменения';
       document.getElementById('cancel-btn').style.display = 'block';
 
-      // Плавно прокручиваем вверх к форме
+      // Автоматическая прокрутка и фокус на верхнем поле ввода
       window.scrollTo({ top: 0, behavior: 'smooth' });
+      document.getElementById('team1').focus();
     }
 
     // Отмена редактирования
@@ -414,7 +418,7 @@
             </small>
           </div>
           <div class="action-btns">
-            <button class="edit-btn" onclick="editMatch('${m.id}')">✏️ Изменить</button>
+            <button class="edit-btn" onclick="editMatch('${m.id}')">✏️</button>
             <button class="delete-btn" onclick="deleteMatch('${m.id}')">🗑️</button>
           </div>
         </div>
