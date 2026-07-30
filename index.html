@@ -17,6 +17,8 @@
       --danger: #ef4444;
       --gold: #f59e0b;
       --blue: #3b82f6;
+      --pitch-bg: #14231a;
+      --pitch-line: rgba(255, 255, 255, 0.15);
     }
 
     body {
@@ -53,7 +55,7 @@
       opacity: 0.8;
     }
 
-    input, select, button.form-btn {
+    input, select, textarea, button.form-btn {
       width: 100%;
       padding: 12px;
       margin-top: 8px;
@@ -63,6 +65,7 @@
       background: var(--bg);
       color: var(--text);
       box-sizing: border-box;
+      font-family: inherit;
     }
 
     button.form-btn {
@@ -242,9 +245,34 @@
       padding: 0 8px 0 0;
     }
 
+    /* Вкладки в деталях матча (Обзор / Составы) */
+    .modal-nav-tabs {
+      display: flex;
+      background-color: var(--card-bg);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .modal-tab-btn {
+      flex: 1;
+      padding: 12px 0;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--hint);
+      border: none;
+      background: none;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+    }
+
+    .modal-tab-btn.active {
+      color: #ffffff;
+      border-bottom: 2px solid var(--accent);
+    }
+
     .hero-scoreboard {
       background: linear-gradient(180deg, var(--card-bg) 0%, var(--bg) 100%);
-      padding: 20px 16px;
+      padding: 20px 16px 12px 16px;
       text-align: center;
     }
 
@@ -293,7 +321,6 @@
       letter-spacing: 2px;
     }
 
-    /* АВТОРЫ ГОЛОВ ПОД СЧЕТОМ */
     .hero-goals-summary {
       display: flex;
       justify-content: center;
@@ -319,7 +346,7 @@
 
     .modal-content-area { padding: 16px; }
 
-    /* ХРОНОЛОГИЯ ГОЛОВ В СТИЛЕ ФОТО 2 */
+    /* ХРОНОЛОГИЯ ГОЛОВ */
     .timeline-container {
       display: flex;
       flex-direction: column;
@@ -352,6 +379,249 @@
 
     .goal-ball { font-size: 15px; }
     .player-title { color: var(--text); }
+
+    /* ------------------------------------ */
+    /* ВКЛАДКА «СОСТАВЫ» (ФОТО 1, 2, 3) */
+    /* ------------------------------------ */
+    .lineup-team-toggle {
+      display: flex;
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 4px;
+      margin-bottom: 14px;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .lineup-toggle-btn {
+      flex: 1;
+      padding: 8px 12px;
+      border: none;
+      background: transparent;
+      color: var(--hint);
+      font-weight: 700;
+      font-size: 13px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .lineup-toggle-btn.active {
+      background: #2a2a2e;
+      color: var(--text);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+
+    /* ФУТБОЛЬНОЕ ПОЛЕ (ФОТО 1) */
+    .pitch-card {
+      background-color: var(--pitch-bg);
+      border-radius: 14px;
+      padding: 16px 10px;
+      border: 1px solid rgba(255,255,255,0.1);
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+
+    /* Разметка поля */
+    .pitch-lines {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      pointer-events: none;
+    }
+    .pitch-center-circle {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 90px; height: 90px;
+      border: 1px solid var(--pitch-line);
+      border-radius: 50%;
+    }
+    .pitch-center-line {
+      position: absolute;
+      top: 50%; left: 0; right: 0;
+      border-top: 1px solid var(--pitch-line);
+    }
+    .pitch-box-bottom {
+      position: absolute;
+      bottom: 0; left: 25%; right: 25%; height: 50px;
+      border: 1px solid var(--pitch-line);
+      border-bottom: none;
+    }
+
+    .pitch-header-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .formation-pill {
+      background: rgba(255,255,255,0.1);
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    /* Сетка игроков на поле */
+    .tactical-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .pitch-row {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+    }
+
+    .pitch-player {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 68px;
+      text-align: center;
+    }
+
+    .player-avatar-wrap {
+      position: relative;
+      width: 40px;
+      height: 40px;
+      margin-bottom: 4px;
+    }
+
+    .player-avatar {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: #2a2a2e;
+      border: 2px solid rgba(255,255,255,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 13px;
+      color: #fff;
+    }
+
+    /* Плашка оценки под фото (Фото 1) */
+    .rating-badge {
+      position: absolute;
+      bottom: -4px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 10px;
+      font-weight: 800;
+      padding: 1px 5px;
+      border-radius: 4px;
+      color: #000;
+      line-height: 1.2;
+    }
+
+    .rating-badge.green { background: #22c55e; color: #fff; }
+    .rating-badge.yellow { background: #eab308; color: #000; }
+    .rating-badge.orange { background: #f97316; color: #fff; }
+    .rating-badge.red { background: #ef4444; color: #fff; }
+
+    .player-name-label {
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 70px;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+    }
+
+    /* ТРЕНЕР И ЗАМЕНЫ (ФОТО 2) */
+    .coach-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .list-item-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: #2a2a2e;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+
+    .sub-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .sub-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .sub-item-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .sub-details {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .sub-player-name {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .sub-meta {
+      font-size: 11px;
+      color: var(--hint);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* ТРАВМЫ И ДИСКВАЛИФИКАЦИИ (ФОТО 3) */
+    .absence-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .absence-status {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--danger);
+    }
+
+    .absence-reason {
+      font-size: 11px;
+      color: var(--hint);
+    }
 
     .bottom-nav {
       position: fixed;
@@ -398,8 +668,8 @@
     
     <div class="card">
       <h4 id="form-title">➕ Добавить новый матч</h4>
-      <input type="text" id="team1" placeholder="Команда 1 (например, Барселона)">
-      <input type="text" id="team2" placeholder="Команда 2 (например, Европа)">
+      <input type="text" id="team1" placeholder="Команда 1 (например, Барселона)" oninput="renderGoalEditor()">
+      <input type="text" id="team2" placeholder="Команда 2 (например, Европа)" oninput="renderGoalEditor()">
       <input type="text" id="score" placeholder="Счет (например, 4 - 1)">
       <input type="text" id="match_date" placeholder="Дата/время (например, 24.07.26 • 21:00)">
       
@@ -416,6 +686,13 @@
 
       <input type="text" id="best_player" placeholder="⭐ Лучший игрок (например, А. Янес)">
       
+      <!-- Редактор составов в Админке -->
+      <label style="font-size:13px; font-weight:bold; color:var(--hint); margin-top:12px; display:block;">
+        📋 Составы и Замены (JSON данные):
+      </label>
+      <textarea id="lineup1_data" rows="4" placeholder="Состав Команды 1 (авто-шаблон создается при сохранении если пусто)" style="font-size:11px; font-family:monospace;"></textarea>
+      <textarea id="lineup2_data" rows="4" placeholder="Состав Команды 2 (авто-шаблон создается при сохранении если пусто)" style="font-size:11px; font-family:monospace;"></textarea>
+
       <button class="form-btn" id="save-btn" onclick="saveMatch()">Сохранить матч</button>
       <button class="cancel-btn" id="cancel-btn" style="display:none;" onclick="cancelEdit()">Отмена редактирования</button>
     </div>
@@ -426,7 +703,7 @@
     </div>
   </div>
 
-  <!-- МОДАЛЬНОЕ ОКНО МАТЧА -->
+  <!-- МОДАЛЬНОЕ ОКНО МАТЧА (FLASHSCORE UI) -->
   <div id="match-details-modal" class="match-modal">
     <div class="modal-top-bar">
       <button class="back-btn" onclick="closeMatchModal()">←</button>
@@ -457,18 +734,75 @@
       </div>
     </div>
 
-    <!-- Содержимое матча -->
-    <div class="modal-content-area">
-      <!-- 1. Последовательность голов (Фото 2) -->
+    <!-- Вкладки деталей матча: Обзор | Составы -->
+    <div class="modal-nav-tabs">
+      <button class="modal-tab-btn active" onclick="switchMatchSubTab('overview', this)">Обзор</button>
+      <button class="modal-tab-btn" onclick="switchMatchSubTab('lineups', this)">Составы</button>
+    </div>
+
+    <!-- ВКЛАДКА 1: ОБЗОР -->
+    <div id="subtab-overview" class="modal-content-area">
       <div class="card">
         <h4 style="margin-top:0; margin-bottom: 12px;">⚽ Последовательность голов</h4>
         <div id="m-timeline-container"></div>
       </div>
 
-      <!-- 2. Игрок матча (MVP под последовательностью голов) -->
       <div class="card" id="m-mvp-card">
         <h4 style="margin-top:0; color:var(--gold);">🏅 Игрок матча</h4>
         <div id="m-mvp-name" style="font-size: 16px; font-weight: bold;">Не указан</div>
+      </div>
+    </div>
+
+    <!-- ВКЛАДКА 2: СОСТАВЫ (ФОТО 1, 2, 3) -->
+    <div id="subtab-lineups" class="modal-content-area" style="display: none;">
+      <!-- Переключатель Команда 1 / Команда 2 -->
+      <div class="lineup-team-toggle">
+        <button id="toggle-team1-btn" class="lineup-toggle-btn active" onclick="selectLineupTeam(1)">
+          <span>⚽</span> <span id="btn-t1-name">Команда 1</span>
+        </button>
+        <button id="toggle-team2-btn" class="lineup-toggle-btn" onclick="selectLineupTeam(2)">
+          <span>⚽</span> <span id="btn-t2-name">Команда 2</span>
+        </button>
+      </div>
+
+      <!-- Тактическая схема (Фото 1) -->
+      <div class="pitch-card">
+        <div class="pitch-lines">
+          <div class="pitch-center-circle"></div>
+          <div class="pitch-center-line"></div>
+          <div class="pitch-box-bottom"></div>
+        </div>
+
+        <div class="pitch-header-info">
+          <div style="font-weight:bold; font-size:14px;" id="pitch-team-name">Барселона</div>
+          <div class="formation-pill" id="pitch-formation">4-2-3-1</div>
+        </div>
+
+        <!-- Поле с игроками -->
+        <div class="tactical-grid" id="tactical-grid"></div>
+      </div>
+
+      <!-- Карточка тренера -->
+      <div class="card">
+        <div class="coach-row">
+          <div class="list-item-avatar">👔</div>
+          <div>
+            <div style="font-weight:bold; font-size:14px;" id="coach-name">Ханс-Дитер Флик</div>
+            <div style="font-size:12px; color:var(--hint);">Главный тренер</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Список замен (Фото 2) -->
+      <div class="card">
+        <h4 style="margin-top:0; margin-bottom:10px;">Замены</h4>
+        <div class="sub-list" id="subs-list"></div>
+      </div>
+
+      <!-- Травмы и дисквалификации (Фото 3) -->
+      <div class="card">
+        <h4 style="margin-top:0; margin-bottom:10px;">Травмы и дисквалификации</h4>
+        <div id="absences-list"></div>
       </div>
     </div>
   </div>
@@ -496,7 +830,9 @@
 
     let allMatches = [];
     let editingMatchId = null;
-    let goalItems = []; // Массив для редактирования последовательности голов
+    let goalItems = [];
+    let currentMatchObject = null;
+    let currentLineupTeam = 1;
 
     const userId = tg.initDataUnsafe?.user?.id;
     if (userId === ADMIN_TELEGRAM_ID) {
@@ -511,21 +847,47 @@
     }
 
     // ------------------------------------
-    // ЛОГИКА РЕДАКТОРА ПОСЛЕДОВАТЕЛЬНОСТИ ГОЛОВ
+    // ШАБЛОН СОСТАВА (DEFAULTS)
+    // ------------------------------------
+    function getDefaultLineup(teamName) {
+      return {
+        coach: "Главный тренер",
+        formation: "4-2-3-1",
+        startingXI: [
+          // Нападающие (Ряд 4)
+          [{ num: 9, name: "Р. Левандовски", rating: 7.0 }],
+          // Атакующие полузащитники (Ряд 3)
+          [{ num: 14, name: "М. Рашфорд", rating: 6.2 }, { num: 20, name: "Д. Ольмо", rating: 6.5 }, { num: 7, name: "Ф. Торрес", rating: 6.6 }],
+          // Опорники (Ряд 2)
+          [{ num: 6, name: "П. Гави", rating: 6.6 }, { num: 22, name: "М. Берналь", rating: 6.5 }],
+          // Защитники (Ряд 1)
+          [{ num: 3, name: "А. Бальде", rating: 6.1 }, { num: 18, name: "Ж. Мартин", rating: 7.6 }, { num: 4, name: "Р. Араухо", rating: 8.7 }, { num: 24, name: "Э. Гарсия", rating: 7.3 }],
+          // Вратарь (Ряд 0)
+          [{ num: 25, name: "В. Щенсны", rating: 5.9 }]
+        ],
+        subs: [
+          { num: 42, name: "Хави Эспарт", rating: 5.4, subInfo: "46' Выбыл: Р. Араухо" },
+          { num: 15, name: "Андреас Кристенсен", rating: 6.0, subInfo: "62' Выбыл: Э. Гарсия" },
+          { num: 21, name: "Френки де Йонг", rating: 6.3, subInfo: "62' Выбыл: Д. Ольмо" }
+        ],
+        absences: [
+          { name: "Фермин Лопес", status: "➕ Травмирован", reason: "Перелом плюсн. кости" },
+          { name: "Ламин Ямаль", status: "➕ Травмирован", reason: "Бедро" },
+          { name: "Рафинья", status: "➕ Травмирован", reason: "Физический дискомфорт" }
+        ]
+      };
+    }
+
+    // ------------------------------------
+    // ЛОГИКА РЕДАКТОРА ГОЛОВ В АДМИНКЕ
     // ------------------------------------
     function addGoalToEditor(team) {
-      goalItems.push({
-        id: Date.now() + Math.random(),
-        team: team,
-        player: ''
-      });
+      goalItems.push({ id: Date.now() + Math.random(), team: team, player: '' });
       renderGoalEditor();
     }
 
     function updateGoalPlayer(index, val) {
-      if (goalItems[index]) {
-        goalItems[index].player = val;
-      }
+      if (goalItems[index]) goalItems[index].player = val;
     }
 
     function moveGoal(index, direction) {
@@ -574,9 +936,12 @@
       const match_date = document.getElementById('match_date').value;
       const best_player = document.getElementById('best_player').value;
 
+      let l1Raw = document.getElementById('lineup1_data').value;
+      let l2Raw = document.getElementById('lineup2_data').value;
+
       if (!team1 || !team2) return alert('Заполните названия команд');
 
-      // Формируем строки голов с сохранением порядка (минуты кодируют хронологию)
+      // Формируем порядок голов
       let g1List = [];
       let g2List = [];
       goalItems.forEach((g, idx) => {
@@ -590,7 +955,13 @@
       const goals1 = g1List.join(', ');
       const goals2 = g2List.join(', ');
 
-      const matchData = { team1, team2, score, match_date, goals1, goals2, best_player };
+      if (!l1Raw) l1Raw = JSON.stringify(getDefaultLineup(team1));
+      if (!l2Raw) l2Raw = JSON.stringify(getDefaultLineup(team2));
+
+      const matchData = { 
+        team1, team2, score, match_date, goals1, goals2, best_player,
+        lineup1: l1Raw, lineup2: l2Raw 
+      };
 
       let error = null;
       if (editingMatchId) {
@@ -620,8 +991,9 @@
       document.getElementById('score').value = match.score || '';
       document.getElementById('match_date').value = match.match_date || '';
       document.getElementById('best_player').value = match.best_player || '';
+      document.getElementById('lineup1_data').value = match.lineup1 || JSON.stringify(getDefaultLineup(match.team1), null, 2);
+      document.getElementById('lineup2_data').value = match.lineup2 || JSON.stringify(getDefaultLineup(match.team2), null, 2);
 
-      // Парсим сохраненную последовательность голов
       const parsed = parseGoalsSequence(match.goals1, match.goals2);
       goalItems = parsed.map(g => ({
         id: Math.random(),
@@ -648,6 +1020,8 @@
       document.getElementById('score').value = '';
       document.getElementById('match_date').value = '';
       document.getElementById('best_player').value = '';
+      document.getElementById('lineup1_data').value = '';
+      document.getElementById('lineup2_data').value = '';
 
       renderGoalEditor();
 
@@ -669,7 +1043,110 @@
     }
 
     // ------------------------------------
-    // ОБРАБОТКА И ОТОБРАЖЕНИЕ ГОЛОВ
+    // РАБОТА С ВНУТРЕННИМИ ВКЛАДКАМИ МАТЧА
+    // ------------------------------------
+    function switchMatchSubTab(tabName, btn) {
+      document.querySelectorAll('.modal-nav-tabs .modal-tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      if (tabName === 'overview') {
+        document.getElementById('subtab-overview').style.display = 'block';
+        document.getElementById('subtab-lineups').style.display = 'none';
+      } else {
+        document.getElementById('subtab-overview').style.display = 'none';
+        document.getElementById('subtab-lineups').style.display = 'block';
+      }
+    }
+
+    function selectLineupTeam(teamNum) {
+      currentLineupTeam = teamNum;
+      document.getElementById('toggle-team1-btn').classList.toggle('active', teamNum === 1);
+      document.getElementById('toggle-team2-btn').classList.toggle('active', teamNum === 2);
+      renderLineupView();
+    }
+
+    function getRatingClass(rating) {
+      const r = parseFloat(rating);
+      if (isNaN(r)) return 'yellow';
+      if (r >= 7.5) return 'green';
+      if (r >= 6.5) return 'yellow';
+      if (r >= 6.0) return 'orange';
+      return 'red';
+    }
+
+    // ОТОБРАЖЕНИЕ ВКЛАДКИ «СОСТАВЫ»
+    function renderLineupView() {
+      if (!currentMatchObject) return;
+
+      const teamName = currentLineupTeam === 1 ? currentMatchObject.team1 : currentMatchObject.team2;
+      const rawData = currentLineupTeam === 1 ? currentMatchObject.lineup1 : currentMatchObject.lineup2;
+
+      let lineup = null;
+      try {
+        if (rawData) lineup = JSON.parse(rawData);
+      } catch(e) { }
+
+      if (!lineup) lineup = getDefaultLineup(teamName);
+
+      document.getElementById('pitch-team-name').innerText = teamName;
+      document.getElementById('pitch-formation').innerText = lineup.formation || '4-2-3-1';
+      document.getElementById('coach-name').innerText = lineup.coach || 'Главный тренер';
+
+      // 1. Поле и игроки
+      const pitchGrid = document.getElementById('tactical-grid');
+      pitchGrid.innerHTML = lineup.startingXI.map(row => `
+        <div class="pitch-row">
+          ${row.map(p => `
+            <div class="pitch-player">
+              <div class="player-avatar-wrap">
+                <div class="player-avatar">${p.num}</div>
+                <div class="rating-badge ${getRatingClass(p.rating)}">${p.rating}</div>
+              </div>
+              <div class="player-name-label">${p.name}</div>
+            </div>
+          `).map(item => item).join('')}
+        </div>
+      `).join('');
+
+      // 2. Замены
+      const subsContainer = document.getElementById('subs-list');
+      if (!lineup.subs || lineup.subs.length === 0) {
+        subsContainer.innerHTML = '<div style="color:var(--hint); font-size:12px;">Замен не было</div>';
+      } else {
+        subsContainer.innerHTML = lineup.subs.map(s => `
+          <div class="sub-item">
+            <div class="sub-item-left">
+              <div class="list-item-avatar">${s.num}</div>
+              <div class="sub-details">
+                <div class="sub-player-name">${s.name}</div>
+                <div class="sub-meta">🟢 ${s.subInfo}</div>
+              </div>
+            </div>
+            <div class="rating-badge ${getRatingClass(s.rating)}" style="position:static; transform:none;">${s.rating}</div>
+          </div>
+        `).join('');
+      }
+
+      // 3. Травмы и дисквалификации
+      const absContainer = document.getElementById('absences-list');
+      if (!lineup.absences || lineup.absences.length === 0) {
+        absContainer.innerHTML = '<div style="color:var(--hint); font-size:12px;">Пропускающих матч нет</div>';
+      } else {
+        absContainer.innerHTML = lineup.absences.map(a => `
+          <div class="absence-item">
+            <div class="list-item-avatar" style="color:var(--danger);">🩹</div>
+            <div>
+              <div style="font-weight:bold; font-size:13px;">${a.name}</div>
+              <div class="absence-status">${a.status}</div>
+              <div class="absence-reason">${a.reason}</div>
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+
+    // ------------------------------------
+    // ОБРАБОТКА МАТЧА И ДЕТАЛЕЙ
     // ------------------------------------
     function parseGoalsSequence(goals1Str, goals2Str) {
       const goals = [];
@@ -680,11 +1157,7 @@
         items.forEach((item, idx) => {
           const matchMin = item.match(/(\d+)['’]?/);
           const min = matchMin ? parseInt(matchMin[1], 10) : (idx + 1) * 10;
-          goals.push({
-            team: teamNum,
-            player: item,
-            minute: min
-          });
+          goals.push({ team: teamNum, player: item, minute: min });
         });
       };
 
@@ -708,12 +1181,17 @@
       const match = allMatches.find(m => String(m.id) === String(id));
       if (!match) return;
 
+      currentMatchObject = match;
+
       document.getElementById('m-team1').innerText = match.team1 || 'Команда 1';
       document.getElementById('m-team2').innerText = match.team2 || 'Команда 2';
       document.getElementById('m-score').innerText = match.score || 'vs';
       document.getElementById('m-date').innerText = match.match_date ? '📅 ' + match.match_date : 'Завершен';
 
-      // 1. Отображение авторов под счетом (Фото 1)
+      document.getElementById('btn-t1-name').innerText = match.team1 || 'Ком. 1';
+      document.getElementById('btn-t2-name').innerText = match.team2 || 'Ком. 2';
+
+      // Авторы голов под счетом (Фото 1)
       const heroGoalsContainer = document.getElementById('m-hero-goals');
       const heroG1 = document.getElementById('m-hero-goals1');
       const heroG2 = document.getElementById('m-hero-goals2');
@@ -729,7 +1207,7 @@
         heroGoalsContainer.style.display = 'none';
       }
 
-      // 2. Последовательность голов без минут (Фото 2)
+      // Последовательность голов (Обзор)
       const timelineContainer = document.getElementById('m-timeline-container');
       const parsedGoals = parseGoalsSequence(match.goals1, match.goals2);
 
@@ -764,6 +1242,11 @@
       }
 
       document.getElementById('m-mvp-name').innerText = match.best_player ? match.best_player : 'Не указан';
+
+      // Сброс и рендер состава
+      selectLineupTeam(1);
+      switchMatchSubTab('overview', document.querySelector('.modal-nav-tabs .modal-tab-btn'));
+
       document.getElementById('match-details-modal').classList.add('active');
     }
 
