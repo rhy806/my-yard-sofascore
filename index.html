@@ -313,7 +313,6 @@
       overflow: hidden;
       border: 1px solid rgba(255,255,255,0.15);
       margin: 12px 0;
-      /* touch-action: none; удалено чтобы работал свайп по странице */
     }
     .pitch-line-center { position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: var(--pitch-line); }
     .pitch-circle-center {
@@ -337,7 +336,7 @@
       align-items: center;
       cursor: grab;
       z-index: 10;
-      touch-action: none; /* Оставляем только на игроках для перетаскивания */
+      touch-action: none;
     }
     .pitch-player-abs:active { cursor: grabbing; z-index: 20; }
     .player-avatar-circle {
@@ -1611,7 +1610,6 @@
       const activeLineup = currentAdminTeam === 1 ? adminLineup1 : adminLineup2;
 
       container.innerHTML = activeLineup.startingXI.map(p => {
-        // Подтягиваем фото игрока, если оно есть в общем составе
         const squadPlayer = allSquad.find(sq => sq.name === p.name);
         const avatarStyle = (squadPlayer && squadPlayer.photo_url) ? `background-image: url('${squadPlayer.photo_url}'); color: transparent;` : '';
 
@@ -1712,7 +1710,6 @@
 
       allMatches = matches;
 
-      // Предстоящие матчи
       const upcomingMatch = matches.find(m => m.status === 'upcoming');
       if (upcomingMatch) {
         widgetContainer.innerHTML = `
@@ -1737,7 +1734,6 @@
         widgetContainer.innerHTML = '<div class="empty-card-placeholder">Предстоящих матчей нет</div>';
       }
 
-      // Текущая форма
       const finishedMatches = matches.filter(m => m.status !== 'upcoming').reverse();
 
       if (finishedMatches.length === 0) {
@@ -1773,7 +1769,6 @@
         formWidgetContainer.innerHTML = formHTML;
       }
 
-      // Список сыгранных матчей
       const playedMatches = matches.filter(m => m.status !== 'upcoming');
       if (playedMatches.length === 0) {
         container.innerHTML = '<p style="color:var(--hint);">Сыгранных матчей пока нет.</p>';
@@ -1804,7 +1799,6 @@
         }).join('');
       }
 
-      // Список в админке
       adminContainer.innerHTML = matches.map(m => `
         <div class="admin-match-item">
           <div>
@@ -2026,7 +2020,6 @@
         });
       }
 
-      // Отрисовка замен
       const subsContainer = document.getElementById('subs-list');
       const subsRaw = (lineup.subsText || '').trim();
       if (!subsRaw) {
@@ -2041,7 +2034,6 @@
         `).join('');
       }
 
-      // Отрисовка отсутствующих
       const absContainer = document.getElementById('absences-list');
       const absRaw = (lineup.absencesText || '').trim();
       if (!absRaw) {
@@ -2057,7 +2049,6 @@
       }
     }
 
-    // РАЗБОР ГОЛОВ И ХРОНОЛОГИИ
     function parseGoalsSequence(goals1Str, goals2Str) {
       const goals = [];
       const cleanName = (str) => str.replace(/\d+['’]?/g, '').replace(/^\d+[\.\)]\s*/, '').trim();
@@ -2177,8 +2168,6 @@
     // ------------------------------------
     // СТРАНИЦА ПРОФИЛЯ ИГРОКА И РЕДАКТИРОВАНИЕ
     // ------------------------------------
-    
-    // Переключение вкладок в модалке игрока
     function switchProfileTab(tabId, btnElement) {
       document.querySelectorAll('#player-profile-modal .top-tab-btn').forEach(b => b.classList.remove('active'));
       if (btnElement) {
@@ -2205,7 +2194,6 @@
       const posCode = foundPlayer?.position || 'FW';
       const posConf = POSITIONS_CONFIG[posCode] || { code: posCode };
 
-      // Показ кнопки редактирования только админу
       if (userId === ADMIN_TELEGRAM_ID && foundPlayer) {
         document.getElementById('pp-edit-btn').style.display = 'inline-block';
         document.getElementById('pp-edit-career-btn').style.display = 'block';
@@ -2219,7 +2207,6 @@
       document.getElementById('pp-club-title').innerText = teamName;
       document.getElementById('pp-followers').innerText = (Math.floor(Math.random() * 80) + 20) + 'k';
 
-      // Фото в профиле
       const avatarEl = document.getElementById('pp-avatar');
       if (foundPlayer && foundPlayer.photo_url) {
         avatarEl.style.backgroundImage = `url('${foundPlayer.photo_url}')`;
@@ -2231,7 +2218,6 @@
         avatarEl.innerText = number ? number : '⚽';
       }
 
-      // Дополнительные данные профиля
       document.getElementById('pp-nationality').innerHTML = foundPlayer?.nationality || '🇷🇺 RUS';
       document.getElementById('pp-age').innerText = foundPlayer?.age || '20 ЛЕТ';
       document.getElementById('pp-height').innerText = foundPlayer?.height || '180 cm';
@@ -2239,7 +2225,6 @@
       document.getElementById('pp-position').innerText = posConf.code;
       document.getElementById('pp-number').innerText = number;
 
-      // === ПОДГРУЗКА МАТЧЕЙ ДЛЯ ВКЛАДКИ "МАТЧИ" ===
       const playerMatches = allMatches.filter(m => {
         if(m.status === 'upcoming') return false;
         let played = false;
@@ -2268,11 +2253,9 @@
         `).join('');
       }
 
-      // === ПОДГРУЗКА ДАННЫХ ДЛЯ ВКЛАДКИ "КАРЬЕРА" ===
       let cStats = { mp: 0, min: '-', gls: 0, ast: '-', asr: '-' };
       let isManual = false;
 
-      // Высчитываем АВТО-статистику
       let autoMp = playerMatches.length;
       let autoGls = 0;
       playerMatches.forEach(m => {
@@ -2287,7 +2270,6 @@
           autoGls += parseG(m.goals1) + parseG(m.goals2);
       });
 
-      // Парсим ручные данные, если они есть
       if (foundPlayer && foundPlayer.career_stats) {
           try {
               const parsed = JSON.parse(foundPlayer.career_stats);
@@ -2315,7 +2297,7 @@
           </tr>
       `;
 
-      switchProfileTab('details'); // Сброс на Детали при открытии
+      switchProfileTab('details');
 
       document.getElementById('player-profile-modal').classList.add('active');
 
@@ -2388,7 +2370,6 @@
       }
     }
 
-    // Редактирование Карьеры
     function openCareerEditModal() {
       if(!currentPlayerViewing) return;
       let mp = '', min = '', gls = '', ast = '', asr = '';
@@ -2443,8 +2424,8 @@
       } else {
           closeCareerEditModal();
           await loadSquad();
-          openPlayerProfileByName(currentPlayerViewing.name); // Перерисовываем модалку профиля
-          switchProfileTab('career'); // Возвращаемся сразу на вкладку карьеры
+          openPlayerProfileByName(currentPlayerViewing.name);
+          switchProfileTab('career');
       }
     }
 
