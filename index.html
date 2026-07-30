@@ -45,6 +45,14 @@
       margin-bottom: 12px;
     }
 
+    .clickable-card {
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    .clickable-card:active {
+      opacity: 0.8;
+    }
+
     input, select, button.form-btn {
       width: 100%;
       padding: 12px;
@@ -118,7 +126,6 @@
       font-size: 15px;
     }
 
-    /* Стили для авторов голов */
     .goals-row {
       display: flex;
       justify-content: space-between;
@@ -138,7 +145,6 @@
       text-align: right;
     }
 
-    /* Стили для лучшего игрока */
     .mvp-row {
       margin-top: 10px;
       font-size: 12px;
@@ -158,6 +164,121 @@
       border-bottom: 1px solid rgba(255,255,255,0.05);
     }
 
+    /* ------------------------------------ */
+    /* СТИЛИ ДЛЯ ОКНА ДЕТАЛЕЙ МАТЧА (FLASHSCORE STYLE) */
+    /* ------------------------------------ */
+    .match-modal {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: var(--bg);
+      z-index: 1000;
+      display: none;
+      overflow-y: auto;
+      padding-bottom: 30px;
+    }
+
+    .match-modal.active {
+      display: block;
+    }
+
+    .modal-top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background-color: var(--card-bg);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .back-btn {
+      background: none;
+      border: none;
+      color: var(--text);
+      font-size: 22px;
+      cursor: pointer;
+      padding: 0 8px 0 0;
+    }
+
+    .hero-scoreboard {
+      background: linear-gradient(180deg, var(--card-bg) 0%, var(--bg) 100%);
+      padding: 24px 16px;
+      text-align: center;
+    }
+
+    .hero-date {
+      font-size: 12px;
+      color: var(--hint);
+      margin-bottom: 16px;
+    }
+
+    .hero-teams {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+    }
+
+    .hero-team {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .hero-team-icon {
+      width: 48px;
+      height: 48px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+
+    .hero-team-name {
+      font-weight: bold;
+      font-size: 15px;
+      text-align: center;
+    }
+
+    .hero-score-box {
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--accent);
+      padding: 0 12px;
+      letter-spacing: 2px;
+    }
+
+    .modal-tabs {
+      display: flex;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      margin-bottom: 16px;
+      background: var(--card-bg);
+    }
+
+    .modal-tab-btn {
+      flex: 1;
+      padding: 12px;
+      text-align: center;
+      background: none;
+      border: none;
+      color: var(--hint);
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+    }
+
+    .modal-tab-btn.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    .modal-content-area {
+      padding: 0 16px;
+    }
+
     .bottom-nav {
       position: fixed;
       bottom: 0; left: 0; right: 0;
@@ -167,6 +288,7 @@
       justify-content: space-around;
       align-items: center;
       border-top: 1px solid rgba(255,255,255,0.1);
+      z-index: 999;
     }
 
     .nav-item {
@@ -192,6 +314,7 @@
   <!-- ВКЛАДКА: МАТЧИ -->
   <div id="matches" class="tab-content active">
     <h3>Список матчей</h3>
+    <p style="font-size:12px; color:var(--hint); margin-top:-8px;">💡 Нажмите на матч для подробностей</p>
     <div id="matches-list">Загрузка матчей...</div>
   </div>
 
@@ -221,6 +344,61 @@
     </div>
   </div>
 
+  <!-- ---------------------------------------------------- -->
+  <!-- МОДАЛЬНОЕ ОКНО ПРОСМОТРА ДЕТАЛЕЙ МАТЧА (FLASHSCORE) -->
+  <!-- ---------------------------------------------------- -->
+  <div id="match-details-modal" class="match-modal">
+    <div class="modal-top-bar">
+      <button class="back-btn" onclick="closeMatchModal()">←</button>
+      <span style="font-weight: bold; font-size: 15px;">Обзор матча</span>
+      <div style="width: 24px;"></div> <!-- Пустой блок для центрирования -->
+    </div>
+
+    <!-- Шапка счета -->
+    <div class="hero-scoreboard">
+      <div class="hero-date" id="m-date">Завершен</div>
+      <div class="hero-teams">
+        <div class="hero-team">
+          <div class="hero-team-icon">⚽</div>
+          <div class="hero-team-name" id="m-team1">Команда 1</div>
+        </div>
+        <div class="hero-score-box" id="m-score">0 - 0</div>
+        <div class="hero-team">
+          <div class="hero-team-icon">⚽</div>
+          <div class="hero-team-name" id="m-team2">Команда 2</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Переключатель вкладок внутри матча -->
+    <div class="modal-tabs">
+      <button class="modal-tab-btn active" onclick="switchModalTab('m-tab-details', this)">Детали</button>
+      <button class="modal-tab-btn" onclick="switchModalTab('m-tab-goals', this)">Голы и MVP</button>
+    </div>
+
+    <!-- Содержимое вкладок -->
+    <div class="modal-content-area">
+      <!-- Вкладка 1: Детали -->
+      <div id="m-tab-details">
+        <div class="card">
+          <h4 style="margin-top:0;">⚽ Забитые мячи</h4>
+          <div class="goals-row" style="border:none; padding-top:0;">
+            <div class="goals-col" id="m-goals1-list">—</div>
+            <div class="goals-col right" id="m-goals2-list">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Вкладка 2: Голы и MVP -->
+      <div id="m-tab-goals" style="display: none;">
+        <div class="card" id="m-mvp-card">
+          <h4 style="margin-top:0; color:var(--gold);">🏅 Игрок матча</h4>
+          <div id="m-mvp-name" style="font-size: 16px; font-weight: bold;">Не указан</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- НИЖНЯЯ НАВИГАЦИЯ -->
   <nav class="bottom-nav">
     <button class="nav-item active" onclick="switchTab('matches', this)">
@@ -245,11 +423,10 @@
     tg.ready();
     tg.expand();
 
-    // Переменные состояния
     let allMatches = [];
     let editingMatchId = null;
 
-    // Проверяем, админ ли открыл приложение
+    // Проверяем админа
     const userId = tg.initDataUnsafe?.user?.id;
     if (userId === ADMIN_TELEGRAM_ID) {
       document.getElementById('admin-nav-btn').style.display = 'flex';
@@ -262,7 +439,7 @@
       btn.classList.add('active');
     }
 
-    // Сохранение (создание или обновление) матча
+    // Сохранение матча
     async function saveMatch() {
       const team1 = document.getElementById('team1').value;
       const team2 = document.getElementById('team2').value;
@@ -279,17 +456,10 @@
       let error = null;
 
       if (editingMatchId) {
-        // Режим обновления существующего матча
-        const response = await _supabase
-          .from('matches')
-          .update(matchData)
-          .eq('id', editingMatchId);
+        const response = await _supabase.from('matches').update(matchData).eq('id', editingMatchId);
         error = response.error;
       } else {
-        // Режим создания нового матча
-        const response = await _supabase
-          .from('matches')
-          .insert([matchData]);
+        const response = await _supabase.from('matches').insert([matchData]);
         error = response.error;
       }
 
@@ -302,13 +472,10 @@
       }
     }
 
-    // Запуск режима редактирования
+    // Редактирование
     function editMatch(id) {
       const match = allMatches.find(m => String(m.id) === String(id));
-      if (!match) {
-        alert('Не удалось найти данные матча');
-        return;
-      }
+      if (!match) return alert('Не удалось найти данные');
 
       editingMatchId = match.id;
       document.getElementById('team1').value = match.team1 || '';
@@ -323,17 +490,12 @@
       document.getElementById('save-btn').innerText = 'Сохранить изменения';
       document.getElementById('cancel-btn').style.display = 'block';
 
-      // Автоматическая прокрутка и фокус на верхнем поле ввода
       window.scrollTo({ top: 0, behavior: 'smooth' });
       document.getElementById('team1').focus();
     }
 
-    // Отмена редактирования
-    function cancelEdit() {
-      resetForm();
-    }
+    function cancelEdit() { resetForm(); }
 
-    // Сброс формы
     function resetForm() {
       editingMatchId = null;
       document.getElementById('team1').value = '';
@@ -349,14 +511,10 @@
       document.getElementById('cancel-btn').style.display = 'none';
     }
 
-    // Удаление матча из базы
     async function deleteMatch(id) {
       if (!confirm('Вы уверены, что хотите удалить этот матч?')) return;
 
-      const { error } = await _supabase
-        .from('matches')
-        .delete()
-        .eq('id', id);
+      const { error } = await _supabase.from('matches').delete().eq('id', id);
 
       if (error) {
         alert('Ошибка при удалении: ' + error.message);
@@ -365,6 +523,40 @@
         if (editingMatchId === id) resetForm();
         loadMatches();
       }
+    }
+
+    // ------------------------------------
+    // ФУНКЦИИ МОДАЛЬНОГО ОКНА ДЕТАЛЕЙ МАТЧА
+    // ------------------------------------
+    function openMatchDetails(id) {
+      const match = allMatches.find(m => String(m.id) === String(id));
+      if (!match) return;
+
+      document.getElementById('m-team1').innerText = match.team1 || 'Команда 1';
+      document.getElementById('m-team2').innerText = match.team2 || 'Команда 2';
+      document.getElementById('m-score').innerText = match.score || 'vs';
+      document.getElementById('m-date').innerText = match.match_date ? '📅 ' + match.match_date : 'Завершен';
+
+      document.getElementById('m-goals1-list').innerHTML = match.goals1 ? '⚽ ' + match.goals1 : '—';
+      document.getElementById('m-goals2-list').innerHTML = match.goals2 ? '⚽ ' + match.goals2 : '—';
+
+      document.getElementById('m-mvp-name').innerText = match.best_player ? match.best_player : 'Не указан';
+
+      document.getElementById('match-details-modal').classList.add('active');
+    }
+
+    function closeMatchModal() {
+      document.getElementById('match-details-modal').classList.remove('active');
+    }
+
+    function switchModalTab(tabId, btn) {
+      document.getElementById('m-tab-details').style.display = 'none';
+      document.getElementById('m-tab-goals').style.display = 'none';
+      
+      document.querySelectorAll('.modal-tab-btn').forEach(b => b.classList.remove('active'));
+      
+      document.getElementById(tabId).style.display = 'block';
+      btn.classList.add('active');
     }
 
     // Загрузка матчей
@@ -386,11 +578,11 @@
 
       allMatches = matches;
 
-      // Список для пользователей
+      // Список для пользователей (при клике открывает экран матча)
       container.innerHTML = matches.map(m => {
         const hasGoals = m.goals1 || m.goals2;
         return `
-          <div class="card">
+          <div class="card clickable-card" onclick="openMatchDetails('${m.id}')">
             ${m.match_date ? `<div class="match-header">📅 ${m.match_date}</div>` : ''}
             <div class="match-row">
               <span style="width:38%; text-align:left;">${m.team1}</span>
