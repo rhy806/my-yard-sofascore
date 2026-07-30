@@ -1521,52 +1521,142 @@
       renderLineupView();
     }
 
-    function renderLineupView() {
-      if (!currentMatchObject) return;
+ // Переменная для хранения таймера зажатия
+let longPressTimer = null;
 
-      const teamName = currentLineupTeam === 1 ? currentMatchObject.team1 : currentMatchObject.team2;
-      const rawData = currentLineupTeam === 1 ? currentMatchObject.lineup1 : currentMatchObject.lineup2;
+function renderLineupView() {
+  if (!currentMatchObject) return;
 
-      let lineup = null;
-      try { if (rawData) lineup = JSON.parse(rawData); } catch(e) { }
-      if (!lineup) lineup = getDefaultLineup(teamName);
+  const teamName = currentLineupTeam === 1 ? currentMatchObject.team1 : currentMatchObject.team2;
+  const rawData = currentLineupTeam === 1 ? currentMatchObject.lineup1 : currentMatchObject.lineup2;
 
-      const pitchContainer = document.getElementById('viewer-pitch-players');
-      pitchContainer.innerHTML = lineup.startingXI.map(p => `
-        <div class="pitch-player-abs" style="left:${p.x}%; top:${p.y}%;">
-          <div class="player-avatar-circle ${p.isGk ? 'gk' : ''}">${p.num}</div>
-          <div class="player-name-label">${p.name}</div>
+  let lineup = null;
+  try { if (rawData) lineup = JSON.parse(rawData); } catch(e) { }
+  if (!lineup) lineup = getDefaultLineup(teamName);
+
+  const pitchContainer = document.getElementById('viewer-pitch-players');
+  
+  // 1. Отрисовываем игроков на поле с сохранением индекса
+  pitchContainer.innerHTML = lineup.startingXI.map((p, index) => `
+    <div class="pitch-player-abs" 
+         data-index="${index}" 
+         style="left:${p.x}%; top:${p.y}%;">
+      <div class="player-avatar-circle ${p.isGk ? 'gk' : ''}">${p.num || '?'}</div>
+      <div class="player-name-label">${p.name || 'Пусто'}</div>
+    </div>
+  `).join('');
+
+  // 2. Навешиваем долгое зажатие (только если текущий пользователь — админ)
+  if (typeof currentUserRole !== 'undefined' && currentUserRole === 'admin') { 
+    document.querySelectorAll('.pitch-player-abs').forEach(playerEl => {
+      
+      const startPress = (e) => {
+        // Таймер на 2 секунды (2000 мс)
+        longPressTimer = setTimeout(() => {
+          const playerIndex = playerEl.getAttribute('data-index');
+          openPlayerSelectMenu(playerIndex, lineup);
+        }, 2000);
+      };
+
+      const cancelPress = () => {
+        if (longPressTimer) {
+          clearTimeout(longPressTimer);
+          longPressTimer = null;
+        }
+      };
+
+      playerEl.addEventListener('pointerdown', startPress);
+      playerEl.addEventListener('pointerup', cancelPress);
+      playerEl.addEventListener('pointerleave', cancelPress);
+      playerEl.addEventListener('touchmove', cancelPress);
+    });
+  }
+
+  // Отрисовка замен
+  const subsContainer = document.getElementById('subs-list');
+  const subsRaw = (lineup.subsText || '').trim();
+  if (!subsRaw) {
+    subsContainer.innerHTML = '<div style="color:var(--hint); font-size:13px; font-style:italic;">Замены не проводились</div>';
+  } else {
+    const subsArray = subsRaw.split(/,|\n/).map(s => s.trim()).filter(Boolean);
+    subsContainer.innerHTML = subsArray.map(s => `
+      <div class="sub-item">
+        <span style="font-size:15px;">🟢</span>
+        <span style="font-weight:600;">${s}</span>
+      </div>
+    `).join('');
+  }
+
+  // Отрисовка отсутствующих
+  const absContainer = document.getElementById('absences-list');
+  const absRaw = (lineup.absencesText || '').trim();
+  if (!absRaw) {
+    absContainer.innerHTML = '<div style="color:var(--hint); font-size:13px; font-style:italic;">Пропускающих матч нет</div>';
+  } else {
+    const absArray = absRaw.split(/,|\n/).map(s => s.trim()).filter(Boolean);
+    absContainer.innerHTML = absArray.map(a => `
+      <div class="absence-item">
+        <span style="font-size:15px;">🩹</span>
+        <span style="font-weight:600; color:var(--danger);">${a}</span>
+      </div>
+    `).join('');
+  }
+}
+
+// ------------------------------------
+// Вспомогательные функции выбора игрока
+// ------------------------------------
+function openPlayerSelectMenu(playerIndex, lineup) {
+  const playersList = window.allPlayersList || [
+    { name: 'Игорь Акинфеев', num: 35 },
+    { name: 'Георгий Джикия', num: 14 },
+    { name: 'Александр Головин', num: 17 },
+    { name: 'Артем Дзюба', num: 22 }
+  ];
+
+  const modalHtml = `
+    <div id="player-select-modal" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center; z-index:9999;">
+      <div style="background:#fff; border-radius:12px; padding:16px; width:90%; max-width:320px; color:#000;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <h4 style="margin:0;">Выберите игрока</h4>
+          <button onclick="document.getElementById('player-select-modal').remove()" style="border:none; background:none; font-size:18px; cursor:pointer;">✕</button>
         </div>
-      `).join('');
+        <div style="max-height:200px; overflow-y:auto; border:1px solid #ccc; border-radius:8px;">
+          ${playersList.map(p => `
+            <div class="select-player-row" style="padding:8px 12px; border-bottom:1px solid #eee; cursor:pointer;" onclick="assignPlayerToSlot(${playerIndex}, '${p.name}', ${p.num})">
+              <b>#${p.num}</b> ${p.name}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  `;
 
-      const subsContainer = document.getElementById('subs-list');
-      const subsRaw = (lineup.subsText || '').trim();
-      if (!subsRaw) {
-        subsContainer.innerHTML = '<div style="color:var(--hint); font-size:13px; font-style:italic;">Замены не проводились</div>';
-      } else {
-        const subsArray = subsRaw.split(/,|\n/).map(s => s.trim()).filter(Boolean);
-        subsContainer.innerHTML = subsArray.map(s => `
-          <div class="sub-item">
-            <span style="font-size:15px;">🟢</span>
-            <span style="font-weight:600;">${s}</span>
-          </div>
-        `).join('');
-      }
+  document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
 
-      const absContainer = document.getElementById('absences-list');
-      const absRaw = (lineup.absencesText || '').trim();
-      if (!absRaw) {
-        absContainer.innerHTML = '<div style="color:var(--hint); font-size:13px; font-style:italic;">Пропускающих матч нет</div>';
-      } else {
-        const absArray = absRaw.split(/,|\n/).map(s => s.trim()).filter(Boolean);
-        absContainer.innerHTML = absArray.map(a => `
-          <div class="absence-item">
-            <span style="font-size:15px;">🩹</span>
-            <span style="font-weight:600; color:var(--danger);">${a}</span>
-          </div>
-        `).join('');
-      }
-    }
+function assignPlayerToSlot(playerIndex, name, num) {
+  const teamName = currentLineupTeam === 1 ? currentMatchObject.team1 : currentMatchObject.team2;
+  let rawData = currentLineupTeam === 1 ? currentMatchObject.lineup1 : currentMatchObject.lineup2;
+  
+  let lineup = null;
+  try { if (rawData) lineup = JSON.parse(rawData); } catch(e) { }
+  if (!lineup) lineup = getDefaultLineup(teamName);
+
+  lineup.startingXI[playerIndex].name = name;
+  lineup.startingXI[playerIndex].num = num;
+
+  if (currentLineupTeam === 1) {
+    currentMatchObject.lineup1 = JSON.stringify(lineup);
+  } else {
+    currentMatchObject.lineup2 = JSON.stringify(lineup);
+  }
+
+  const modal = document.getElementById('player-select-modal');
+  if (modal) modal.remove();
+  
+  renderLineupView();
+}
 
     // РАЗБОР ГОЛОВ И ХРОНОЛОГИИ (БЕЗ МИНУТ)
     function parseGoalsSequence(goals1Str, goals2Str) {
