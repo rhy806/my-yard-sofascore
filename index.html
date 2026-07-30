@@ -5,13 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Дворовый Flashscore</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- Подключаем клиент Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
       --bg: var(--tg-theme-bg-color, #121212);
       --card-bg: var(--tg-theme-secondary-bg-color, #1e1e1e);
       --text: var(--tg-theme-text-color, #ffffff);
       --hint: var(--tg-theme-hint-color, #a1a1aa);
-      --accent: #22c55e; /* Спортивный зеленый цвет */
+      --accent: #22c55e;
     }
 
     body {
@@ -19,7 +21,7 @@
       background-color: var(--bg);
       color: var(--text);
       margin: 0;
-      padding: 0 0 70px 0; /* Отступ снизу под навигацию */
+      padding: 0 0 70px 0;
     }
 
     header {
@@ -30,16 +32,9 @@
       border-bottom: 1px solid rgba(255,255,255,0.1);
     }
 
-    .tab-content {
-      display: none;
-      padding: 16px;
-    }
+    .tab-content { display: none; padding: 16px; }
+    .tab-content.active { display: block; }
 
-    .tab-content.active {
-      display: block;
-    }
-
-    /* Карточки матчей */
     .card {
       background-color: var(--card-bg);
       border-radius: 12px;
@@ -47,36 +42,30 @@
       margin-bottom: 12px;
     }
 
-    .match-header {
-      display: flex;
-      justify-content: space-between;
-      font-size: 12px;
-      color: var(--hint);
-      margin-bottom: 8px;
+    /* Стили для формы админки */
+    input, select, button.form-btn {
+      width: 100%;
+      padding: 12px;
+      margin-top: 8px;
+      margin-bottom: 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: var(--bg);
+      color: var(--text);
+      box-sizing: border-box;
     }
 
-    .score-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 20px;
+    button.form-btn {
+      background: var(--accent);
+      color: white;
       font-weight: bold;
+      border: none;
+      cursor: pointer;
     }
 
-    /* Список игроков */
-    .player-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 12px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-    }
-
-    /* Нижнее меню */
     .bottom-nav {
       position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
+      bottom: 0; left: 0; right: 0;
       height: 60px;
       background-color: var(--card-bg);
       display: flex;
@@ -91,122 +80,122 @@
       align-items: center;
       font-size: 11px;
       color: var(--hint);
-      cursor: pointer;
       border: none;
       background: none;
     }
 
-    .nav-item.active {
-      color: var(--accent);
-    }
-
-    .nav-item span {
-      font-size: 20px;
-    }
+    .nav-item.active { color: var(--accent); }
+    .nav-item span { font-size: 20px; }
+    
+    /* Скрываем админку по умолчанию */
+    #admin-nav-btn { display: none; }
   </style>
 </head>
 <body>
 
-  <header id="app-header">⚽️ ФК «Наш Двор»</header>
+  <header>⚽️ ФК «Наш Двор»</header>
 
-  <!-- ВКЛАДКА 1: МАТЧИ -->
+  <!-- ВКЛАДКА: МАТЧИ -->
   <div id="matches" class="tab-content active">
-    <div class="card">
-      <div class="match-header">
-        <span>ТУР 5 • ВЧЕРА</span>
-        <span style="color: var(--accent); font-weight: bold;">ЗАВЕРШЕН</span>
-      </div>
-      <div class="score-row">
-        <span>ФК «Наш Двор»</span>
-        <span style="color: var(--accent);">3 : 1</span>
-        <span>«Соседи»</span>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="match-header">
-        <span>ТУР 6 • ВОСКРЕСЕНЬЕ, 18:00</span>
-        <span>АНОНС</span>
-      </div>
-      <div class="score-row">
-        <span>ФК «Наш Двор»</span>
-        <span>vs</span>
-        <span>«Заводчан»</span>
-      </div>
-    </div>
+    <h3>Список матчей</h3>
+    <div id="matches-list">Загрузка матчей...</div>
   </div>
 
-  <!-- ВКЛАДКА 2: СОСТАВ -->
-  <div id="squad" class="tab-content">
+  <!-- ВКЛАДКА: СЕКРЕТНАЯ АДМИНКА -->
+  <div id="admin" class="tab-content">
+    <h3>⚙️ Панель администратора</h3>
     <div class="card">
-      <div class="player-row">
-        <span>🧤 1. Алексей Смирнов</span>
-        <span style="color: var(--hint);">Вратарь</span>
-      </div>
-      <div class="player-row">
-        <span>⚽️ 9. Иван Иванов</span>
-        <span style="color: var(--accent);">5 голов</span>
-      </div>
-      <div class="player-row">
-        <span>👟 10. Сергей Петров</span>
-        <span style="color: var(--hint);">3 ассиста</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- ВКЛАДКА 3: ТАБЛИЦА -->
-  <div id="table" class="tab-content">
-    <div class="card">
-      <div class="player-row" style="font-weight: bold;">
-        <span>Команда</span>
-        <span>Очки</span>
-      </div>
-      <div class="player-row">
-        <span>1. 🥇 ФК «Наш Двор»</span>
-        <span>12</span>
-      </div>
-      <div class="player-row">
-        <span>2. 🥈 «Соседи»</span>
-        <span>9</span>
-      </div>
-      <div class="player-row">
-        <span>3. 🥉 «Заводчане»</span>
-        <span>4</span>
-      </div>
+      <h4>Добавить матч</h4>
+      <input type="text" id="team1" placeholder="Команда 1 (например, Наш Двор)">
+      <input type="text" id="team2" placeholder="Команда 2 (например, Соседи)">
+      <input type="text" id="score" placeholder="Счет (например, 3 : 1)">
+      <button class="form-btn" onclick="addMatch()">Сохранить матч</button>
     </div>
   </div>
 
   <!-- НИЖНЯЯ НАВИГАЦИЯ -->
   <nav class="bottom-nav">
     <button class="nav-item active" onclick="switchTab('matches', this)">
-      <span>⚽️</span>
-      Матчи
+      <span>⚽️</span>Матчи
     </button>
-    <button class="nav-item" onclick="switchTab('squad', this)">
-      <span>👥</span>
-      Состав
-    </button>
-    <button class="nav-item" onclick="switchTab('table', this)">
-      <span>🏆</span>
-      Таблица
+    <!-- Кнопка админки появится только у тебя -->
+    <button id="admin-nav-btn" class="nav-item" onclick="switchTab('admin', this)">
+      <span>⚙️</span>Админка
     </button>
   </nav>
 
   <script>
+    // 1. ВСТАВЬ СЮДА СВОЙ TELEGRAM ID
+    const ADMIN_TELEGRAM_ID = 1435007314; 
+
+    // 2. ВСТАВЬ СЮДА ДАННЫЕ ИЗ SUPABASE
+    const SUPABASE_URL = 'https://ssriiiiuljdeftigdiyl.supabase.co/rest/v1/';
+    const SUPABASE_KEY = 'sb_publishable_jWUTsulzCMEQV6O26zac-g_04tBxiy4';
+    
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
     const tg = window.Telegram.WebApp;
     tg.ready();
     tg.expand();
 
-    function switchTab(tabId, btn) {
-      // Скрываем все вкладки
-      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-      // Снимаем подсвечивание со всех кнопок
-      document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+    // Проверяем, админ ли открыл приложение
+    const userId = tg.initDataUnsafe?.user?.id;
+    if (userId === ADMIN_TELEGRAM_ID) {
+      document.getElementById('admin-nav-btn').style.display = 'flex';
+    }
 
-      // Показываем нужную вкладку и подсвечиваем кнопку
+    function switchTab(tabId, btn) {
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
       document.getElementById(tabId).classList.add('active');
       btn.classList.add('active');
     }
+
+    // Функция сохранения матча в базу данных
+    async function addMatch() {
+      const team1 = document.getElementById('team1').value;
+      const team2 = document.getElementById('team2').value;
+      const score = document.getElementById('score').value;
+
+      if (!team1 || !team2) return alert('Заполните названия команд');
+
+      const { data, error } = await _supabase
+        .from('matches')
+        .insert([{ team1, team2, score }]);
+
+      if (error) {
+        alert('Ошибка при сохранении: ' + error.message);
+      } else {
+        alert('Матч успешно добавлен!');
+        loadMatches();
+      }
+    }
+
+    // Функция загрузки матчей из базы
+    async function loadMatches() {
+      const { data: matches, error } = await _supabase
+        .from('matches')
+        .select('*');
+
+      const container = document.getElementById('matches-list');
+      if (error || !matches || matches.length === 0) {
+        container.innerHTML = '<p>Матчей пока нет.</p>';
+        return;
+      }
+
+      container.innerHTML = matches.map(m => `
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; font-weight:bold;">
+            <span>${m.team1}</span>
+            <span style="color:var(--accent);">${m.score || 'vs'}</span>
+            <span>${m.team2}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Загружаем матчи при старте
+    loadMatches();
   </script>
 </body>
 </html>
