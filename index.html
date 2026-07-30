@@ -16,6 +16,7 @@
       --accent: #22c55e;
       --danger: #ef4444;
       --gold: #f59e0b;
+      --blue: #3b82f6;
     }
 
     body {
@@ -61,6 +62,33 @@
       color: white;
       font-weight: bold;
       border: none;
+      cursor: pointer;
+    }
+
+    button.cancel-btn {
+      background: transparent;
+      color: var(--hint);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      padding: 10px;
+      width: 100%;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .action-btns {
+      display: flex;
+      gap: 6px;
+    }
+
+    .edit-btn {
+      background: rgba(59, 130, 246, 0.15);
+      color: var(--blue);
+      border: 1px solid var(--blue);
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: bold;
       cursor: pointer;
     }
 
@@ -113,7 +141,6 @@
     /* Стили для лучшего игрока */
     .mvp-row {
       margin-top: 10px;
-      padding-top: 6px;
       font-size: 12px;
       font-weight: 600;
       color: var(--gold);
@@ -172,9 +199,9 @@
   <div id="admin" class="tab-content">
     <h3>⚙️ Панель администратора</h3>
     
-    <!-- Форма создания -->
+    <!-- Форма создания / редактирования -->
     <div class="card">
-      <h4>➕ Добавить новый матч</h4>
+      <h4 id="form-title">➕ Добавить новый матч</h4>
       <input type="text" id="team1" placeholder="Команда 1 (например, Наш Двор)">
       <input type="text" id="team2" placeholder="Команда 2 (например, Соседи)">
       <input type="text" id="score" placeholder="Счет (например, 3 : 1)">
@@ -182,12 +209,14 @@
       <input type="text" id="goals1" placeholder="Голы Команды 1 (например, Иванов, Петров-2)">
       <input type="text" id="goals2" placeholder="Голы Команды 2 (например, Сидоров)">
       <input type="text" id="best_player" placeholder="⭐ Лучший игрок (например, Алексей Иванов)">
-      <button class="form-btn" onclick="addMatch()">Сохранить матч</button>
+      
+      <button class="form-btn" id="save-btn" onclick="saveMatch()">Сохранить матч</button>
+      <button class="cancel-btn" id="cancel-btn" style="display:none;" onclick="cancelEdit()">Отмена редактирования</button>
     </div>
 
     <!-- Управление созданными матчами -->
     <div class="card">
-      <h4>🗑️ Управление матчами</h4>
+      <h4>📋 Управление матчами</h4>
       <div id="admin-matches-list">Загрузка...</div>
     </div>
   </div>
@@ -216,6 +245,10 @@
     tg.ready();
     tg.expand();
 
+    // Переменные состояния
+    let allMatches = [];
+    let editingMatchId = null;
+
     // Проверяем, админ ли открыл приложение
     const userId = tg.initDataUnsafe?.user?.id;
     if (userId === ADMIN_TELEGRAM_ID) {
@@ -229,8 +262,8 @@
       btn.classList.add('active');
     }
 
-    // Добавление матча
-    async function addMatch() {
+    // Сохранение (создание или обновление) матча
+    async function saveMatch() {
       const team1 = document.getElementById('team1').value;
       const team2 = document.getElementById('team2').value;
       const score = document.getElementById('score').value;
@@ -241,23 +274,75 @@
 
       if (!team1 || !team2) return alert('Заполните названия команд');
 
-      const { data, error } = await _supabase
-        .from('matches')
-        .insert([{ team1, team2, score, match_date, goals1, goals2, best_player }]);
+      const matchData = { team1, team2, score, match_date, goals1, goals2, best_player };
+
+      let error = null;
+
+      if (editingMatchId) {
+        // Режим обновления существующего матча
+        const response = await _supabase
+          .from('matches')
+          .update(matchData)
+          .eq('id', editingMatchId);
+        error = response.error;
+      } else {
+        // Режим создания нового матча
+        const response = await _supabase
+          .from('matches')
+          .insert([matchData]);
+        error = response.error;
+      }
 
       if (error) {
         alert('Ошибка при сохранении: ' + error.message);
       } else {
-        alert('Матч успешно добавлен!');
-        document.getElementById('team1').value = '';
-        document.getElementById('team2').value = '';
-        document.getElementById('score').value = '';
-        document.getElementById('match_date').value = '';
-        document.getElementById('goals1').value = '';
-        document.getElementById('goals2').value = '';
-        document.getElementById('best_player').value = '';
+        alert(editingMatchId ? 'Матч обновлен!' : 'Матч добавлен!');
+        resetForm();
         loadMatches();
       }
+    }
+
+    // Запуск режима редактирования
+    function editMatch(id) {
+      const match = allMatches.find(m => m.id === id);
+      if (!match) return;
+
+      editingMatchId = match.id;
+      document.getElementById('team1').value = match.team1 || '';
+      document.getElementById('team2').value = match.team2 || '';
+      document.getElementById('score').value = match.score || '';
+      document.getElementById('match_date').value = match.match_date || '';
+      document.getElementById('goals1').value = match.goals1 || '';
+      document.getElementById('goals2').value = match.goals2 || '';
+      document.getElementById('best_player').value = match.best_player || '';
+
+      document.getElementById('form-title').innerText = '✏️ Редактировать матч';
+      document.getElementById('save-btn').innerText = 'Сохранить изменения';
+      document.getElementById('cancel-btn').style.display = 'block';
+
+      // Плавно прокручиваем вверх к форме
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Отмена редактирования
+    function cancelEdit() {
+      resetForm();
+    }
+
+    // Сброс формы
+    function resetForm() {
+      editingMatchId = null;
+      document.getElementById('team1').value = '';
+      document.getElementById('team2').value = '';
+      document.getElementById('score').value = '';
+      document.getElementById('match_date').value = '';
+      document.getElementById('goals1').value = '';
+      document.getElementById('goals2').value = '';
+      document.getElementById('best_player').value = '';
+
+      document.getElementById('form-title').innerText = '➕ Добавить новый матч';
+      document.getElementById('save-btn').innerText = 'Сохранить матч';
+      document.getElementById('cancel-btn').style.display = 'none';
     }
 
     // Удаление матча из базы
@@ -273,6 +358,7 @@
         alert('Ошибка при удалении: ' + error.message);
       } else {
         alert('Матч удален!');
+        if (editingMatchId === id) resetForm();
         loadMatches();
       }
     }
@@ -288,10 +374,13 @@
       const adminContainer = document.getElementById('admin-matches-list');
 
       if (error || !matches || matches.length === 0) {
+        allMatches = [];
         container.innerHTML = '<p style="color:var(--hint);">Матчей пока нет.</p>';
         adminContainer.innerHTML = '<p style="color:var(--hint);">Нет сохраненных матчей.</p>';
         return;
       }
+
+      allMatches = matches;
 
       // Список для пользователей
       container.innerHTML = matches.map(m => {
@@ -324,7 +413,10 @@
               ${m.match_date ? '📅 ' + m.match_date + ' | ' : ''}Счет: ${m.score || 'не указан'}
             </small>
           </div>
-          <button class="delete-btn" onclick="deleteMatch('${m.id}')">🗑️ Удалить</button>
+          <div class="action-btns">
+            <button class="edit-btn" onclick="editMatch('${m.id}')">✏️ Изменить</button>
+            <button class="delete-btn" onclick="deleteMatch('${m.id}')">🗑️</button>
+          </div>
         </div>
       `).join('');
     }
