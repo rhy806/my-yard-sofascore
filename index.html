@@ -62,12 +62,6 @@
       letter-spacing: 0.3px;
     }
 
-    .team-country {
-      font-size: 12px;
-      color: var(--hint);
-      margin-top: 2px;
-    }
-
     /* ВКЛАДКИ НАВИГАЦИИ */
     .top-nav-tabs {
       display: flex;
@@ -319,7 +313,7 @@
       overflow: hidden;
       border: 1px solid rgba(255,255,255,0.15);
       margin: 12px 0;
-      touch-action: none;
+      /* touch-action: none; удалено чтобы работал свайп по странице */
     }
     .pitch-line-center { position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: var(--pitch-line); }
     .pitch-circle-center {
@@ -343,6 +337,7 @@
       align-items: center;
       cursor: grab;
       z-index: 10;
+      touch-action: none; /* Оставляем только на игроках для перетаскивания */
     }
     .pitch-player-abs:active { cursor: grabbing; z-index: 20; }
     .player-avatar-circle {
@@ -489,10 +484,9 @@
     .team-toggle-btn.active { background: var(--accent); color: #000; border-color: var(--accent); }
 
     .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 60px; background-color: var(--card-bg); display: flex; justify-content: space-around; align-items: center; border-top: 1px solid rgba(255,255,255,0.1); z-index: 999; }
-    .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 11px; color: var(--hint); border: none; background: none; }
+    .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 11px; color: var(--hint); border: none; background: none; cursor: pointer; }
     .nav-item.active { color: var(--accent); }
     .nav-item span { font-size: 20px; }
-    #admin-nav-btn { display: none; }
 
     /* ПРОФИЛЬ ИГРОКА (SOFASCORE СТИЛЬ) */
     #player-profile-modal {
@@ -526,7 +520,7 @@
     }
     .pp-edit-icon {
       cursor: pointer;
-      display: none; /* Показывать только админу */
+      display: none; 
       font-size: 18px;
     }
 
@@ -590,6 +584,10 @@
       font-weight: 600;
     }
 
+    /* ВКЛАДКИ В ПРОФИЛЕ ИГРОКА */
+    .pp-tab-content { display: none; }
+    .pp-tab-content.active { display: block; }
+
     .pp-club-banner {
       display: flex;
       align-items: center;
@@ -641,8 +639,16 @@
       gap: 4px;
     }
 
+    /* ТАБЛИЦА КАРЬЕРЫ */
+    .career-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: center; color: #fff; }
+    .career-table th { color: var(--hint); font-weight: 600; padding-bottom: 12px; font-size: 11px; text-transform: uppercase; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .career-table td { padding: 14px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .career-table .left-align { text-align: left; }
+    .career-asr { background: var(--gold); color: #000; padding: 3px 6px; border-radius: 6px; font-weight: 800; font-size: 12px;}
+    .team-logo-small { width: 18px; height: 18px; display: inline-block; background: rgba(255,255,255,0.1); border-radius: 50%; vertical-align: middle; margin-right: 6px; text-align:center; font-size:11px; line-height:18px;}
+
     /* Модалка редактирования игрока */
-    #player-details-edit-modal { z-index: 1100; }
+    #player-details-edit-modal, #career-edit-modal { z-index: 1100; }
   </style>
 </head>
 <body>
@@ -653,7 +659,6 @@
       <div class="team-badge-icon">⚽</div>
       <div>
         <div class="team-name">ФК Яйц</div>
-        <div class="team-country">Дворовый Футбол</div>
       </div>
     </div>
 
@@ -919,50 +924,87 @@
       </div>
 
       <div class="top-nav-tabs">
-        <button class="top-tab-btn active">Детали</button>
-        <button class="top-tab-btn" onclick="alert('Раздел в разработке')">Сезон</button>
-        <button class="top-tab-btn" onclick="alert('Раздел в разработке')">Матчи</button>
-        <button class="top-tab-btn" onclick="alert('Раздел в разработке')">Медиа</button>
+        <button class="top-tab-btn active" onclick="switchProfileTab('details', this)">Детали</button>
+        <button class="top-tab-btn" onclick="switchProfileTab('matches', this)">Матчи</button>
+        <button class="top-tab-btn" onclick="switchProfileTab('career', this)">Карьера</button>
+        <button class="top-tab-btn" onclick="switchProfileTab('media', this)">Медиа</button>
       </div>
     </div>
 
     <div style="padding: 16px;">
-      <!-- КЛУБНАЯ ПЛАШКА -->
-      <div class="pp-club-banner">
-        <div class="pp-club-icon">⚽</div>
-        <div>
-          <div class="pp-club-title" id="pp-club-title">ФК Яйц</div>
-          <div class="pp-club-contract" id="pp-club-contract">Контракт до 30 июня 2027</div>
+      
+      <!-- Вкладка: Детали -->
+      <div id="pp-tab-details" class="pp-tab-content active">
+        <!-- КЛУБНАЯ ПЛАШКА -->
+        <div class="pp-club-banner">
+          <div class="pp-club-icon">⚽</div>
+          <div>
+            <div class="pp-club-title" id="pp-club-title">ФК Яйц</div>
+            <div class="pp-club-contract" id="pp-club-contract">Контракт до 30 июня 2027</div>
+          </div>
+        </div>
+
+        <!-- СЕТКА ХАРАКТЕРИСТИК -->
+        <div class="pp-stats-grid">
+          <div class="pp-stat-cell">
+            <div class="pp-stat-label">НАЦИОНАЛЬНОСТЬ</div>
+            <div class="pp-stat-value" id="pp-nationality">🇷🇺 RUS</div>
+          </div>
+          <div class="pp-stat-cell">
+            <div class="pp-stat-label">ВОЗРАСТ</div>
+            <div class="pp-stat-value" id="pp-age">20 ЛЕТ</div>
+          </div>
+          <div class="pp-stat-cell">
+            <div class="pp-stat-label">РОСТ</div>
+            <div class="pp-stat-value" id="pp-height">180 cm</div>
+          </div>
+          <div class="pp-stat-cell">
+            <div class="pp-stat-label">РАБОЧАЯ НОГА</div>
+            <div class="pp-stat-value" id="pp-foot">Правая</div>
+          </div>
+          <div class="pp-stat-cell">
+            <div class="pp-stat-label">ПОЗИЦИЯ</div>
+            <div class="pp-stat-value" id="pp-position">FW</div>
+          </div>
+          <div class="pp-stat-cell">
+            <div class="pp-stat-label">НОМЕР</div>
+            <div class="pp-stat-value" id="pp-number">10</div>
+          </div>
         </div>
       </div>
 
-      <!-- СЕТКА ХАРАКТЕРИСТИК -->
-      <div class="pp-stats-grid">
-        <div class="pp-stat-cell">
-          <div class="pp-stat-label">НАЦИОНАЛЬНОСТЬ</div>
-          <div class="pp-stat-value" id="pp-nationality">🇷🇺 RUS</div>
-        </div>
-        <div class="pp-stat-cell">
-          <div class="pp-stat-label">ВОЗРАСТ</div>
-          <div class="pp-stat-value" id="pp-age">20 ЛЕТ</div>
-        </div>
-        <div class="pp-stat-cell">
-          <div class="pp-stat-label">РОСТ</div>
-          <div class="pp-stat-value" id="pp-height">180 cm</div>
-        </div>
-        <div class="pp-stat-cell">
-          <div class="pp-stat-label">РАБОЧАЯ НОГА</div>
-          <div class="pp-stat-value" id="pp-foot">Правая</div>
-        </div>
-        <div class="pp-stat-cell">
-          <div class="pp-stat-label">ПОЗИЦИЯ</div>
-          <div class="pp-stat-value" id="pp-position">FW</div>
-        </div>
-        <div class="pp-stat-cell">
-          <div class="pp-stat-label">НОМЕР</div>
-          <div class="pp-stat-value" id="pp-number">10</div>
-        </div>
+      <!-- Вкладка: Матчи -->
+      <div id="pp-tab-matches" class="pp-tab-content">
+        <div id="pp-matches-list"></div>
       </div>
+
+      <!-- Вкладка: Карьера -->
+      <div id="pp-tab-career" class="pp-tab-content">
+        <table class="career-table">
+          <thead>
+            <tr>
+              <th class="left-align">Год</th>
+              <th class="left-align">Команда</th>
+              <th>MP</th>
+              <th>MIN</th>
+              <th>GLS</th>
+              <th>AST</th>
+              <th>ASR</th>
+            </tr>
+          </thead>
+          <tbody id="pp-career-body">
+            <!-- Динамически заполняется -->
+          </tbody>
+        </table>
+        
+        <button id="pp-edit-career-btn" class="form-btn" style="margin-top:20px; display:none;" onclick="openCareerEditModal()">Редактировать статистику</button>
+      </div>
+
+      <!-- Вкладка: Медиа -->
+      <div id="pp-tab-media" class="pp-tab-content">
+        <div class="empty-card-placeholder">Медиа файлы отсутствуют</div>
+      </div>
+
     </div>
   </div>
 
@@ -997,12 +1039,42 @@
     </div>
   </div>
 
+  <!-- МОДАЛЬНОЕ ОКНО РЕДАКТИРОВАНИЯ КАРЬЕРЫ -->
+  <div id="career-edit-modal" class="match-modal">
+    <div class="modal-top-bar">
+      <button class="back-btn" onclick="closeCareerEditModal()">←</button>
+      <span style="font-weight: bold; font-size: 15px;">Статистика</span>
+      <div style="width: 24px;"></div>
+    </div>
+    <div style="padding: 16px;">
+      <div class="card">
+        <label style="font-size:12px; color:var(--hint);">Игры (MP)</label>
+        <input type="number" id="edit-career-mp">
+
+        <label style="font-size:12px; color:var(--hint);">Сыграно минут (MIN)</label>
+        <input type="text" id="edit-career-min">
+
+        <label style="font-size:12px; color:var(--hint);">Голы (GLS)</label>
+        <input type="number" id="edit-career-gls">
+
+        <label style="font-size:12px; color:var(--hint);">Ассисты (AST)</label>
+        <input type="number" id="edit-career-ast">
+
+        <label style="font-size:12px; color:var(--hint);">Рейтинг Sofascore (ASR)</label>
+        <input type="text" id="edit-career-asr" placeholder="например, 6.82">
+
+        <button class="form-btn" onclick="saveCareerStats()">Сохранить статистику</button>
+        <button class="cancel-btn" onclick="resetCareerStats()">Сбросить на АВТО</button>
+      </div>
+    </div>
+  </div>
+
   <!-- НИЖНЯЯ НАВИГАЦИЯ -->
-  <nav class="bottom-nav">
+  <nav class="bottom-nav" id="bottom-nav">
     <button class="nav-item active" onclick="switchMainTab('details', this)">
       <span>⚽️</span>Команда
     </button>
-    <button id="admin-nav-btn" class="nav-item" onclick="switchMainTab('admin', this)">
+    <button id="admin-nav-btn" class="nav-item" onclick="switchMainTab('admin', this)" style="display:none;">
       <span>⚙️</span>Админка
     </button>
   </nav>
@@ -1051,8 +1123,14 @@
     let currentPlayerViewing = null;
 
     const userId = tg.initDataUnsafe?.user?.id;
+    
+    // Скрываем нижнюю меню для не-админов
     if (userId === ADMIN_TELEGRAM_ID) {
       document.getElementById('admin-nav-btn').style.display = 'flex';
+    } else {
+      const bNav = document.getElementById('bottom-nav');
+      if(bNav) bNav.style.display = 'none';
+      document.body.style.paddingBottom = '0';
     }
 
     function toggleAccordion(cardId) {
@@ -1110,7 +1188,7 @@
 
     function switchMainTab(tabId, btn) {
       document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-      document.querySelectorAll('.top-tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.team-header .top-tab-btn').forEach(b => b.classList.remove('active'));
 
       const targetTab = document.getElementById('tab-' + tabId);
       if (targetTab) targetTab.classList.add('active');
@@ -1118,7 +1196,7 @@
       if (btn && btn.classList.contains('top-tab-btn')) {
         btn.classList.add('active');
       } else {
-        const topBtns = document.querySelectorAll('.top-tab-btn');
+        const topBtns = document.querySelectorAll('.team-header .top-tab-btn');
         if (tabId === 'details') topBtns[0]?.classList.add('active');
         if (tabId === 'matches') topBtns[1]?.classList.add('active');
         if (tabId === 'squad') topBtns[2]?.classList.add('active');
@@ -1540,7 +1618,9 @@
         return `
         <div class="pitch-player-abs" id="p-item-${p.id}" style="left:${p.x}%; top:${p.y}%;">
           <div class="player-avatar-circle ${p.isGk ? 'gk' : ''}" style="${avatarStyle}">${p.num || '?'}</div>
-          <div class="player-name-label">${p.name || 'Пусто'}</div>
+          <div class="player-name-label">
+            ${p.num ? `<span style="color:#d1d5db; margin-right:3px;">${p.num}</span>` : ''}${p.name || 'Пусто'}
+          </div>
         </div>
       `}).join('');
 
@@ -1896,7 +1976,9 @@
                style="left:${p.x}%; top:${p.y}%;"
                onclick="openPlayerProfileByName('${safeName}', '${teamName}')">
             <div class="player-avatar-circle ${p.isGk ? 'gk' : ''}" style="${avatarStyle}">${p.num || '?'}</div>
-            <div class="player-name-label">${p.name || 'Пусто'}</div>
+            <div class="player-name-label">
+              ${p.num ? `<span style="color:#d1d5db; margin-right:3px;">${p.num}</span>` : ''}${p.name || 'Пусто'}
+            </div>
           </div>
         `;
       }).join('');
@@ -2095,13 +2177,28 @@
     // ------------------------------------
     // СТРАНИЦА ПРОФИЛЯ ИГРОКА И РЕДАКТИРОВАНИЕ
     // ------------------------------------
+    
+    // Переключение вкладок в модалке игрока
+    function switchProfileTab(tabId, btnElement) {
+      document.querySelectorAll('#player-profile-modal .top-tab-btn').forEach(b => b.classList.remove('active'));
+      if (btnElement) {
+        btnElement.classList.add('active');
+      } else {
+        document.querySelector('#player-profile-modal .top-tab-btn').classList.add('active');
+      }
+
+      document.querySelectorAll('.pp-tab-content').forEach(c => c.classList.remove('active'));
+      const target = document.getElementById('pp-tab-' + tabId);
+      if (target) target.classList.add('active');
+    }
+
     function openPlayerProfileByName(playerName, teamNameOverride = null) {
       if (!playerName || playerName === 'Пусто') return;
 
       if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
 
       const foundPlayer = allSquad.find(p => p.name.toLowerCase().trim() === playerName.toLowerCase().trim());
-      currentPlayerViewing = foundPlayer; // Запоминаем для окна редактирования
+      currentPlayerViewing = foundPlayer; 
 
       const teamName = teamNameOverride || 'ФК Яйц';
       const number = foundPlayer?.number || '7';
@@ -2111,8 +2208,10 @@
       // Показ кнопки редактирования только админу
       if (userId === ADMIN_TELEGRAM_ID && foundPlayer) {
         document.getElementById('pp-edit-btn').style.display = 'inline-block';
+        document.getElementById('pp-edit-career-btn').style.display = 'block';
       } else {
         document.getElementById('pp-edit-btn').style.display = 'none';
+        document.getElementById('pp-edit-career-btn').style.display = 'none';
       }
 
       document.getElementById('pp-name').innerText = playerName;
@@ -2139,6 +2238,84 @@
       document.getElementById('pp-foot').innerText = foundPlayer?.foot || 'Правая';
       document.getElementById('pp-position').innerText = posConf.code;
       document.getElementById('pp-number').innerText = number;
+
+      // === ПОДГРУЗКА МАТЧЕЙ ДЛЯ ВКЛАДКИ "МАТЧИ" ===
+      const playerMatches = allMatches.filter(m => {
+        if(m.status === 'upcoming') return false;
+        let played = false;
+        if(m.lineup1 && m.lineup1.includes(`"name":"${playerName}"`)) played = true;
+        if(m.lineup2 && m.lineup2.includes(`"name":"${playerName}"`)) played = true;
+        
+        const cleanName = s => s.replace(/\d+['’]?/g, '').replace(/^\d+[\.\)]\s*/, '').trim();
+        if(m.goals1 && m.goals1.split(/,|\n/).map(s => cleanName(s)).includes(playerName)) played = true;
+        if(m.goals2 && m.goals2.split(/,|\n/).map(s => cleanName(s)).includes(playerName)) played = true;
+        return played;
+      });
+
+      const matchesContainer = document.getElementById('pp-matches-list');
+      if (playerMatches.length === 0) {
+        matchesContainer.innerHTML = '<div class="empty-card-placeholder">Сыгранных матчей нет</div>';
+      } else {
+        matchesContainer.innerHTML = playerMatches.map(m => `
+          <div class="card clickable-card" onclick="openMatchDetails('${m.id}')">
+            <div class="match-header">${m.match_date || ''}</div>
+            <div class="match-row">
+              <span style="width:38%; text-align:left;">${m.team1}</span>
+              <span style="color:var(--accent); text-align:center; min-width:40px;">${m.score}</span>
+              <span style="width:38%; text-align:right;">${m.team2}</span>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // === ПОДГРУЗКА ДАННЫХ ДЛЯ ВКЛАДКИ "КАРЬЕРА" ===
+      let cStats = { mp: 0, min: '-', gls: 0, ast: '-', asr: '-' };
+      let isManual = false;
+
+      // Высчитываем АВТО-статистику
+      let autoMp = playerMatches.length;
+      let autoGls = 0;
+      playerMatches.forEach(m => {
+          const parseG = (str) => {
+             if(!str) return 0;
+             let count = 0;
+             str.split(/,|\n/).forEach(s => {
+                if(s.replace(/\d+['’]?/g, '').replace(/^\d+[\.\)]\s*/, '').trim() === playerName) count++;
+             });
+             return count;
+          }
+          autoGls += parseG(m.goals1) + parseG(m.goals2);
+      });
+
+      // Парсим ручные данные, если они есть
+      if (foundPlayer && foundPlayer.career_stats) {
+          try {
+              const parsed = JSON.parse(foundPlayer.career_stats);
+              if (parsed.manual) {
+                  isManual = true;
+                  cStats = parsed;
+              }
+          } catch(e) {}
+      }
+
+      if (!isManual) {
+          cStats.mp = autoMp;
+          cStats.gls = autoGls;
+      }
+
+      document.getElementById('pp-career-body').innerHTML = `
+          <tr>
+            <td class="left-align">26/27</td>
+            <td class="left-align"><span class="team-logo-small">⚽</span>${teamName}</td>
+            <td>${cStats.mp}</td>
+            <td>${cStats.min || '-'}</td>
+            <td>${cStats.gls}</td>
+            <td>${cStats.ast || '-'}</td>
+            <td><span class="${cStats.asr !== '-' ? 'career-asr' : ''}">${cStats.asr || '-'}</span></td>
+          </tr>
+      `;
+
+      switchProfileTab('details'); // Сброс на Детали при открытии
 
       document.getElementById('player-profile-modal').classList.add('active');
 
@@ -2206,8 +2383,68 @@
       } else {
         alert('Профиль обновлен!');
         closePlayerEditModal();
-        await loadSquad(); // Обновляем данные
-        openPlayerProfileByName(currentPlayerViewing.name); // Перерисовываем профиль
+        await loadSquad(); 
+        openPlayerProfileByName(currentPlayerViewing.name); 
+      }
+    }
+
+    // Редактирование Карьеры
+    function openCareerEditModal() {
+      if(!currentPlayerViewing) return;
+      let mp = '', min = '', gls = '', ast = '', asr = '';
+      if (currentPlayerViewing.career_stats) {
+          try {
+              const st = JSON.parse(currentPlayerViewing.career_stats);
+              if (st.manual) {
+                mp = st.mp; min = st.min; gls = st.gls; ast = st.ast; asr = st.asr;
+              }
+          } catch(e){}
+      }
+      
+      document.getElementById('edit-career-mp').value = mp;
+      document.getElementById('edit-career-min').value = min;
+      document.getElementById('edit-career-gls').value = gls;
+      document.getElementById('edit-career-ast').value = ast;
+      document.getElementById('edit-career-asr').value = asr;
+
+      document.getElementById('career-edit-modal').classList.add('active');
+      if (tg.BackButton) tg.BackButton.onClick(closeCareerEditModal);
+    }
+
+    function closeCareerEditModal() {
+      document.getElementById('career-edit-modal').classList.remove('active');
+      if (tg.BackButton) {
+        tg.BackButton.offClick(closeCareerEditModal);
+        tg.BackButton.onClick(closePlayerProfile);
+      }
+    }
+
+    async function saveCareerStats() {
+      const stats = {
+          manual: true,
+          mp: document.getElementById('edit-career-mp').value,
+          min: document.getElementById('edit-career-min').value,
+          gls: document.getElementById('edit-career-gls').value,
+          ast: document.getElementById('edit-career-ast').value,
+          asr: document.getElementById('edit-career-asr').value
+      };
+      await updateCareerInDB(stats);
+    }
+
+    async function resetCareerStats() {
+      await updateCareerInDB(null);
+    }
+
+    async function updateCareerInDB(statsObj) {
+      const payload = { career_stats: statsObj ? JSON.stringify(statsObj) : null };
+      const { error } = await _supabase.from('squad').update(payload).eq('id', currentPlayerViewing.id);
+      if (error) {
+          alert('ОШИБКА: Добавьте текстовую колонку `career_stats` в таблицу `squad` в вашей базе данных Supabase!');
+      } else {
+          closeCareerEditModal();
+          await loadSquad();
+          openPlayerProfileByName(currentPlayerViewing.name); // Перерисовываем модалку профиля
+          switchProfileTab('career'); // Возвращаемся сразу на вкладку карьеры
       }
     }
 
