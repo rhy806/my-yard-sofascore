@@ -544,7 +544,7 @@
     <!-- 2. СВОРАЧИВАЕМОЕ УПРАВЛЕНИЕ ОБЩИМ СОСТАВОМ -->
     <div class="card" id="card-squad-admin">
       <div class="card-accordion-header" onclick="toggleAccordion('card-squad-admin')">
-        <h4>👤 Игроки в общем составе</h4>
+        <h4 id="squad-form-title">👤 Игроки в общем составе</h4>
         <div class="accordion-icon">▼</div>
       </div>
 
@@ -576,7 +576,10 @@
         <div class="pos-pills-grid" id="secondary-pos-pills"></div>
 
         <input type="text" id="player-status-input" placeholder="Статус (например, ➕ Травмирован)">
-        <button class="form-btn" onclick="addSquadPlayer()">Добавить игрока в состав</button>
+        
+        <button class="form-btn" id="save-squad-btn" onclick="saveSquadPlayer()">Добавить игрока в состав</button>
+        <button class="cancel-btn" id="cancel-squad-btn" style="display:none;" onclick="cancelSquadEdit()">Отмена редактирования</button>
+        
         <div id="admin-squad-list"></div>
       </div>
     </div>
@@ -720,6 +723,7 @@
     let allMatches = [];
     let allSquad = [];
     let editingMatchId = null;
+    let editingSquadPlayerId = null;
 
     let adminLineup1 = getDefaultLineup("Команда 1");
     let adminLineup2 = getDefaultLineup("Команда 2");
@@ -921,7 +925,7 @@
       container.innerHTML = html;
     }
 
-    async function addSquadPlayer() {
+    async function saveSquadPlayer() {
       const name = document.getElementById('player-name-input').value.trim();
       const number = document.getElementById('player-number-input').value.trim();
       const position = document.getElementById('player-pos-input').value;
@@ -937,23 +941,85 @@
         status
       };
 
-      const { error } = await _supabase.from('squad').insert([payload]);
-      if (error) {
-        alert('Ошибка добавления: ' + error.message);
+      let error = null;
+
+      if (editingSquadPlayerId) {
+        const res = await _supabase.from('squad').update(payload).eq('id', editingSquadPlayerId);
+        error = res.error;
       } else {
-        document.getElementById('player-name-input').value = '';
-        document.getElementById('player-number-input').value = '';
-        document.getElementById('player-status-input').value = '';
-        selectedSecondaryPositions = [];
-        renderSecondaryPosPills();
+        const res = await _supabase.from('squad').insert([payload]);
+        error = res.error;
+      }
+
+      if (error) {
+        alert('Ошибка сохранения игрока: ' + error.message);
+      } else {
+        resetSquadForm();
         loadSquad();
       }
+    }
+
+    function editSquadPlayer(id) {
+      const player = allSquad.find(p => String(p.id) === String(id));
+      if (!player) return;
+
+      editingSquadPlayerId = player.id;
+      document.getElementById('player-name-input').value = player.name || '';
+      document.getElementById('player-number-input').value = player.number || '';
+      document.getElementById('player-pos-input').value = player.position || 'CF';
+      document.getElementById('player-status-input').value = player.status || '';
+
+      selectedSecondaryPositions = [];
+      if (player.secondary_positions) {
+        if (Array.isArray(player.secondary_positions)) {
+          selectedSecondaryPositions = [...player.secondary_positions];
+        } else if (typeof player.secondary_positions === 'string') {
+          try {
+            selectedSecondaryPositions = JSON.parse(player.secondary_positions);
+          } catch(e) {
+            selectedSecondaryPositions = player.secondary_positions.split(',').map(s => s.trim()).filter(Boolean);
+          }
+        }
+      }
+
+      renderSecondaryPosPills();
+
+      document.getElementById('save-squad-btn').innerText = 'Обновить игрока';
+      document.getElementById('cancel-squad-btn').style.display = 'block';
+
+      const card = document.getElementById('card-squad-admin');
+      if (card && !card.classList.contains('open')) {
+        card.classList.add('open');
+      }
+    }
+
+    function resetSquadForm() {
+      editingSquadPlayerId = null;
+      document.getElementById('player-name-input').value = '';
+      document.getElementById('player-number-input').value = '';
+      document.getElementById('player-pos-input').value = 'CF';
+      document.getElementById('player-status-input').value = '';
+      selectedSecondaryPositions = [];
+      
+      document.getElementById('save-squad-btn').innerText = 'Добавить игрока в состав';
+      document.getElementById('cancel-squad-btn').style.display = 'none';
+
+      renderSecondaryPosPills();
+    }
+
+    function cancelSquadEdit() {
+      resetSquadForm();
     }
 
     async function deleteSquadPlayer(id) {
       if (!confirm('Удалить игрока из состава?')) return;
       const { error } = await _supabase.from('squad').delete().eq('id', id);
-      if (!error) loadSquad();
+      if (error) {
+        alert('Ошибка удаления: ' + error.message);
+      } else {
+        if (editingSquadPlayerId === id) resetSquadForm();
+        loadSquad();
+      }
     }
 
     function renderAdminSquadList() {
@@ -970,7 +1036,10 @@
               <strong>${p.name}</strong> (${mainConf.label}) <br>
               <small style="color:var(--hint);">№${p.number || '—'} ${p.status ? ' | ' + p.status : ''}</small>
             </div>
-            <button class="delete-btn" onclick="deleteSquadPlayer(${p.id})">🗑️</button>
+            <div class="action-btns">
+              <button class="edit-btn" onclick="editSquadPlayer(${p.id})">✏️</button>
+              <button class="delete-btn" onclick="deleteSquadPlayer(${p.id})">🗑️</button>
+            </div>
           </div>
         `;
       }).join('');
