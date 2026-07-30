@@ -120,7 +120,7 @@
       border: 1px solid rgba(255,255,255,0.05);
     }
 
-    /* СВОРАЧИВАЕМЫЕ КАРТОЧКИ (АККОРДЕОН) */
+    /* АККОРДЕОН */
     .card-accordion-header {
       display: flex;
       justify-content: space-between;
@@ -223,7 +223,7 @@
     .upcoming-status-title { color: var(--accent); font-weight: 800; font-size: 18px; letter-spacing: 1px; }
     .upcoming-date-time { font-size: 12px; color: var(--hint); margin-top: 4px; font-weight: 600; }
 
-    /* ТЕКУЩАЯ ФОРМА (W / L / D) */
+    /* ФОРМА (W / L / D) */
     .form-container {
       display: flex;
       align-items: center;
@@ -251,7 +251,7 @@
     .form-circle.loss { background-color: var(--danger); color: #fff; }
     .form-circle.draw { background-color: var(--gold); color: #000; }
 
-    /* СОСТАВ КОМАНДЫ */
+    /* СОСТАВ КОМАНДЫ (КАК НА ФОТО 2) */
     .squad-group-title { font-size: 14px; font-weight: 800; color: var(--hint); margin: 18px 0 10px 0; text-transform: uppercase; }
     .player-row-card {
       display: flex;
@@ -271,11 +271,10 @@
       font-weight: 800; font-size: 13px; color: #fff;
     }
     .player-info-name { font-weight: 700; font-size: 14px; }
-    .player-info-meta { font-size: 12px; color: var(--hint); margin-top: 2px; }
-    .player-subpos-tag { display: inline-block; background: rgba(255,255,255,0.08); border-radius: 4px; padding: 1px 5px; font-size: 11px; margin-left: 4px; color: #d1d5db; }
+    .player-info-meta { font-size: 12px; color: var(--hint); margin-top: 2px; font-weight: 600; }
     .player-status-badge { font-size: 12px; color: var(--danger); font-weight: 600; margin-top: 2px; }
 
-    /* ИНТЕРАКТИВНЫЙ ВЫБОР ДОПОЛНИТЕЛЬНЫХ ПОЗИЦИЙ В АДМИНКЕ */
+    /* ИНТЕРАКТИВНЫЙ ВЫБОР ПОЗИЦИЙ В АДМИНКЕ */
     .pos-pills-grid {
       display: flex;
       flex-wrap: wrap;
@@ -307,7 +306,7 @@
       pointer-events: none;
     }
 
-    /* ФУТБОЛЬНОЕ ПОЛЕ 5+1 И ДРАГ-ЭНД-ДРОП */
+    /* ПОЛЕ 5+1 */
     .pitch-container {
       width: 100%;
       height: 380px;
@@ -366,12 +365,59 @@
       text-align: center;
     }
 
-    /* ТАЙМЛАЙН */
+    /* ДИЗАЙН ГОЛОВ В СТИЛЕ ФОТО 1 */
+    .hero-goals-summary-row {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 16px;
+      margin-top: 14px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    .hero-goals-col {
+      flex: 1;
+      font-size: 12px;
+      font-weight: 600;
+      color: #d1d5db;
+      line-height: 1.5;
+    }
+    .hero-goals-col.left { text-align: right; }
+    .hero-goals-col.right { text-align: left; }
+    .hero-goals-ball-icon {
+      width: 22px;
+      height: 22px;
+      background: rgba(34, 197, 94, 0.2);
+      border: 1px solid var(--accent);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    /* ХРОНОЛОГИЯ ГОЛОВ (КАК В НИЖНЕЙ ЧАСТИ ФОТО 1) */
     .timeline-container { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
-    .timeline-row { display: flex; align-items: center; font-size: 13px; font-weight: 600; }
-    .timeline-row.left { justify-content: flex-start; text-align: left; gap: 8px; }
-    .timeline-row.right { justify-content: flex-end; text-align: right; gap: 8px; }
-    .score-pill { background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 6px; font-weight: 800; font-size: 12px; }
+    .timeline-goal-card {
+      display: flex;
+      align-items: center;
+      background: var(--card-inner);
+      padding: 10px 14px;
+      border-radius: 10px;
+      gap: 12px;
+    }
+    .timeline-goal-card.left { justify-content: flex-start; }
+    .timeline-goal-card.right { justify-content: flex-end; }
+    .timeline-score-badge {
+      background: rgba(255,255,255,0.12);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-weight: 800;
+      font-size: 13px;
+      color: #fff;
+    }
 
     .sub-item, .absence-item {
       display: flex; align-items: center; gap: 8px;
@@ -379,7 +425,7 @@
       margin-bottom: 6px; font-size: 13px;
     }
 
-    /* ФОРМЫ */
+    /* ФОРМЫ И АДМИНКА ГОЛОВ */
     input, select, textarea, button.form-btn {
       width: 100%; padding: 11px; margin-top: 6px; margin-bottom: 10px;
       border-radius: 8px; border: 1px solid rgba(255,255,255,0.2);
@@ -392,6 +438,20 @@
     .action-btns { display: flex; gap: 6px; }
     .edit-btn { background: rgba(59, 130, 246, 0.15); color: var(--blue); border: 1px solid var(--blue); border-radius: 6px; padding: 6px 10px; font-weight: bold; cursor: pointer; }
     .delete-btn { background: rgba(239, 68, 68, 0.15); color: var(--danger); border: 1px solid var(--danger); border-radius: 6px; padding: 6px 10px; font-weight: bold; cursor: pointer; }
+
+    /* РЕДАКТОР ПОСЛЕДОВАТЕЛЬНОСТИ ГОЛОВ В АДМИНКЕ */
+    .goal-builder-row {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      margin-bottom: 8px;
+      background: var(--card-inner);
+      padding: 8px;
+      border-radius: 8px;
+    }
+    .goal-builder-row select { width: 130px; margin: 0; padding: 8px; font-size: 12px; }
+    .goal-builder-row input { margin: 0; padding: 8px; font-size: 12px; }
+    .goal-builder-row button { width: auto; margin: 0; padding: 8px 12px; font-size: 12px; }
 
     .match-header { font-size: 12px; color: var(--hint); margin-bottom: 8px; text-align: center; }
     .match-row { display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 15px; }
@@ -410,7 +470,7 @@
     .modal-tab-btn { flex: 1; padding: 12px 0; text-align: center; font-size: 14px; font-weight: 600; color: var(--hint); border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent; }
     .modal-tab-btn.active { color: #ffffff; border-bottom: 2px solid var(--accent); }
 
-    .hero-scoreboard { background: linear-gradient(180deg, var(--card-bg) 0%, var(--bg) 100%); padding: 20px 16px 12px 16px; text-align: center; }
+    .hero-scoreboard { background: linear-gradient(180deg, var(--card-bg) 0%, var(--bg) 100%); padding: 20px 16px 14px 16px; text-align: center; }
     .hero-date { font-size: 12px; color: var(--hint); margin-bottom: 14px; }
     .hero-teams { display: flex; justify-content: space-around; align-items: center; }
     .hero-team { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; }
@@ -496,16 +556,16 @@
         <input type="text" id="score" placeholder="например, 4 : 1">
         
         <label style="font-size:12px; color:var(--hint);">Дата</label>
-        <input type="text" id="match_date" placeholder="Дата (например, 4 августа 2026 г.)">
+        <input type="text" id="match_date" placeholder="Дата (например, 24.07.26)">
 
-        <!-- БЛОК АВТОРОВ ГОЛОВ (ТОЛЬКО ДЛЯ ЗАВЕРШЕННЫХ) -->
+        <!-- БЛОК ПОСЛЕДОВАТЕЛЬНОСТИ ГОЛОВ В АДМИНКЕ -->
         <div id="group-goals">
-          <label style="font-size:12px; color:var(--hint);">Авторы голов</label>
-          <textarea id="goals1" placeholder="Голы Команды 1 (например: Иван 10', Сергей 25')"></textarea>
-          <textarea id="goals2" placeholder="Голы Команды 2 (например: Дмитрий 18')"></textarea>
+          <label style="font-size:12px; color:var(--hint); font-weight:bold; display:block; margin-bottom:6px;">⚽ Последовательность забитых голов</label>
+          <div id="goals-builder-container"></div>
+          <button type="button" class="form-btn" style="background:var(--card-inner); border:1px solid rgba(255,255,255,0.2); color:#fff; font-size:13px; margin-top:4px;" onclick="addGoalToBuilder()">+ Добавить гол в хронологию</button>
         </div>
 
-        <!-- БЛОК MVP (ТОЛЬКО ДЛЯ ЗАВЕРШЕННЫХ) -->
+        <!-- БЛОК MVP -->
         <div id="group-mvp">
           <label style="font-size:12px; color:var(--hint);">Игрок матча (MVP)</label>
           <input type="text" id="best_player" placeholder="⭐ Игрок матча">
@@ -527,10 +587,10 @@
           <div id="admin-pitch-players"></div>
         </div>
 
-        <!-- БЛОК ЗАМЕН (ТОЛЬКО ДЛЯ ЗАВЕРШЕННЫХ) -->
+        <!-- БЛОК ЗАМЕН -->
         <div id="group-subs">
           <label style="font-size:12px; color:var(--hint); margin-top:12px; display:block;">Замены (каждая с новой строки)</label>
-          <textarea id="subs-text" placeholder="например: Иван ➔ Алексей (30')"></textarea>
+          <textarea id="subs-text" placeholder="например: Иван ➔ Алексей"></textarea>
         </div>
 
         <label style="font-size:12px; color:var(--hint);">Пропускающие матч / Травмы</label>
@@ -541,7 +601,7 @@
       </div>
     </div>
 
-    <!-- 2. СВОРАЧИВАЕМОЕ УПРАВЛЕНИЕ ОБЩИМ СОСТАВОМ -->
+    <!-- 2. УПРАВЛЕНИЕ ОБЩИМ СОСТАВОМ -->
     <div class="card" id="card-squad-admin">
       <div class="card-accordion-header" onclick="toggleAccordion('card-squad-admin')">
         <h4 id="squad-form-title">👤 Игроки в общем составе</h4>
@@ -554,22 +614,18 @@
         
         <label style="font-size:12px; color:var(--hint); margin-top:4px; display:block;">1. Основная позиция</label>
         <select id="player-pos-input" onchange="onPrimaryPosChange()">
-          <!-- Форварды -->
-          <option value="CF">Центр-Форвард</option>
-          <option value="LW">Левый вингер</option>
-          <option value="RW">Правый вингер</option>
-          <!-- Полузащитники -->
-          <option value="CM">Центральный полузащитник</option>
-          <option value="CDM">Опорный полузащитник</option>
-          <option value="CAM">Атакующий полузащитник</option>
-          <option value="LM">Левый полузащитник</option>
-          <option value="RM">Правый полузащитник</option>
-          <!-- Защитники -->
-          <option value="CB">Центральный защитник</option>
-          <option value="LB">Левый защитник</option>
-          <option value="RB">Правый защитник</option>
-          <!-- Вратарь -->
-          <option value="GK">Вратарь</option>
+          <option value="CF">Центр-Форвард (CF)</option>
+          <option value="LW">Левый вингер (LW)</option>
+          <option value="RW">Правый вингер (RW)</option>
+          <option value="CM">Центральный полузащитник (CM)</option>
+          <option value="CDM">Опорный полузащитник (CDM)</option>
+          <option value="CAM">Атакующий полузащитник (CAM)</option>
+          <option value="LM">Левый полузащитник (LM)</option>
+          <option value="RM">Правый полузащитник (RM)</option>
+          <option value="CB">Центральный защитник (CB)</option>
+          <option value="LB">Левый защитник (LB)</option>
+          <option value="RB">Правый защитник (RB)</option>
+          <option value="GK">Вратарь (GK)</option>
         </select>
 
         <label style="font-size:12px; color:var(--hint); display:block; margin-top:8px;">2. Дополнительные позиции (нажмите чтобы выбрать)</label>
@@ -584,7 +640,7 @@
       </div>
     </div>
 
-    <!-- 3. СВОРАЧИВАЕМЫЙ СПИСОК ВСЕХ МАТЧЕЙ -->
+    <!-- 3. СПИСОК ВСЕХ МАТЧЕЙ -->
     <div class="card" id="card-matches-admin">
       <div class="card-accordion-header" onclick="toggleAccordion('card-matches-admin')">
         <h4>📋 Все сохраненные матчи</h4>
@@ -606,6 +662,7 @@
       <div style="width: 24px;"></div>
     </div>
 
+    <!-- ШАПКА МАТЧА (КАК НА ФОТО 1) -->
     <div class="hero-scoreboard">
       <div class="hero-date" id="m-date">Завершен</div>
       <div class="hero-teams">
@@ -619,9 +676,12 @@
           <div class="hero-team-name" id="m-team2">Команда 2</div>
         </div>
       </div>
-      <div id="m-hero-goals" style="display:flex; justify-content:space-between; margin-top:12px; font-size:12px; color:var(--hint);">
-        <div id="m-hero-goals1" style="text-align:left; width:45%;"></div>
-        <div id="m-hero-goals2" style="text-align:right; width:45%;"></div>
+
+      <!-- БЛОК ГОЛОВ ПО ЦЕНТРУ (КАК НА ФОТО 1) -->
+      <div class="hero-goals-summary-row" id="m-hero-goals-summary">
+        <div class="hero-goals-col left" id="m-hero-goals1"></div>
+        <div class="hero-goals-ball-icon">⚽</div>
+        <div class="hero-goals-col right" id="m-hero-goals2"></div>
       </div>
     </div>
 
@@ -633,7 +693,7 @@
     <div style="padding: 16px;">
       <div id="subtab-overview">
         <div class="card">
-          <h4 style="margin-top:0; font-size:14px; color:var(--hint);">⚽ Хронология голов</h4>
+          <h4 style="margin-top:0; font-size:14px; color:var(--hint);">⚽ Забитые голы</h4>
           <div id="m-timeline-container"></div>
         </div>
 
@@ -694,29 +754,24 @@
     tg.ready();
     tg.expand();
 
-    // СПРАВОЧНИК ПОЗИЦИЙ
+    // СПРАВОЧНИК ПОЗИЦИЙ С КОРОТКИМИ КОДАМИ
     const POSITIONS_CONFIG = {
-      // Нападающие (FW)
-      'CF':  { label: 'Центр-Форвард', category: 'FW', code: 'ЦФ' },
-      'LW':  { label: 'Левый вингер', category: 'FW', code: 'ЛВ' },
-      'RW':  { label: 'Правый вингер', category: 'FW', code: 'ПВ' },
-      // Полузащитники (MF)
-      'CM':  { label: 'Центральный полузащитник', category: 'MF', code: 'ЦП' },
-      'CDM': { label: 'Опорный полузащитник', category: 'MF', code: 'ОП' },
-      'CAM': { label: 'Атакующий полузащитник', category: 'MF', code: 'АП' },
-      'LM':  { label: 'Левый полузащитник', category: 'MF', code: 'ЛП' },
-      'RM':  { label: 'Правый полузащитник', category: 'MF', code: 'ПП' },
-      // Защитники (DF)
-      'CB':  { label: 'Центральный защитник', category: 'DF', code: 'ЦЗ' },
-      'LB':  { label: 'Левый защитник', category: 'DF', code: 'ЛЗ' },
-      'RB':  { label: 'Правый защитник', category: 'DF', code: 'ПЗ' },
-      // Вратарь (GK)
-      'GK':  { label: 'Вратарь', category: 'GK', code: 'ВР' },
-
-      // Совместимость со старыми записями
-      'FW':  { label: 'Центр-Форвард', category: 'FW', code: 'ЦФ' },
-      'MF':  { label: 'Центральный полузащитник', category: 'MF', code: 'ЦП' },
-      'DF':  { label: 'Центральный защитник', category: 'DF', code: 'ЦЗ' }
+      'CF':  { label: 'Центр-Форвард', category: 'FW', code: 'CF' },
+      'LW':  { label: 'Левый вингер', category: 'FW', code: 'LW' },
+      'RW':  { label: 'Правый вингер', category: 'FW', code: 'RW' },
+      'CM':  { label: 'Центральный полузащитник', category: 'MF', code: 'CM' },
+      'CDM': { label: 'Опорный полузащитник', category: 'MF', code: 'CDM' },
+      'CAM': { label: 'Атакующий полузащитник', category: 'MF', code: 'CAM' },
+      'LM':  { label: 'Левый полузащитник', category: 'MF', code: 'LM' },
+      'RM':  { label: 'Правый полузащитник', category: 'MF', code: 'RM' },
+      'CB':  { label: 'Центральный защитник', category: 'DF', code: 'CB' },
+      'LB':  { label: 'Левый защитник', category: 'DF', code: 'LB' },
+      'RB':  { label: 'Правый защитник', category: 'DF', code: 'RB' },
+      'GK':  { label: 'Вратарь', category: 'GK', code: 'GK' },
+      // Старые значения
+      'FW':  { label: 'Центр-Форвард', category: 'FW', code: 'FW' },
+      'MF':  { label: 'Полузащитник', category: 'MF', code: 'MF' },
+      'DF':  { label: 'Защитник', category: 'DF', code: 'DF' }
     };
 
     let selectedSecondaryPositions = [];
@@ -725,6 +780,7 @@
     let editingMatchId = null;
     let editingSquadPlayerId = null;
 
+    let adminGoalsList = []; // Динамический список голов для админки
     let adminLineup1 = getDefaultLineup("Команда 1");
     let adminLineup2 = getDefaultLineup("Команда 2");
     let currentAdminTeam = 1;
@@ -816,7 +872,7 @@
 
         html += `
           <button type="button" class="${classNames}" onclick="toggleSecondaryPos('${key}')">
-            ${conf.label}
+            ${conf.code} (${conf.label})
           </button>
         `;
       });
@@ -843,7 +899,7 @@
     }
 
     // ------------------------------------
-    // СОСТАВ КОМАНДЫ (SQUAD)
+    // СОСТАВ КОМАНДЫ (КАК НА ФОТО 2)
     // ------------------------------------
     async function loadSquad() {
       const { data, error } = await _supabase.from('squad').select('*').order('id', { ascending: true });
@@ -859,7 +915,6 @@
         return;
       }
 
-      // Категории состава
       const groups = {
         'FW': { title: 'Нападающие', players: [] },
         'MF': { title: 'Полузащитники', players: [] },
@@ -867,9 +922,8 @@
         'GK': { title: 'Вратари', players: [] }
       };
 
-      // Распределение игроков по основной позиции
       allSquad.forEach(p => {
-        const conf = POSITIONS_CONFIG[p.position] || { category: 'MF', label: p.position || 'Игрок' };
+        const conf = POSITIONS_CONFIG[p.position] || { category: 'MF', code: p.position || 'FW' };
         if (groups[conf.category]) {
           groups[conf.category].players.push(p);
         } else {
@@ -883,10 +937,10 @@
         if (group.players.length > 0) {
           html += `<div class="squad-group-title">${group.title}</div>`;
           group.players.forEach(p => {
-            const mainConf = POSITIONS_CONFIG[p.position] || { label: p.position };
+            const mainConf = POSITIONS_CONFIG[p.position] || { code: p.position };
             
-            // Формируем вывод дополнительных позиций
-            let subPosText = '';
+            // Собираем все позиции через запятую (как на фото 2)
+            let posList = [mainConf.code];
             let subPositionsArr = [];
             
             if (p.secondary_positions) {
@@ -897,12 +951,15 @@
               }
             }
 
-            if (subPositionsArr.length > 0) {
-              const subLabels = subPositionsArr
-                .map(k => POSITIONS_CONFIG[k] ? POSITIONS_CONFIG[k].label : k)
-                .join(', ');
-              subPosText = `<span class="player-subpos-tag">Доп: ${subLabels}</span>`;
-            }
+            subPositionsArr.forEach(subKey => {
+              const subConf = POSITIONS_CONFIG[subKey];
+              const codeStr = subConf ? subConf.code : subKey;
+              if (codeStr && !posList.includes(codeStr)) {
+                posList.push(codeStr);
+              }
+            });
+
+            const positionsString = posList.join(', ');
 
             html += `
               <div class="player-row-card">
@@ -911,8 +968,7 @@
                   <div>
                     <div class="player-info-name">${p.name}</div>
                     <div class="player-info-meta">
-                      ${p.number ? '№' + p.number + ' • ' : ''}<strong>${mainConf.label}</strong>
-                      ${subPosText}
+                      ${p.number ? p.number + '&nbsp;&nbsp;' : ''}${positionsString}
                     </div>
                     ${p.status ? `<div class="player-status-badge">${p.status}</div>` : ''}
                   </div>
@@ -1007,9 +1063,7 @@
       renderSecondaryPosPills();
     }
 
-    function cancelSquadEdit() {
-      resetSquadForm();
-    }
+    function cancelSquadEdit() { resetSquadForm(); }
 
     async function deleteSquadPlayer(id) {
       if (!confirm('Удалить игрока из состава?')) return;
@@ -1029,11 +1083,11 @@
         return;
       }
       container.innerHTML = allSquad.map(p => {
-        const mainConf = POSITIONS_CONFIG[p.position] || { label: p.position };
+        const mainConf = POSITIONS_CONFIG[p.position] || { code: p.position };
         return `
           <div class="admin-match-item">
             <div>
-              <strong>${p.name}</strong> (${mainConf.label}) <br>
+              <strong>${p.name}</strong> (${mainConf.code}) <br>
               <small style="color:var(--hint);">№${p.number || '—'} ${p.status ? ' | ' + p.status : ''}</small>
             </div>
             <div class="action-btns">
@@ -1043,6 +1097,94 @@
           </div>
         `;
       }).join('');
+    }
+
+    // ------------------------------------
+    // КОНСТРУКТОР ХРОНОЛОГИИ ГОЛОВ В АДМИНКЕ
+    // ------------------------------------
+    function renderAdminGoalsBuilder() {
+      const container = document.getElementById('goals-builder-container');
+      if (adminGoalsList.length === 0) {
+        container.innerHTML = '<div style="font-size:12px; color:var(--hint); margin:6px 0;">Голы еще не добавлены</div>';
+        return;
+      }
+
+      let html = '';
+      adminGoalsList.forEach((item, index) => {
+        html += `
+          <div class="goal-builder-row">
+            <span style="font-weight:bold; font-size:12px; color:var(--hint);">${index + 1}.</span>
+            <select onchange="updateGoalBuilderTeam(${index}, this.value)">
+              <option value="1" ${item.team === 1 ? 'selected' : ''}>Команда 1</option>
+              <option value="2" ${item.team === 2 ? 'selected' : ''}>Команда 2</option>
+            </select>
+            <input type="text" value="${item.player || ''}" placeholder="Игрок (например, Иван)" oninput="updateGoalBuilderPlayer(${index}, this.value)">
+            <button type="button" class="delete-btn" onclick="removeGoalFromBuilder(${index})">✕</button>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    function addGoalToBuilder() {
+      adminGoalsList.push({ team: 1, player: '' });
+      renderAdminGoalsBuilder();
+    }
+
+    function updateGoalBuilderTeam(index, val) {
+      if (adminGoalsList[index]) adminGoalsList[index].team = parseInt(val, 10);
+    }
+
+    function updateGoalBuilderPlayer(index, val) {
+      if (adminGoalsList[index]) adminGoalsList[index].player = val;
+    }
+
+    function removeGoalFromBuilder(index) {
+      adminGoalsList.splice(index, 1);
+      renderAdminGoalsBuilder();
+    }
+
+    function parseGoalsToBuilderList(goals1Str, goals2Str) {
+      const cleanName = (str) => str.replace(/\d+['’]?/g, '').trim();
+      const extracted = [];
+
+      const parseTeamGoals = (str, teamNum) => {
+        if (!str) return;
+        const lines = str.split(/,|\n/).map(s => s.trim()).filter(Boolean);
+        lines.forEach(line => {
+          const numMatch = line.match(/^(\d+)[\.\)]\s*(.+)/);
+          if (numMatch) {
+            extracted.push({ order: parseInt(numMatch[1], 10), team: teamNum, player: cleanName(numMatch[2]) });
+          } else {
+            extracted.push({ order: 999, team: teamNum, player: cleanName(line) });
+          }
+        });
+      };
+
+      parseTeamGoals(goals1Str, 1);
+      parseTeamGoals(goals2Str, 2);
+
+      extracted.sort((a, b) => a.order - b.order);
+      return extracted.map(e => ({ team: e.team, player: e.player }));
+    }
+
+    function serializeGoalsBuilder() {
+      const g1Lines = [];
+      const g2Lines = [];
+
+      adminGoalsList.forEach((item, index) => {
+        const cleanPlayer = item.player.replace(/\d+['’]?/g, '').trim();
+        if (!cleanPlayer) return;
+        
+        const lineText = `${index + 1}. ${cleanPlayer}`;
+        if (item.team === 1) g1Lines.push(lineText);
+        else g2Lines.push(lineText);
+      });
+
+      return {
+        goals1: g1Lines.join('\n'),
+        goals2: g2Lines.join('\n')
+      };
     }
 
     // ------------------------------------
@@ -1206,8 +1348,9 @@
         container.innerHTML = '<p style="color:var(--hint);">Сыгранных матчей пока нет.</p>';
       } else {
         container.innerHTML = playedMatches.map(m => {
-          const cleanG1 = m.goals1 ? m.goals1.split(/,|\n/).map(s => s.trim().replace(/\s*\d+['’]?$/g, '')).join(', ') : '';
-          const cleanG2 = m.goals2 ? m.goals2.split(/,|\n/).map(s => s.trim().replace(/\s*\d+['’]?$/g, '')).join(', ') : '';
+          const cleanName = s => s.replace(/\d+['’]?/g, '').replace(/^\d+[\.\)]\s*/, '').trim();
+          const cleanG1 = m.goals1 ? m.goals1.split(/,|\n/).map(s => cleanName(s)).filter(Boolean).join(', ') : '';
+          const cleanG2 = m.goals2 ? m.goals2.split(/,|\n/).map(s => cleanName(s)).filter(Boolean).join(', ') : '';
           const hasGoals = cleanG1 || cleanG2;
 
           return `
@@ -1252,14 +1395,16 @@
       const status = document.getElementById('match_status').value;
       const isUpcoming = (status === 'upcoming');
 
+      const goalsData = isUpcoming ? { goals1: '', goals2: '' } : serializeGoalsBuilder();
+
       const payload = {
         status: status,
         team1: document.getElementById('team1').value.trim() || 'ФК Яйц',
         team2: document.getElementById('team2').value.trim() || 'Соперник',
         score: document.getElementById('score').value.trim(),
         match_date: document.getElementById('match_date').value.trim(),
-        goals1: isUpcoming ? '' : document.getElementById('goals1').value.trim(),
-        goals2: isUpcoming ? '' : document.getElementById('goals2').value.trim(),
+        goals1: goalsData.goals1,
+        goals2: goalsData.goals2,
         best_player: isUpcoming ? '' : document.getElementById('best_player').value.trim(),
         lineup1: JSON.stringify(adminLineup1),
         lineup2: JSON.stringify(adminLineup2)
@@ -1298,9 +1443,11 @@
       document.getElementById('team2').value = match.team2 || '';
       document.getElementById('score').value = match.score || '';
       document.getElementById('match_date').value = match.match_date || '';
-      document.getElementById('goals1').value = match.goals1 || '';
-      document.getElementById('goals2').value = match.goals2 || '';
       document.getElementById('best_player').value = match.best_player || '';
+
+      // Загрузка последовательности голов в конструктор
+      adminGoalsList = parseGoalsToBuilderList(match.goals1, match.goals2);
+      renderAdminGoalsBuilder();
 
       try { adminLineup1 = match.lineup1 ? JSON.parse(match.lineup1) : getDefaultLineup(match.team1); } catch(e) { adminLineup1 = getDefaultLineup(match.team1); }
       try { adminLineup2 = match.lineup2 ? JSON.parse(match.lineup2) : getDefaultLineup(match.team2); } catch(e) { adminLineup2 = getDefaultLineup(match.team2); }
@@ -1327,9 +1474,10 @@
       document.getElementById('team2').value = '';
       document.getElementById('score').value = '';
       document.getElementById('match_date').value = '';
-      document.getElementById('goals1').value = '';
-      document.getElementById('goals2').value = '';
       document.getElementById('best_player').value = '';
+
+      adminGoalsList = [];
+      renderAdminGoalsBuilder();
 
       adminLineup1 = getDefaultLineup("Команда 1");
       adminLineup2 = getDefaultLineup("Команда 2");
@@ -1420,21 +1568,24 @@
       }
     }
 
+    // РАЗБОР ГОЛОВ И ХРОНОЛОГИИ (БЕЗ МИНУТ)
     function parseGoalsSequence(goals1Str, goals2Str) {
       const goals = [];
+      const cleanName = (str) => str.replace(/\d+['’]?/g, '').replace(/^\d+[\.\)]\s*/, '').trim();
+
       const extract = (str, teamNum) => {
         if (!str) return;
         const items = str.split(/,|\n/).map(s => s.trim()).filter(Boolean);
         items.forEach((item, idx) => {
-          const matchMin = item.match(/(\d+)['’]?\s*$/);
-          const min = matchMin ? parseInt(matchMin[1], 10) : (idx + 1) * 10;
-          goals.push({ team: teamNum, player: item, minute: min });
+          const numMatch = item.match(/^(\d+)[\.\)]/);
+          const order = numMatch ? parseInt(numMatch[1], 10) : (idx + 1) * 10;
+          goals.push({ team: teamNum, player: cleanName(item), order: order });
         });
       };
 
       extract(goals1Str, 1);
       extract(goals2Str, 2);
-      goals.sort((a, b) => a.minute - b.minute);
+      goals.sort((a, b) => a.order - b.order);
 
       let score1 = 0, score2 = 0;
       goals.forEach(g => {
@@ -1462,23 +1613,25 @@
       document.getElementById('btn-t1-name').innerText = match.team1 || 'Ком. 1';
       document.getElementById('btn-t2-name').innerText = match.team2 || 'Ком. 2';
 
-      const heroGoalsContainer = document.getElementById('m-hero-goals');
+      // ОЧИСТКА ИМЕН ОТ МИНУТ И НУМЕРАЦИИ
+      const cleanName = str => str.replace(/\d+['’]?/g, '').replace(/^\d+[\.\)]\s*/, '').trim();
+
+      const g1List = match.goals1 ? match.goals1.split(/,|\n/).map(s => cleanName(s)).filter(Boolean) : [];
+      const g2List = match.goals2 ? match.goals2.split(/,|\n/).map(s => cleanName(s)).filter(Boolean) : [];
+
+      const summaryRow = document.getElementById('m-hero-goals-summary');
       const heroG1 = document.getElementById('m-hero-goals1');
       const heroG2 = document.getElementById('m-hero-goals2');
 
-      const cleanGoalName = (str) => str.replace(/\s*\d+['’]?$/g, '').trim();
-
-      const g1List = match.goals1 ? match.goals1.split(/,|\n/).map(s => cleanGoalName(s.trim())).filter(Boolean) : [];
-      const g2List = match.goals2 ? match.goals2.split(/,|\n/).map(s => cleanGoalName(s.trim())).filter(Boolean) : [];
-
       if (g1List.length > 0 || g2List.length > 0) {
-        heroGoalsContainer.style.display = 'flex';
+        summaryRow.style.display = 'flex';
         heroG1.innerHTML = g1List.map(g => `<div>${g}</div>`).join('') || '—';
         heroG2.innerHTML = g2List.map(g => `<div>${g}</div>`).join('') || '—';
       } else {
-        heroGoalsContainer.style.display = 'none';
+        summaryRow.style.display = 'none';
       }
 
+      // ХРОНОЛОГИЯ ГОЛОВ (ДИЗАЙН В СТИЛЕ ФОТО 1, БЕЗ МИНУТ)
       const timelineContainer = document.getElementById('m-timeline-container');
       const parsedGoals = parseGoalsSequence(match.goals1, match.goals2);
 
@@ -1489,21 +1642,20 @@
         timelineContainer.innerHTML = `
           <div class="timeline-container">
             ${reversedGoals.map(g => {
-              const cleanName = cleanGoalName(g.player);
               if (g.team === 1) {
                 return `
-                  <div class="timeline-row left">
-                    <span style="font-size:15px;">⚽</span>
-                    <span class="score-pill">${g.runningScore}</span>
-                    <span>${cleanName} <small style="color:var(--hint); font-weight:normal;">(${g.minute}')</small></span>
+                  <div class="timeline-goal-card left">
+                    <span style="font-size:16px;">⚽</span>
+                    <span class="timeline-score-badge">${g.runningScore}</span>
+                    <span style="font-weight:700; font-size:14px; color:#fff;">${g.player}</span>
                   </div>
                 `;
               } else {
                 return `
-                  <div class="timeline-row right">
-                    <span>${cleanName} <small style="color:var(--hint); font-weight:normal;">(${g.minute}')</small></span>
-                    <span class="score-pill">${g.runningScore}</span>
-                    <span style="font-size:15px;">⚽</span>
+                  <div class="timeline-goal-card right">
+                    <span style="font-weight:700; font-size:14px; color:#fff;">${g.player}</span>
+                    <span class="timeline-score-badge">${g.runningScore}</span>
+                    <span style="font-size:16px;">⚽</span>
                   </div>
                 `;
               }
@@ -1535,6 +1687,7 @@
 
     // ИНИЦИАЛИЗАЦИЯ
     renderSecondaryPosPills();
+    renderAdminGoalsBuilder();
     toggleAdminFields();
     selectAdminLineupTeam(1);
     loadSquad();
