@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Дворовый Flashscore</title>
+  <!-- Официальный скрипт Telegram Mini Apps -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      /* Нативные цвета из темы Telegram */
+      background-color: var(--tg-theme-bg-color, #ffffff);
+      color: var(--tg-theme-text-color, #000000);
+      margin: 0;
+      padding: 16px;
+      text-align: center;
+    }
+    .card {
+      background-color: var(--tg-theme-secondary-bg-color, #f4f4f5);
+      border-radius: 16px;
+      padding: 16px;
+      margin-top: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    .score {
+      font-size: 36px;
+      font-weight: 800;
+      margin: 12px 0;
+      color: var(--tg-theme-button-color, #2481cc);
+    }
+    .status {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: bold;
+      background-color: #22c55e;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <h2 id="greeting">👋 Привет, Болельщик!</h2>
+
+  <div class="card">
+    <span class="status">ЗАВЕРШЕН</span>
+    <h3>ФК «Наш Двор» — «Соседи»</h3>
+    <div class="score">3 : 1</div>
+    <p>⚽️ Голы: Иванов (12'), Петров (45', 80')</p>
+  </div>
+
+  <script>
+    // Инициализация Telegram Web App
+    const tg = window.Telegram.WebApp;
+    
+    // Сообщаем Телеграму, что приложение готово и его можно развернуть
+    tg.ready();
+    tg.expand(); 
+
+    // Достаем имя пользователя из Telegram ID
+    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+      document.getElementById('greeting').innerText = `👋 Привет, ${tg.initDataUnsafe.user.first_name}!`;
+    }
+  </script>
+</body>
+</html>
