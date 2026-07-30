@@ -14,6 +14,7 @@
       --text: var(--tg-theme-text-color, #ffffff);
       --hint: var(--tg-theme-hint-color, #a1a1aa);
       --accent: #22c55e;
+      --danger: #ef4444;
     }
 
     body {
@@ -42,7 +43,6 @@
       margin-bottom: 12px;
     }
 
-    /* Стили для формы админки */
     input, select, button.form-btn {
       width: 100%;
       padding: 12px;
@@ -61,6 +61,32 @@
       font-weight: bold;
       border: none;
       cursor: pointer;
+    }
+
+    .delete-btn {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--danger);
+      border: 1px solid var(--danger);
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .match-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: bold;
+    }
+
+    .admin-match-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
     }
 
     .bottom-nav {
@@ -87,7 +113,6 @@
     .nav-item.active { color: var(--accent); }
     .nav-item span { font-size: 20px; }
     
-    /* Скрываем админку по умолчанию */
     #admin-nav-btn { display: none; }
   </style>
 </head>
@@ -104,12 +129,20 @@
   <!-- ВКЛАДКА: СЕКРЕТНАЯ АДМИНКА -->
   <div id="admin" class="tab-content">
     <h3>⚙️ Панель администратора</h3>
+    
+    <!-- Форма создания -->
     <div class="card">
-      <h4>Добавить матч</h4>
+      <h4>➕ Добавить новый матч</h4>
       <input type="text" id="team1" placeholder="Команда 1 (например, Наш Двор)">
       <input type="text" id="team2" placeholder="Команда 2 (например, Соседи)">
       <input type="text" id="score" placeholder="Счет (например, 3 : 1)">
       <button class="form-btn" onclick="addMatch()">Сохранить матч</button>
+    </div>
+
+    <!-- Управление созданными матчами -->
+    <div class="card">
+      <h4>🗑️ Управление матчами</h4>
+      <div id="admin-matches-list">Загрузка...</div>
     </div>
   </div>
 
@@ -118,17 +151,16 @@
     <button class="nav-item active" onclick="switchTab('matches', this)">
       <span>⚽️</span>Матчи
     </button>
-    <!-- Кнопка админки появится только у тебя -->
     <button id="admin-nav-btn" class="nav-item" onclick="switchTab('admin', this)">
       <span>⚙️</span>Админка
     </button>
   </nav>
 
   <script>
-    // 1. ВСТАВЬ СЮДА СВОЙ TELEGRAM ID
+    // ТВОЙ TELEGRAM ID
     const ADMIN_TELEGRAM_ID = 1435007314; 
 
-    // 2. ВСТАВЬ СЮДА ДАННЫЕ ИЗ SUPABASE
+    // ТВОИ ДАННЫЕ SUPABASE
     const SUPABASE_URL = 'https://ssriiiiuljdeftigdiyl.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_jWUTsulzCMEQV6O26zac-g_04tBxiy4';
     
@@ -151,7 +183,7 @@
       btn.classList.add('active');
     }
 
-    // Функция сохранения матча в базу данных
+    // Добавление матча
     async function addMatch() {
       const team1 = document.getElementById('team1').value;
       const team2 = document.getElementById('team2').value;
@@ -167,34 +199,69 @@
         alert('Ошибка при сохранении: ' + error.message);
       } else {
         alert('Матч успешно добавлен!');
+        document.getElementById('team1').value = '';
+        document.getElementById('team2').value = '';
+        document.getElementById('score').value = '';
         loadMatches();
       }
     }
 
-    // Функция загрузки матчей из базы
+    // Удаление матча из базы
+    async function deleteMatch(id) {
+      if (!confirm('Вы уверены, что хотите удалить этот матч?')) return;
+
+      const { error } = await _supabase
+        .from('matches')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        alert('Ошибка при удалении: ' + error.message);
+      } else {
+        alert('Матч удален!');
+        loadMatches();
+      }
+    }
+
+    // Загрузка матчей
     async function loadMatches() {
       const { data: matches, error } = await _supabase
         .from('matches')
-        .select('*');
+        .select('*')
+        .order('created_at', { ascending: false });
 
       const container = document.getElementById('matches-list');
+      const adminContainer = document.getElementById('admin-matches-list');
+
       if (error || !matches || matches.length === 0) {
-        container.innerHTML = '<p>Матчей пока нет.</p>';
+        container.innerHTML = '<p style="color:var(--hint);">Матчей пока нет.</p>';
+        adminContainer.innerHTML = '<p style="color:var(--hint);">Нет сохраненных матчей.</p>';
         return;
       }
 
+      // Список для пользователей
       container.innerHTML = matches.map(m => `
         <div class="card">
-          <div style="display:flex; justify-content:space-between; font-weight:bold;">
+          <div class="match-row">
             <span>${m.team1}</span>
             <span style="color:var(--accent);">${m.score || 'vs'}</span>
             <span>${m.team2}</span>
           </div>
         </div>
       `).join('');
+
+      // Список для админа
+      adminContainer.innerHTML = matches.map(m => `
+        <div class="admin-match-item">
+          <div>
+            <strong>${m.team1} — ${m.team2}</strong> <br>
+            <small style="color:var(--hint);">Счет: ${m.score || 'не указан'}</small>
+          </div>
+          <button class="delete-btn" onclick="deleteMatch('${m.id}')">🗑️ Удалить</button>
+        </div>
+      `).join('');
     }
 
-    // Загружаем матчи при старте
     loadMatches();
   </script>
 </body>
