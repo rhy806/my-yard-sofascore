@@ -47,7 +47,7 @@
 
     .clickable-card {
       cursor: pointer;
-      transition: background 0.2s ease;
+      transition: opacity 0.2s ease;
     }
     .clickable-card:active {
       opacity: 0.8;
@@ -165,7 +165,7 @@
     }
 
     /* ------------------------------------ */
-    /* СТИЛИ ДЛЯ ОКНА ДЕТАЛЕЙ МАТЧА (FLASHSCORE STYLE) */
+    /* СТИЛИ ОФОРМЛЕНИЯ МАТЧА (FLASHSCORE) */
     /* ------------------------------------ */
     .match-modal {
       position: fixed;
@@ -177,9 +177,7 @@
       padding-bottom: 30px;
     }
 
-    .match-modal.active {
-      display: block;
-    }
+    .match-modal.active { display: block; }
 
     .modal-top-bar {
       display: flex;
@@ -201,14 +199,14 @@
 
     .hero-scoreboard {
       background: linear-gradient(180deg, var(--card-bg) 0%, var(--bg) 100%);
-      padding: 24px 16px;
+      padding: 20px 16px;
       text-align: center;
     }
 
     .hero-date {
       font-size: 12px;
       color: var(--hint);
-      margin-bottom: 16px;
+      margin-bottom: 14px;
     }
 
     .hero-teams {
@@ -250,6 +248,31 @@
       letter-spacing: 2px;
     }
 
+    /* АВТОРЫ ГОЛОВ ПОД СЧЕТОМ (ФОТО 1) */
+    .hero-goals-summary {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 12px;
+      margin-top: 16px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      font-size: 13px;
+      color: var(--hint);
+    }
+
+    .hero-goals-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .hero-goals-col.left { text-align: right; }
+    .hero-goals-col.right { text-align: left; }
+    .hero-goals-icon { font-size: 16px; padding-top: 2px; }
+
+    /* ВКАЛАДКИ МОДАЛКИ */
     .modal-tabs {
       display: flex;
       border-bottom: 1px solid rgba(255,255,255,0.1);
@@ -275,9 +298,41 @@
       border-bottom-color: var(--accent);
     }
 
-    .modal-content-area {
-      padding: 0 16px;
+    .modal-content-area { padding: 0 16px; }
+
+    /* ХРОНОЛОГИЯ ГОЛОВ В СТИЛЕ ФОТО 2 (БЕЗ МИНУТ) */
+    .timeline-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 6px 0;
     }
+
+    .timeline-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .timeline-row.left { justify-content: flex-start; }
+    .timeline-row.right { justify-content: flex-end; }
+
+    .score-pill {
+      background: #2a2a2d;
+      color: #ffffff;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 0.5px;
+      border: 1px solid rgba(255,255,255,0.1);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .goal-ball { font-size: 15px; }
+    .player-title { color: var(--text); }
 
     .bottom-nav {
       position: fixed;
@@ -318,40 +373,36 @@
     <div id="matches-list">Загрузка матчей...</div>
   </div>
 
-  <!-- ВКЛАДКА: СЕКРЕТНАЯ АДМИНКА -->
+  <!-- ВКЛАДКА: АДМИНКА -->
   <div id="admin" class="tab-content">
     <h3>⚙️ Панель администратора</h3>
     
-    <!-- Форма создания / редактирования -->
     <div class="card">
       <h4 id="form-title">➕ Добавить новый матч</h4>
-      <input type="text" id="team1" placeholder="Команда 1 (например, Наш Двор)">
-      <input type="text" id="team2" placeholder="Команда 2 (например, Соседи)">
-      <input type="text" id="score" placeholder="Счет (например, 3 : 1)">
-      <input type="text" id="match_date" placeholder="Дата/время (например, Сегодня в 18:00)">
-      <input type="text" id="goals1" placeholder="Голы Команды 1 (например, Иванов, Петров-2)">
-      <input type="text" id="goals2" placeholder="Голы Команды 2 (например, Сидоров)">
-      <input type="text" id="best_player" placeholder="⭐ Лучший игрок (например, Алексей Иванов)">
+      <input type="text" id="team1" placeholder="Команда 1 (например, Барселона)">
+      <input type="text" id="team2" placeholder="Команда 2 (например, Европа)">
+      <input type="text" id="score" placeholder="Счет (например, 4 - 1)">
+      <input type="text" id="match_date" placeholder="Дата/время (например, 24.07.26 • 21:00)">
+      <input type="text" id="goals1" placeholder="Голы Команды 1 (например, И. Диарра 13', Г. Форт 29')">
+      <input type="text" id="goals2" placeholder="Голы Команды 2 (например, F. Ribeiro 40')">
+      <input type="text" id="best_player" placeholder="⭐ Лучший игрок (например, А. Янес)">
       
       <button class="form-btn" id="save-btn" onclick="saveMatch()">Сохранить матч</button>
       <button class="cancel-btn" id="cancel-btn" style="display:none;" onclick="cancelEdit()">Отмена редактирования</button>
     </div>
 
-    <!-- Управление созданными матчами -->
     <div class="card">
       <h4>📋 Управление матчами</h4>
       <div id="admin-matches-list">Загрузка...</div>
     </div>
   </div>
 
-  <!-- ---------------------------------------------------- -->
-  <!-- МОДАЛЬНОЕ ОКНО ПРОСМОТРА ДЕТАЛЕЙ МАТЧА (FLASHSCORE) -->
-  <!-- ---------------------------------------------------- -->
+  <!-- МОДАЛЬНОЕ ОКНО МАТЧА -->
   <div id="match-details-modal" class="match-modal">
     <div class="modal-top-bar">
       <button class="back-btn" onclick="closeMatchModal()">←</button>
       <span style="font-weight: bold; font-size: 15px;">Обзор матча</span>
-      <div style="width: 24px;"></div> <!-- Пустой блок для центрирования -->
+      <div style="width: 24px;"></div>
     </div>
 
     <!-- Шапка счета -->
@@ -368,28 +419,34 @@
           <div class="hero-team-name" id="m-team2">Команда 2</div>
         </div>
       </div>
+
+      <!-- Авторы голов под счетом (Фото 1) -->
+      <div class="hero-goals-summary" id="m-hero-goals" style="display: none;">
+        <div class="hero-goals-col left" id="m-hero-goals1"></div>
+        <div class="hero-goals-icon">⚽</div>
+        <div class="hero-goals-col right" id="m-hero-goals2"></div>
+      </div>
     </div>
 
-    <!-- Переключатель вкладок внутри матча -->
+    <!-- Вкладки -->
     <div class="modal-tabs">
       <button class="modal-tab-btn active" onclick="switchModalTab('m-tab-details', this)">Детали</button>
-      <button class="modal-tab-btn" onclick="switchModalTab('m-tab-goals', this)">Голы и MVP</button>
+      <button class="modal-tab-btn" onclick="switchModalTab('m-tab-goals', this)">MVP</button>
     </div>
 
-    <!-- Содержимое вкладок -->
+    <!-- Содержимое -->
     <div class="modal-content-area">
-      <!-- Вкладка 1: Детали -->
+      <!-- Вкладка 1: Хронология голов (Фото 2) -->
       <div id="m-tab-details">
         <div class="card">
-          <h4 style="margin-top:0;">⚽ Забитые мячи</h4>
-          <div class="goals-row" style="border:none; padding-top:0;">
-            <div class="goals-col" id="m-goals1-list">—</div>
-            <div class="goals-col right" id="m-goals2-list">—</div>
+          <h4 style="margin-top:0; margin-bottom: 12px;">⚽ Последовательность голов</h4>
+          <div id="m-timeline-container">
+            <!-- Динамическая последовательность голов без минут -->
           </div>
         </div>
       </div>
 
-      <!-- Вкладка 2: Голы и MVP -->
+      <!-- Вкладка 2: MVP -->
       <div id="m-tab-goals" style="display: none;">
         <div class="card" id="m-mvp-card">
           <h4 style="margin-top:0; color:var(--gold);">🏅 Игрок матча</h4>
@@ -399,7 +456,7 @@
     </div>
   </div>
 
-  <!-- НИЖНЯЯ НАВИГАЦИЯ -->
+  <!-- НАВИГАЦИЯ -->
   <nav class="bottom-nav">
     <button class="nav-item active" onclick="switchTab('matches', this)">
       <span>⚽️</span>Матчи
@@ -410,10 +467,7 @@
   </nav>
 
   <script>
-    // ТВОЙ TELEGRAM ID
     const ADMIN_TELEGRAM_ID = 1435007314; 
-
-    // ТВОИ ДАННЫЕ SUPABASE
     const SUPABASE_URL = 'https://ssriiiiuljdeftigdiyl.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_jWUTsulzCMEQV6O26zac-g_04tBxiy4';
     
@@ -426,7 +480,6 @@
     let allMatches = [];
     let editingMatchId = null;
 
-    // Проверяем админа
     const userId = tg.initDataUnsafe?.user?.id;
     if (userId === ADMIN_TELEGRAM_ID) {
       document.getElementById('admin-nav-btn').style.display = 'flex';
@@ -439,7 +492,6 @@
       btn.classList.add('active');
     }
 
-    // Сохранение матча
     async function saveMatch() {
       const team1 = document.getElementById('team1').value;
       const team2 = document.getElementById('team2').value;
@@ -454,7 +506,6 @@
       const matchData = { team1, team2, score, match_date, goals1, goals2, best_player };
 
       let error = null;
-
       if (editingMatchId) {
         const response = await _supabase.from('matches').update(matchData).eq('id', editingMatchId);
         error = response.error;
@@ -472,10 +523,9 @@
       }
     }
 
-    // Редактирование
     function editMatch(id) {
       const match = allMatches.find(m => String(m.id) === String(id));
-      if (!match) return alert('Не удалось найти данные');
+      if (!match) return;
 
       editingMatchId = match.id;
       document.getElementById('team1').value = match.team1 || '';
@@ -491,7 +541,6 @@
       document.getElementById('cancel-btn').style.display = 'block';
 
       window.scrollTo({ top: 0, behavior: 'smooth' });
-      document.getElementById('team1').focus();
     }
 
     function cancelEdit() { resetForm(); }
@@ -513,9 +562,7 @@
 
     async function deleteMatch(id) {
       if (!confirm('Вы уверены, что хотите удалить этот матч?')) return;
-
       const { error } = await _supabase.from('matches').delete().eq('id', id);
-
       if (error) {
         alert('Ошибка при удалении: ' + error.message);
       } else {
@@ -526,8 +573,43 @@
     }
 
     // ------------------------------------
-    // ФУНКЦИИ МОДАЛЬНОГО ОКНА ДЕТАЛЕЙ МАТЧА
+    // ОБРАБОТКА И ОТОБРАЖЕНИЕ ГОЛОВ
     // ------------------------------------
+    function parseGoalsSequence(goals1Str, goals2Str) {
+      const goals = [];
+
+      const extract = (str, teamNum) => {
+        if (!str) return;
+        const items = str.split(/,|\n/).map(s => s.trim()).filter(Boolean);
+        items.forEach((item, idx) => {
+          const matchMin = item.match(/(\d+)['’]?/);
+          const min = matchMin ? parseInt(matchMatch[1] || matchMin[1], 10) : (idx + 1) * 10;
+          goals.push({
+            team: teamNum,
+            player: item,
+            minute: min
+          });
+        });
+      };
+
+      extract(goals1Str, 1);
+      extract(goals2Str, 2);
+
+      // Сортируем по минутам по возрастанию (13', 29', 40'...)
+      goals.sort((a, b) => a.minute - b.minute);
+
+      // Рассчитываем текущий счет
+      let score1 = 0;
+      let score2 = 0;
+      goals.forEach(g => {
+        if (g.team === 1) score1++;
+        if (g.team === 2) score2++;
+        g.runningScore = `${score1} - ${score2}`;
+      });
+
+      return goals;
+    }
+
     function openMatchDetails(id) {
       const match = allMatches.find(m => String(m.id) === String(id));
       if (!match) return;
@@ -537,11 +619,59 @@
       document.getElementById('m-score').innerText = match.score || 'vs';
       document.getElementById('m-date').innerText = match.match_date ? '📅 ' + match.match_date : 'Завершен';
 
-      document.getElementById('m-goals1-list').innerHTML = match.goals1 ? '⚽ ' + match.goals1 : '—';
-      document.getElementById('m-goals2-list').innerHTML = match.goals2 ? '⚽ ' + match.goals2 : '—';
+      // 1. Отображение авторов под счетом (Как на Фото 1)
+      const heroGoalsContainer = document.getElementById('m-hero-goals');
+      const heroG1 = document.getElementById('m-hero-goals1');
+      const heroG2 = document.getElementById('m-hero-goals2');
+
+      const g1List = match.goals1 ? match.goals1.split(/,|\n/).map(s => s.trim()).filter(Boolean) : [];
+      const g2List = match.goals2 ? match.goals2.split(/,|\n/).map(s => s.trim()).filter(Boolean) : [];
+
+      if (g1List.length > 0 || g2List.length > 0) {
+        heroGoalsContainer.style.display = 'flex';
+        heroG1.innerHTML = g1List.map(g => `<div>${g}</div>`).join('') || '—';
+        heroG2.innerHTML = g2List.map(g => `<div>${g}</div>`).join('') || '—';
+      } else {
+        heroGoalsContainer.style.display = 'none';
+      }
+
+      // 2. Последовательность голов без минут (Как на Фото 2)
+      const timelineContainer = document.getElementById('m-timeline-container');
+      const parsedGoals = parseGoalsSequence(match.goals1, match.goals2);
+
+      if (parsedGoals.length === 0) {
+        timelineContainer.innerHTML = '<p style="color:var(--hint); font-size:13px; margin:0;">Голов в матче не было.</p>';
+      } else {
+        // Отображение от последних голов к первым (как на 2 фото)
+        const reversedGoals = [...parsedGoals].reverse();
+        timelineContainer.innerHTML = `
+          <div class="timeline-container">
+            ${reversedGoals.map(g => {
+              // Убираем минусы/минуты из имени игрока
+              const cleanName = g.player.replace(/\s*\(?\d+['’]?\)?\s*/g, '').trim();
+              if (g.team === 1) {
+                return `
+                  <div class="timeline-row left">
+                    <span class="goal-ball">⚽</span>
+                    <span class="score-pill">${g.runningScore}</span>
+                    <span class="player-title">${cleanName}</span>
+                  </div>
+                `;
+              } else {
+                return `
+                  <div class="timeline-row right">
+                    <span class="player-title">${cleanName}</span>
+                    <span class="score-pill">${g.runningScore}</span>
+                    <span class="goal-ball">⚽</span>
+                  </div>
+                `;
+              }
+            }).join('')}
+          </div>
+        `;
+      }
 
       document.getElementById('m-mvp-name').innerText = match.best_player ? match.best_player : 'Не указан';
-
       document.getElementById('match-details-modal').classList.add('active');
     }
 
@@ -552,14 +682,12 @@
     function switchModalTab(tabId, btn) {
       document.getElementById('m-tab-details').style.display = 'none';
       document.getElementById('m-tab-goals').style.display = 'none';
-      
       document.querySelectorAll('.modal-tab-btn').forEach(b => b.classList.remove('active'));
-      
       document.getElementById(tabId).style.display = 'block';
       btn.classList.add('active');
     }
 
-    // Загрузка матчей
+    // Загрузка списка матчей
     async function loadMatches() {
       const { data: matches, error } = await _supabase
         .from('matches')
@@ -578,7 +706,6 @@
 
       allMatches = matches;
 
-      // Список для пользователей (при клике открывает экран матча)
       container.innerHTML = matches.map(m => {
         const hasGoals = m.goals1 || m.goals2;
         return `
@@ -600,7 +727,6 @@
         `;
       }).join('');
 
-      // Список для админа
       adminContainer.innerHTML = matches.map(m => `
         <div class="admin-match-item">
           <div>
