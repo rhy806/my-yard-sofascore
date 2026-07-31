@@ -379,6 +379,21 @@
       background-position: center;
     }
     .player-avatar-circle.gk { background: var(--gold); }
+    
+    /* ПЛАШКА РЕЙТИНГА ПОД ФОТО ИГРОКА */
+    .player-rating-badge {
+      font-size: 10px;
+      font-weight: 800;
+      padding: 1px 5px;
+      border-radius: 4px;
+      margin-top: 2px;
+      color: #ffffff;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+      white-space: nowrap;
+      line-height: 1.2;
+    }
+
     .player-name-label {
       background: rgba(0,0,0,0.75);
       color: #fff;
@@ -386,7 +401,7 @@
       font-weight: 700;
       padding: 2px 6px;
       border-radius: 4px;
-      margin-top: 3px;
+      margin-top: 2px;
       white-space: nowrap;
       text-align: center;
     }
@@ -575,7 +590,7 @@
     .top-player-item { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
     .top-player-stat { font-size: 16px; font-weight: 800; color: #fff; }
 
-    #player-details-edit-modal, #career-edit-modal, #admin-player-select-modal { z-index: 1100; }
+    #player-details-edit-modal, #career-edit-modal, #admin-player-select-modal, #admin-player-stats-modal { z-index: 1100; }
   </style>
 </head>
 <body>
@@ -690,6 +705,9 @@
         <!-- РАССТАНОВКА И ПОЛЕ -->
         <div id="group-pitch">
             <label style="font-size:13px; font-weight:bold; color:var(--accent);">📐 Расстановка на поле</label>
+            <div style="font-size:11px; color:var(--hint); margin-top:4px; margin-bottom:6px;">
+              💡 <em>Нажмите на игрока для расчета действий и рейтинга. Зажмите для замены игрока.</em>
+            </div>
             <div class="team-toggle-group" style="margin-top:8px;">
               <button id="admin-t1-btn" class="team-toggle-btn active" type="button" onclick="selectAdminLineupTeam(1)">Команда 1</button>
               <button id="admin-t2-btn" class="team-toggle-btn" type="button" onclick="selectAdminLineupTeam(2)">Команда 2</button>
@@ -988,7 +1006,6 @@
     <div style="padding: 16px;">
       <div class="card">
         <input type="hidden" id="edit-profile-id">
-        
         <label style="font-size:12px; color:var(--hint);">Игровой номер</label>
         <input type="text" id="edit-profile-number" placeholder="например, 10">
 
@@ -1061,6 +1078,65 @@
     </div>
   </div>
 
+  <!-- НОВОВВЕДЕНИЕ 3: МОДАЛЬНОЕ ОКНО РАСЧЕТА РЕЙТИНГА И ДЕЙСТВИЙ ИГРОКА -->
+  <div id="admin-player-stats-modal" class="match-modal">
+    <div class="modal-top-bar">
+      <button class="back-btn" onclick="closeAdminPlayerStatsModal()">←</button>
+      <span style="font-weight: bold; font-size: 15px;" id="stat-modal-title">Действия игрока и рейтинг</span>
+      <div style="width: 24px;"></div>
+    </div>
+    <div style="padding: 16px;">
+      <div class="card">
+        <div style="text-align:center; margin-bottom:14px;">
+          <div style="font-size:12px; color:var(--hint); font-weight:800;">ТЕКУЩИЙ РЕЙТИНГ</div>
+          <div id="stat-rating-preview" style="font-size:34px; font-weight:800; color:var(--accent); margin-top:4px;">6.0</div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+          <div>
+            <label style="font-size:11px; color:var(--hint); font-weight:600;">⚽ Гол (+2.0)</label>
+            <input type="number" id="stat-goals" value="0" min="0" oninput="liveUpdateStatRating()">
+          </div>
+          <div>
+            <label style="font-size:11px; color:var(--hint); font-weight:600;">🅰️ Ассист (+1.3)</label>
+            <input type="number" id="stat-assists" value="0" min="0" oninput="liveUpdateStatRating()">
+          </div>
+          <div>
+            <label style="font-size:11px; color:var(--hint); font-weight:600;">🧤 Сейв (+1.0)</label>
+            <input type="number" id="stat-saves" value="0" min="0" oninput="liveUpdateStatRating()">
+          </div>
+          <div>
+            <label style="font-size:11px; color:var(--hint); font-weight:600;">🛡️ Отбор (+0.5)</label>
+            <input type="number" id="stat-tackles" value="0" min="0" oninput="liveUpdateStatRating()">
+          </div>
+          <div>
+            <label style="font-size:11px; color:var(--hint); font-weight:600;">❌ Промах (-0.5)</label>
+            <input type="number" id="stat-misses" value="0" min="0" oninput="liveUpdateStatRating()">
+          </div>
+          <div>
+            <label style="font-size:11px; color:var(--hint); font-weight:600;">⚠️ Неточный пас (-0.3)</label>
+            <input type="number" id="stat-bad-passes" value="0" min="0" oninput="liveUpdateStatRating()">
+          </div>
+          <div>
+            <label style="font-size:11px; color:var(--hint); font-weight:600;">🟨 Фол (штрафной) (-0.7)</label>
+            <input type="number" id="stat-fk-fouls" value="0" min="0" oninput="liveUpdateStatRating()">
+          </div>
+          <div>
+            <label style="font-size:11px; color:var(--hint); font-weight:600;">🟥 Фол (пенальти) (-1.5)</label>
+            <input type="number" id="stat-pen-fouls" value="0" min="0" oninput="liveUpdateStatRating()">
+          </div>
+          <div style="grid-column: span 2;">
+            <label style="font-size:11px; color:var(--hint); font-weight:600;">🥅 Пропущенный гол (вратарь) (-0.5)</label>
+            <input type="number" id="stat-conceded" value="0" min="0" oninput="liveUpdateStatRating()">
+          </div>
+        </div>
+
+        <button class="form-btn" style="margin-top:16px;" onclick="calculateAndSavePlayerRating()">Рассчитать рейтинг</button>
+        <button class="cancel-btn" style="margin-top:4px;" onclick="openPlayerSelectFromStatsModal()">🔄 Сменить игрока на этой позиции</button>
+      </div>
+    </div>
+  </div>
+
   <nav class="bottom-nav" id="bottom-nav">
     <button class="nav-item active" onclick="switchMainTab('details', this)">
       <span>⚽️</span>Команда
@@ -1118,6 +1194,7 @@
 
     let adminAbsences = [];
     let selectedPitchPlayerIndex = null;
+    let editingPitchPlayerIndex = null;
     let longPressTimer = null;
     let isLongPress = false;
 
@@ -1181,6 +1258,38 @@
       return `${years} ${yearWord} ${months} ${monthWord}`;
     }
 
+    /* НОВОВВЕДЕНИЕ 2: ПОЛУЧЕНИЕ СТРОКИ ВСЕХ ПОЗИЦИЙ ИГРОКА (ОСНОВНАЯ + ДОПОЛНИТЕЛЬНЫЕ) */
+    function getPlayerPositionsString(p) {
+      if (!p) return '';
+      const mainConf = POSITIONS_CONFIG[p.position] || { code: p.position || '' };
+      let posList = [mainConf.code];
+      let subPositionsArr = [];
+      if (p.secondary_positions) {
+        if (Array.isArray(p.secondary_positions)) subPositionsArr = p.secondary_positions;
+        else if (typeof p.secondary_positions === 'string') {
+          try { subPositionsArr = JSON.parse(p.secondary_positions); } 
+          catch(e) { subPositionsArr = p.secondary_positions.split(',').map(s=>s.trim()); }
+        }
+      }
+      subPositionsArr.forEach(subKey => {
+        const subConf = POSITIONS_CONFIG[subKey];
+        const codeStr = subConf ? subConf.code : subKey;
+        if (codeStr && !posList.includes(codeStr)) posList.push(codeStr);
+      });
+      return posList.filter(Boolean).join(', ');
+    }
+
+    /* НОВОВВЕДЕНИЕ 3: ПОЛУЧЕНИЕ ЦВЕТА ДЛЯ ПЛАШКИ РЕЙТИНГА */
+    function getRatingColor(rating) {
+      const r = parseFloat(rating);
+      if (isNaN(r)) return 'var(--accent)';
+      if (r >= 7.5) return '#22c55e'; // Ярко-зеленый
+      if (r >= 6.5) return '#84cc16'; // Салатовый
+      if (r >= 6.0) return '#3b82f6'; // Синий
+      if (r >= 5.0) return '#f59e0b'; // Оранжевый
+      return '#ef4444'; // Красный
+    }
+
     function fileToDataUrl(fileInputId, callback) {
       const fileInput = document.getElementById(fileInputId);
       if (fileInput && fileInput.files && fileInput.files[0]) {
@@ -1217,12 +1326,12 @@
     function getDefaultLineup(teamName) {
       return {
         startingXI: [
-          { id: 1, name: "Вратарь", num: 1, x: 50, y: 88, isGk: true },
-          { id: 2, name: "Защитник L", num: 2, x: 28, y: 68 },
-          { id: 3, name: "Защитник R", num: 3, x: 72, y: 68 },
-          { id: 4, name: "Полузащитник", num: 8, x: 50, y: 45 },
-          { id: 5, name: "Нападающий L", num: 7, x: 28, y: 22 },
-          { id: 6, name: "Нападающий R", num: 10, x: 72, y: 22 }
+          { id: 1, name: "Вратарь", num: 1, x: 50, y: 88, isGk: true, rating: 6.0 },
+          { id: 2, name: "Защитник L", num: 2, x: 28, y: 68, rating: 6.0 },
+          { id: 3, name: "Защитник R", num: 3, x: 72, y: 68, rating: 6.0 },
+          { id: 4, name: "Полузащитник", num: 8, x: 50, y: 45, rating: 6.0 },
+          { id: 5, name: "Нападающий L", num: 7, x: 28, y: 22, rating: 6.0 },
+          { id: 6, name: "Нападающий R", num: 10, x: 72, y: 22, rating: 6.0 }
         ],
         bench: [],
         roster: [],
@@ -1350,7 +1459,7 @@
       renderAdminAbsences();
     }
 
-    /* НОВОВВЕДЕНИЕ 3: НАВИГАЦИЯ ПО ПОДПИСКАМ И ТАБАМ */
+    /* НАВИГАЦИЯ ПО ПОДПИСКАМ И ТАБАМ */
     function switchMainTab(tabId, btn) {
       document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
       document.querySelectorAll('.team-header .top-tab-btn').forEach(b => b.classList.remove('active'));
@@ -1363,7 +1472,6 @@
         btn.classList.add('active');
       }
 
-      // Выделяем верхние табы, если кликнули на них
       if (btn && btn.classList.contains('top-tab-btn')) {
         const navBtns = document.querySelectorAll('.bottom-nav .nav-item');
         if (navBtns[0]) navBtns[0].classList.add('active');
@@ -1409,7 +1517,7 @@
 
       let html = '<div class="section-title">Ваши подписки (' + subscribed.length + ')</div>';
       subscribed.forEach(p => {
-        const mainConf = POSITIONS_CONFIG[p.position] || { code: p.position || 'FW' };
+        const posText = getPlayerPositionsString(p);
         const safeName = p.name.replace(/'/g, "\\'");
         const avatarStyle = p.photo_url ? `background-image: url('${p.photo_url}'); color: transparent;` : '';
 
@@ -1419,7 +1527,7 @@
               <div class="player-avatar" style="${avatarStyle}">${p.number || '•'}</div>
               <div>
                 <div class="player-info-name">${p.name}</div>
-                <div class="player-info-meta">${p.number ? '#' + p.number + '&nbsp;&nbsp;' : ''}${mainConf.code}</div>
+                <div class="player-info-meta">${p.number ? '#' + p.number + '&nbsp;&nbsp;' : ''}${posText}</div>
                 ${p.status ? `<div class="player-status-badge">${p.status}</div>` : ''}
               </div>
             </div>
@@ -1433,6 +1541,7 @@
 
     function renderSecondaryPosPills() {
       const container = document.getElementById('secondary-pos-pills');
+      if(!container) return;
       const primaryPos = document.getElementById('player-pos-input').value;
 
       let html = '';
@@ -1508,20 +1617,7 @@
         if (group.players.length > 0) {
           html += `<div class="squad-group-title">${group.title}</div>`;
           group.players.forEach(p => {
-            const mainConf = POSITIONS_CONFIG[p.position] || { code: p.position };
-            let posList = [mainConf.code];
-            let subPositionsArr = [];
-            if (p.secondary_positions) {
-              if (Array.isArray(p.secondary_positions)) subPositionsArr = p.secondary_positions;
-              else if (typeof p.secondary_positions === 'string') {
-                try { subPositionsArr = JSON.parse(p.secondary_positions); } catch(e) { subPositionsArr = p.secondary_positions.split(',').map(s=>s.trim()); }
-              }
-            }
-            subPositionsArr.forEach(subKey => {
-              const subConf = POSITIONS_CONFIG[subKey];
-              const codeStr = subConf ? subConf.code : subKey;
-              if (codeStr && !posList.includes(codeStr)) posList.push(codeStr);
-            });
+            const posText = getPlayerPositionsString(p);
             const safeName = p.name.replace(/'/g, "\\'");
             const avatarStyle = p.photo_url ? `background-image: url('${p.photo_url}'); color: transparent;` : '';
 
@@ -1531,7 +1627,7 @@
                   <div class="player-avatar" style="${avatarStyle}">${p.number || '•'}</div>
                   <div>
                     <div class="player-info-name">${p.name}</div>
-                    <div class="player-info-meta">${p.number ? '#' + p.number + '&nbsp;&nbsp;' : ''}${posList.join(', ')}</div>
+                    <div class="player-info-meta">${p.number ? '#' + p.number + '&nbsp;&nbsp;' : ''}${posText}</div>
                     ${p.status ? `<div class="player-status-badge">${p.status}</div>` : ''}
                   </div>
                 </div>
@@ -1661,7 +1757,6 @@
       if (isAdmin) renderAdminMatchesList();
     }
 
-    /* НОВОВВЕДЕНИЕ 2: ИЗМЕНЕНИЕ СЧЕТА В СПИСКЕ МАТЧЕЙ */
     function renderMatchesList() {
       const container = document.getElementById('matches-list');
       if (allMatches.length === 0) {
@@ -1691,7 +1786,7 @@
           }
         }
 
-        /* ОТОБРАЖЕНИЕ АВТОРОВ ГОЛОВ И ИЗМЕНЕНИЯ СЧЕТА */
+        /* В СПИСКЕ ВСЕХ МАТЧЕЙ ОСТАВЛЯЕМ ВСЕ КАК БЫЛО */
         let goalsRowHtml = '';
         if (!isUpcoming && m.goals_data) {
           try {
@@ -1873,6 +1968,7 @@
       `;
     }
 
+    /* НОВОВВЕДЕНИЕ 2: ВЫВОД ВСЕХ ПОЗИЦИЙ В ВКЛАДКЕ ЛУЧШИХ ИГРОКОВ */
     function renderTopPlayers() {
       const gCard = document.getElementById('top-goals-card');
       const aCard = document.getElementById('top-assists-card');
@@ -1920,6 +2016,8 @@
             const p = item.player;
             const safeName = p.name.replace(/'/g, "\\'");
             const avatarStyle = p.photo_url ? `background-image: url('${p.photo_url}'); color: transparent;` : '';
+            const allPositionsText = getPlayerPositionsString(p);
+
             html += `
               <div class="top-player-item clickable-card" onclick="openPlayerProfileByName('${safeName}')">
                 <div style="display:flex; align-items:center; gap:10px;">
@@ -1927,7 +2025,7 @@
                   <div class="player-avatar" style="${avatarStyle}">${p.number || '•'}</div>
                   <div>
                     <div style="font-weight:700; font-size:14px;">${p.name}</div>
-                    <div style="font-size:11px; color:var(--hint);">${p.position || ''}</div>
+                    <div style="font-size:11px; color:var(--hint);">${allPositionsText}</div>
                   </div>
                 </div>
                 <div class="top-player-stat">${item[key]}</div>
@@ -1996,7 +2094,7 @@
       document.getElementById('subtab-lineups').style.display = tab === 'lineups' ? 'block' : 'none';
     }
 
-    /* НОВОВВЕДЕНИЕ 2: ИЗМЕНЕНИЕ СЧЕТА ВМЕСТО ЭМОДЗИ МЯЧА */
+    /* НОВОВВЕДЕНИЕ 1: В ДЕТАЛЯХ МАТЧА В PHOTO1 СЧЕТЧИК ГОЛОВ РЯДОМ С ФАМИЛИЯМИ НЕ ОТОБРАЖАЕТСЯ */
     function renderMatchGoalsTimeline(match) {
       const timelineContainer = document.getElementById('m-timeline-container');
       const h1 = document.getElementById('m-hero-goals1');
@@ -2029,8 +2127,9 @@
         const author = g.author || 'Гол';
         const assist = g.assist ? ` (${g.assist})` : '';
 
-        if (teamNum === 1) t1Goals.push(`${author} ${currentScore}${assist}`);
-        else t2Goals.push(`${currentScore} ${author}${assist}`);
+        // Здесь убираем текущий счет из списка рядом с фамилиями (Photo 1)
+        if (teamNum === 1) t1Goals.push(`${author}${assist}`);
+        else t2Goals.push(`${author}${assist}`);
 
         const card = document.createElement('div');
         card.className = `timeline-goal-card ${teamNum === 1 ? 'left' : 'right'}`;
@@ -2055,6 +2154,7 @@
       renderMatchLineupView(teamNum);
     }
 
+    /* НОВОВВЕДЕНИЕ 3: ОТОБРАЖЕНИЕ РЕЙТИНГА В ДЕТАЛЯХ МАТЧА НА РАССТАНОВКЕ (PHOTO 2) */
     function renderMatchLineupView(teamNum) {
       if(!currentMatchObject) return;
 
@@ -2138,8 +2238,12 @@
             openPlayerProfileByName(safeName);
           };
 
+          const pRating = (p.rating !== undefined && p.rating !== null) ? parseFloat(p.rating) : 6.0;
+          const ratingColor = getRatingColor(pRating);
+
           el.innerHTML = `
             <div class="player-avatar-circle ${p.isGk ? 'gk' : ''}" style="${avatarStyle}">${p.num || '•'}</div>
+            <div class="player-rating-badge" style="background-color: ${ratingColor};">${pRating.toFixed(1)}</div>
             <div class="player-name-label">${p.name}</div>
           `;
           pitchContainer.appendChild(el);
@@ -2196,15 +2300,19 @@
         const foundInSquad = allSquad.find(s => s.name.toLowerCase() === p.name.toLowerCase());
         const avatarStyle = (foundInSquad && foundInSquad.photo_url) ? `background-image: url('${foundInSquad.photo_url}'); color: transparent;` : '';
 
+        const pRating = (p.rating !== undefined && p.rating !== null) ? parseFloat(p.rating) : 6.0;
+        const ratingColor = getRatingColor(pRating);
+
         el.innerHTML = `
           <div class="player-avatar-circle ${p.isGk ? 'gk' : ''}" style="${avatarStyle}">${p.num || '•'}</div>
+          <div class="player-rating-badge" style="background-color: ${ratingColor};">${pRating.toFixed(1)}</div>
           <div class="player-name-label">${p.name}</div>
         `;
 
-        const safeName = p.name.replace(/'/g, "\\'");
+        // Нажатие по игроку открывает меню расчета рейтинга
         el.onclick = (e) => {
           e.stopPropagation();
-          if (!isLongPress) openPlayerProfileByName(safeName);
+          if (!isLongPress) openAdminPlayerStatsModal(idx);
         };
 
         attachLongPressHandler(el, idx);
@@ -2238,6 +2346,90 @@
       el.addEventListener('mousedown', startPress);
       el.addEventListener('mouseup', cancelPress);
       el.addEventListener('mouseleave', cancelPress);
+    }
+
+    /* НОВОВВЕДЕНИЕ 3: ЛОГИКА ОКНА ВВОДА ДЕЙСТВИЙ И РАСЧЕТА РЕЙТИНГА */
+    function openAdminPlayerStatsModal(playerIndex) {
+      editingPitchPlayerIndex = playerIndex;
+      const currentLineup = (currentAdminTeam === 1) ? adminLineup1 : adminLineup2;
+      if (!currentLineup || !currentLineup.startingXI[playerIndex]) return;
+
+      const p = currentLineup.startingXI[playerIndex];
+      document.getElementById('stat-modal-title').innerText = `Действия: ${p.name}`;
+
+      const s = p.stats || {};
+      document.getElementById('stat-goals').value = s.goals || 0;
+      document.getElementById('stat-assists').value = s.assists || 0;
+      document.getElementById('stat-saves').value = s.saves || 0;
+      document.getElementById('stat-tackles').value = s.tackles || 0;
+      document.getElementById('stat-misses').value = s.misses || 0;
+      document.getElementById('stat-bad-passes').value = s.badPasses || 0;
+      document.getElementById('stat-fk-fouls').value = s.fkFouls || 0;
+      document.getElementById('stat-pen-fouls').value = s.penFouls || 0;
+      document.getElementById('stat-conceded').value = s.conceded || 0;
+
+      liveUpdateStatRating();
+      document.getElementById('admin-player-stats-modal').classList.add('active');
+    }
+
+    function closeAdminPlayerStatsModal() {
+      document.getElementById('admin-player-stats-modal').classList.remove('active');
+    }
+
+    function openPlayerSelectFromStatsModal() {
+      closeAdminPlayerStatsModal();
+      openAdminPlayerSelectModal(editingPitchPlayerIndex);
+    }
+
+    function computeRatingFromInputs() {
+      const goals = parseFloat(document.getElementById('stat-goals').value) || 0;
+      const assists = parseFloat(document.getElementById('stat-assists').value) || 0;
+      const saves = parseFloat(document.getElementById('stat-saves').value) || 0;
+      const tackles = parseFloat(document.getElementById('stat-tackles').value) || 0;
+      const misses = parseFloat(document.getElementById('stat-misses').value) || 0;
+      const badPasses = parseFloat(document.getElementById('stat-bad-passes').value) || 0;
+      const fkFouls = parseFloat(document.getElementById('stat-fk-fouls').value) || 0;
+      const penFouls = parseFloat(document.getElementById('stat-pen-fouls').value) || 0;
+      const conceded = parseFloat(document.getElementById('stat-conceded').value) || 0;
+
+      // Формула авторасчета рейтинга
+      let rating = 6.0 
+        + (goals * 2.0) 
+        + (assists * 1.3) 
+        + (saves * 1.0) 
+        + (tackles * 0.5) 
+        - (misses * 0.5) 
+        - (badPasses * 0.3) 
+        - (fkFouls * 0.7) 
+        - (penFouls * 1.5) 
+        - (conceded * 0.5);
+
+      rating = Math.round(rating * 10) / 10;
+      return {
+        rating,
+        stats: { goals, assists, saves, tackles, misses, badPasses, fkFouls, penFouls, conceded }
+      };
+    }
+
+    function liveUpdateStatRating() {
+      const res = computeRatingFromInputs();
+      const prev = document.getElementById('stat-rating-preview');
+      if (prev) {
+        prev.innerText = res.rating.toFixed(1);
+        prev.style.color = getRatingColor(res.rating);
+      }
+    }
+
+    function calculateAndSavePlayerRating() {
+      const res = computeRatingFromInputs();
+      const currentLineup = (currentAdminTeam === 1) ? adminLineup1 : adminLineup2;
+      if (editingPitchPlayerIndex !== null && currentLineup && currentLineup.startingXI[editingPitchPlayerIndex]) {
+        const playerObj = currentLineup.startingXI[editingPitchPlayerIndex];
+        playerObj.rating = res.rating;
+        playerObj.stats = res.stats;
+      }
+      renderAdminPitch();
+      closeAdminPlayerStatsModal();
     }
 
     function openAdminPlayerSelectModal(playerIndex) {
@@ -2343,258 +2535,8 @@
       renderAdminGoalsBuilder();
     }
 
-    /* МОДАЛЬНОЕ ОКНО ПРОФИЛЯ ИГРОКА */
-    function openPlayerProfileByName(playerName) {
-      const found = allSquad.find(s => s.name.toLowerCase().trim() === playerName.toLowerCase().trim());
-      if (found) {
-        openPlayerProfile(found);
-      } else {
-        openPlayerProfile({
-          id: 'temp_' + Date.now(),
-          name: playerName,
-          number: '•',
-          position: 'FW',
-          secondary_positions: [],
-          photo_url: ''
-        });
-      }
-    }
-
-    function openPlayerProfile(player) {
-      currentPlayerViewing = player;
-
-      document.getElementById('pp-name').innerText = player.name;
-      document.getElementById('pp-number').innerText = player.number || '•';
-      document.getElementById('pp-position').innerText = player.position || 'FW';
-
-      const avatarEl = document.getElementById('pp-avatar');
-      if (player.photo_url) {
-        avatarEl.style.backgroundImage = `url('${player.photo_url}')`;
-        avatarEl.style.color = 'transparent';
-      } else {
-        avatarEl.style.backgroundImage = 'none';
-        avatarEl.style.color = '#fff';
-        avatarEl.innerText = player.number || '⚽';
-      }
-
-      const ageValEl = document.getElementById('pp-age');
-      const calcAge = calculateAgeFormatted(player.dob);
-      if (calcAge) {
-        ageValEl.innerText = calcAge;
-      } else if (player.age) {
-        ageValEl.innerText = player.age;
-      } else {
-        ageValEl.innerText = 'Н/У';
-      }
-
-      document.getElementById('pp-nationality').innerText = player.nationality || '🇷🇺 RUS';
-      document.getElementById('pp-height').innerText = player.height || '180 cm';
-      document.getElementById('pp-foot').innerText = player.foot || 'Правая';
-
-      const starBtn = document.getElementById('pp-star-btn');
-      if (starredPlayers.includes(player.id) || starredPlayers.includes(String(player.id))) {
-        starBtn.innerText = '★';
-        starBtn.classList.add('active');
-      } else {
-        starBtn.innerText = '☆';
-        starBtn.classList.remove('active');
-      }
-
-      renderPlayerCareerTable(player);
-      switchProfileTab('details');
-
-      document.getElementById('player-profile-modal').classList.add('active');
-    }
-
-    function closePlayerProfile() {
-      document.getElementById('player-profile-modal').classList.remove('active');
-    }
-
-    function switchProfileTab(tabName, btn) {
-      document.querySelectorAll('#player-profile-modal .top-tab-btn').forEach(b => b.classList.remove('active'));
-      if (btn) btn.classList.add('active');
-      else {
-        const btns = document.querySelectorAll('#player-profile-modal .top-tab-btn');
-        if (tabName === 'details') btns[0]?.classList.add('active');
-      }
-
-      document.querySelectorAll('.pp-tab-content').forEach(c => c.classList.remove('active'));
-      const target = document.getElementById('pp-tab-' + tabName);
-      if (target) target.classList.add('active');
-    }
-
-    function renderPlayerCareerTable(player) {
-      const tbody = document.getElementById('pp-career-body');
-      tbody.innerHTML = '';
-
-      let careerList = [];
-      if (player.career) {
-        try { careerList = typeof player.career === 'string' ? JSON.parse(player.career) : player.career; } catch(e){}
-      }
-
-      if (!Array.isArray(careerList) || careerList.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="color:var(--hint); padding:20px 0;">История карьеры отсутствует</td></tr>';
-      } else {
-        careerList.forEach(c => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td class="left-align">${c.season || '2026'}</td>
-            <td class="left-align">${c.team || 'ФК Яйц'}</td>
-            <td>${c.mp || 0}</td>
-            <td>${c.gls || 0}</td>
-            <td>${c.ast || 0}</td>
-            <td>${c.sv || 0}</td>
-            <td><span class="career-asr">${c.asr || '6.8'}</span></td>
-          `;
-          tbody.appendChild(tr);
-        });
-      }
-
-      // Доступно только для админа
-      const editCareerBtn = document.getElementById('pp-edit-career-btn');
-      if (editCareerBtn) editCareerBtn.style.display = isAdmin ? 'block' : 'none';
-    }
-
-    /* НОВОВВЕДЕНИЕ 1: РЕДАКТИРОВАНИЕ ПРОФИЛЯ ТОЛЬКО ДЛЯ АДМИНА */
-    function openPlayerEditModal() {
-      if (!isAdmin) return alert('Только администратор может редактировать профиль игрока.');
-      if (!currentPlayerViewing) return;
-
-      document.getElementById('edit-profile-id').value = currentPlayerViewing.id;
-      document.getElementById('edit-profile-number').value = currentPlayerViewing.number || '';
-      document.getElementById('edit-profile-dob').value = currentPlayerViewing.dob || '';
-      document.getElementById('edit-profile-photo').value = currentPlayerViewing.photo_url || '';
-      document.getElementById('edit-profile-photo-file').value = '';
-      document.getElementById('edit-profile-nat').value = currentPlayerViewing.nationality || '🇷🇺 RUS';
-      document.getElementById('edit-profile-height').value = currentPlayerViewing.height || '180 cm';
-      document.getElementById('edit-profile-foot').value = currentPlayerViewing.foot || 'Правая';
-
-      document.getElementById('player-details-edit-modal').classList.add('active');
-    }
-
-    function closePlayerEditModal() {
-      document.getElementById('player-details-edit-modal').classList.remove('active');
-    }
-
-    async function savePlayerProfileDetails() {
-      if (!isAdmin) return alert('Только администратор может сохранять изменения профиля.');
-      if (!currentPlayerViewing) return;
-
-      const number = document.getElementById('edit-profile-number').value.trim();
-      const dob = document.getElementById('edit-profile-dob').value;
-      const photoUrlInput = document.getElementById('edit-profile-photo').value.trim();
-      const nationality = document.getElementById('edit-profile-nat').value.trim();
-      const height = document.getElementById('edit-profile-height').value.trim();
-      const foot = document.getElementById('edit-profile-foot').value.trim();
-
-      fileToDataUrl('edit-profile-photo-file', async (fileDataUrl) => {
-        const photo_url = fileDataUrl || photoUrlInput || currentPlayerViewing.photo_url;
-        const payload = { number, dob, photo_url, nationality, height, foot };
-
-        const { error } = await _supabase.from('squad').update(payload).eq('id', currentPlayerViewing.id);
-        if (error) {
-          alert('Ошибка обновления профиля: ' + error.message);
-        } else {
-          closePlayerEditModal();
-          await loadSquad();
-          const updated = allSquad.find(s => String(s.id) === String(currentPlayerViewing.id));
-          if (updated) openPlayerProfile(updated);
-        }
-      });
-    }
-
-    function openCareerEditModal() {
-      if (!isAdmin) return alert('Только администратор может управлять сезонами.');
-      if (!currentPlayerViewing) return;
-      document.getElementById('career-edit-modal').classList.add('active');
-    }
-
-    function closeCareerEditModal() {
-      document.getElementById('career-edit-modal').classList.remove('active');
-    }
-
-    async function saveCareerStats() {
-      if (!isAdmin) return alert('Только администратор может изменять статистику.');
-      if (!currentPlayerViewing) return;
-
-      const season = document.getElementById('edit-career-season').value.trim() || '2026';
-      const mp = parseInt(document.getElementById('edit-career-mp').value) || 0;
-      const gls = parseInt(document.getElementById('edit-career-gls').value) || 0;
-      const ast = parseInt(document.getElementById('edit-career-ast').value) || 0;
-      const sv = parseInt(document.getElementById('edit-career-saves').value) || 0;
-      const asr = document.getElementById('edit-career-asr').value.trim() || '6.8';
-
-      let currentCareer = [];
-      if (currentPlayerViewing.career) {
-        try {
-          currentCareer = typeof currentPlayerViewing.career === 'string' ? JSON.parse(currentPlayerViewing.career) : currentPlayerViewing.career;
-        } catch(e) { currentCareer = []; }
-      }
-
-      const existingIdx = currentCareer.findIndex(c => c.season === season);
-      const seasonObj = { season, team: 'ФК Яйц', mp, gls, ast, sv, asr };
-
-      if (existingIdx >= 0) {
-        currentCareer[existingIdx] = seasonObj;
-      } else {
-        currentCareer.push(seasonObj);
-      }
-
-      const { error } = await _supabase.from('squad').update({ career: JSON.stringify(currentCareer) }).eq('id', currentPlayerViewing.id);
-      if (error) {
-        alert('Ошибка сохранения карьеры: ' + error.message);
-      } else {
-        closeCareerEditModal();
-        await loadSquad();
-        const updated = allSquad.find(s => String(s.id) === String(currentPlayerViewing.id));
-        if (updated) openPlayerProfile(updated);
-      }
-    }
-
-    async function deleteCareerSeason() {
-      if (!isAdmin) return alert('Только администратор может удалять сезоны.');
-      if (!currentPlayerViewing) return;
-
-      const season = document.getElementById('edit-career-season').value.trim();
-      let currentCareer = [];
-      if (currentPlayerViewing.career) {
-        try {
-          currentCareer = typeof currentPlayerViewing.career === 'string' ? JSON.parse(currentPlayerViewing.career) : currentPlayerViewing.career;
-        } catch(e) { currentCareer = []; }
-      }
-
-      currentCareer = currentCareer.filter(c => c.season !== season);
-
-      const { error } = await _supabase.from('squad').update({ career: JSON.stringify(currentCareer) }).eq('id', currentPlayerViewing.id);
-      if (error) {
-        alert('Ошибка удаления сезона: ' + error.message);
-      } else {
-        closeCareerEditModal();
-        await loadSquad();
-        const updated = allSquad.find(s => String(s.id) === String(currentPlayerViewing.id));
-        if (updated) openPlayerProfile(updated);
-      }
-    }
-
-    async function resetCareerStats() {
-      if (!isAdmin) return alert('Только администратор может сбрасывать статистику.');
-      if (!currentPlayerViewing) return;
-      if (!confirm('Сбросить данные карьеры?')) return;
-
-      const { error } = await _supabase.from('squad').update({ career: null }).eq('id', currentPlayerViewing.id);
-      if (error) {
-        alert('Ошибка сброса: ' + error.message);
-      } else {
-        closeCareerEditModal();
-        await loadSquad();
-        const updated = allSquad.find(s => String(s.id) === String(currentPlayerViewing.id));
-        if (updated) openPlayerProfile(updated);
-      }
-    }
-
-    /* АДМИНКА МАТЧЕЙ */
     async function saveMatch() {
-      if (!isAdmin) return alert('Только администратор может сохранять матчи.');
+      if (!isAdmin) return alert('Только админ может сохранять матчи.');
 
       const status = document.getElementById('match_status').value;
       const team1 = document.getElementById('team1').value.trim();
@@ -2603,7 +2545,7 @@
       const match_date = document.getElementById('match_date').value.trim();
       const best_player = document.getElementById('best_player').value.trim();
 
-      if (!team1 || !team2) return alert('Заполните название команд');
+      if (!team1 || !team2) return alert('Заполните названия команд');
 
       const payload = {
         status,
@@ -2611,8 +2553,8 @@
         team2,
         score,
         match_date,
-        best_player: (status === 'finished') ? best_player : '',
-        goals_data: (status === 'finished') ? JSON.stringify(adminGoals) : null,
+        goals_data: JSON.stringify(adminGoals),
+        best_player,
         lineup1: JSON.stringify(adminLineup1),
         lineup2: JSON.stringify(adminLineup2)
       };
@@ -2629,13 +2571,13 @@
       if (error) {
         alert('Ошибка сохранения матча: ' + error.message);
       } else {
-        cancelEdit();
+        resetMatchForm();
         loadMatches();
       }
     }
 
-    function editMatch(matchId) {
-      const match = allMatches.find(m => m.id === matchId);
+    function editMatch(id) {
+      const match = allMatches.find(m => m.id === id);
       if (!match) return;
 
       editingMatchId = match.id;
@@ -2646,47 +2588,27 @@
       document.getElementById('match_date').value = match.match_date || '';
       document.getElementById('best_player').value = match.best_player || '';
 
+      adminGoals = [];
       if (match.goals_data) {
         try {
           adminGoals = typeof match.goals_data === 'string' ? JSON.parse(match.goals_data) : match.goals_data;
         } catch(e) { adminGoals = []; }
-      } else {
-        adminGoals = [];
       }
       renderAdminGoalsBuilder();
 
+      adminLineup1 = getDefaultLineup(match.team1 || "Команда 1");
       if (match.lineup1) {
-        try { adminLineup1 = typeof match.lineup1 === 'string' ? JSON.parse(match.lineup1) : match.lineup1; }
-        catch(e) { adminLineup1 = getDefaultLineup("Команда 1"); }
-      } else { adminLineup1 = getDefaultLineup("Команда 1"); }
+        try { adminLineup1 = typeof match.lineup1 === 'string' ? JSON.parse(match.lineup1) : match.lineup1; } catch(e){}
+      }
 
+      adminLineup2 = getDefaultLineup(match.team2 || "Команда 2");
       if (match.lineup2) {
-        try { adminLineup2 = typeof match.lineup2 === 'string' ? JSON.parse(match.lineup2) : match.lineup2; }
-        catch(e) { adminLineup2 = getDefaultLineup("Команда 2"); }
-      } else { adminLineup2 = getDefaultLineup("Команда 2"); }
-
-      if (adminLineup1.absencesText) {
-        adminAbsences = [];
-        const lines = adminLineup1.absencesText.split('\n');
-        lines.forEach(l => {
-          if (l.trim()) {
-            const isInj = l.includes('🩹');
-            const cleaned = l.replace(/[🩹🚫]/g, '').trim();
-            adminAbsences.push({
-              player: cleaned,
-              type: isInj ? 'Травмирован' : 'Пропускающий',
-              reason: ''
-            });
-          }
-        });
-      } else {
-        adminAbsences = [];
+        try { adminLineup2 = typeof match.lineup2 === 'string' ? JSON.parse(match.lineup2) : match.lineup2; } catch(e){}
       }
 
       toggleAdminFields();
-      renderAdminAbsences();
 
-      document.getElementById('form-title').innerText = '✏️ Редактирование матча';
+      document.getElementById('form-title').innerText = '✏️ Редактировать матч';
       document.getElementById('save-btn').innerText = 'Обновить матч';
       document.getElementById('cancel-btn').style.display = 'block';
 
@@ -2695,6 +2617,10 @@
     }
 
     function cancelEdit() {
+      resetMatchForm();
+    }
+
+    function resetMatchForm() {
       editingMatchId = null;
       document.getElementById('match_status').value = 'finished';
       document.getElementById('team1').value = '';
@@ -2704,9 +2630,9 @@
       document.getElementById('best_player').value = '';
 
       adminGoals = [];
-      adminAbsences = [];
       adminLineup1 = getDefaultLineup("Команда 1");
       adminLineup2 = getDefaultLineup("Команда 2");
+      adminAbsences = [];
 
       renderAdminGoalsBuilder();
       renderAdminAbsences();
@@ -2722,7 +2648,7 @@
       if (!container) return;
 
       if (allMatches.length === 0) {
-        container.innerHTML = '<p style="font-size:12px; color:var(--hint);">Сохраненных матчей нет</p>';
+        container.innerHTML = '<p style="font-size:12px; color:var(--hint);">Список матчей пуст</p>';
         return;
       }
 
@@ -2731,8 +2657,8 @@
         html += `
           <div class="admin-match-item">
             <div>
-              <strong>${m.team1 || 'Ком.1'} vs ${m.team2 || 'Ком.2'}</strong> (${m.score || 'vs'})
-              <div style="font-size:11px; color:var(--hint);">${m.match_date || ''}</div>
+              <strong>${m.team1 || 'Ком1'} vs ${m.team2 || 'Ком2'}</strong>
+              <div style="font-size:11px; color:var(--hint);">${m.match_date || ''} • ${m.score || ''}</div>
             </div>
             <div class="action-btns">
               <button class="edit-btn" onclick="editMatch(${m.id})">✏️</button>
@@ -2745,18 +2671,284 @@
     }
 
     async function deleteMatch(id) {
-      if (!isAdmin) return alert('Только администратор может удалять матчи.');
+      if (!isAdmin) return alert('Только админ может удалять матчи.');
       if (!confirm('Вы уверены, что хотите удалить этот матч?')) return;
+
       const { error } = await _supabase.from('matches').delete().eq('id', id);
-      if (error) alert('Ошибка удаления матча: ' + error.message);
+      if (error) alert('Ошибка удаления: ' + error.message);
       else loadMatches();
     }
 
-    // ИНИЦИАЛИЗАЦИЯ
+    /* ПРОФИЛЬ ИГРОКА И КАРЬЕРА */
+    function openPlayerProfileByName(playerName) {
+      const player = allSquad.find(p => p.name.toLowerCase() === playerName.toLowerCase());
+      if (player) {
+        openPlayerProfile(player);
+      } else {
+        openPlayerProfile({
+          id: 'temp_' + playerName,
+          name: playerName,
+          number: '•',
+          position: 'FW',
+          status: ''
+        });
+      }
+    }
+
+    function openPlayerProfile(player) {
+      currentPlayerViewing = player;
+
+      const avatar = document.getElementById('pp-avatar');
+      if (player.photo_url) {
+        avatar.style.backgroundImage = `url('${player.photo_url}')`;
+        avatar.innerText = '';
+      } else {
+        avatar.style.backgroundImage = 'none';
+        avatar.innerText = player.number || '⚽';
+      }
+
+      document.getElementById('pp-name').innerText = player.name;
+      document.getElementById('pp-number').innerText = player.number || 'Н/У';
+      document.getElementById('pp-position').innerText = getPlayerPositionsString(player) || player.position || 'FW';
+      document.getElementById('pp-nationality').innerText = player.nationality || '🇷🇺 RUS';
+      document.getElementById('pp-height').innerText = player.height || '180 cm';
+      document.getElementById('pp-foot').innerText = player.foot || 'Правая';
+      
+      const ageStr = calculateAgeFormatted(player.dob);
+      document.getElementById('pp-age').innerText = ageStr || 'Н/У';
+
+      const starBtn = document.getElementById('pp-star-btn');
+      if (starredPlayers.includes(player.id) || starredPlayers.includes(String(player.id))) {
+        starBtn.innerText = '★';
+        starBtn.classList.add('active');
+      } else {
+        starBtn.innerText = '☆';
+        starBtn.classList.remove('active');
+      }
+
+      renderPlayerCareer(player);
+      renderPlayerMatchesHistory(player);
+
+      document.getElementById('player-profile-modal').classList.add('active');
+    }
+
+    function closePlayerProfile() {
+      document.getElementById('player-profile-modal').classList.remove('active');
+    }
+
+    function switchProfileTab(tab, btn) {
+      document.querySelectorAll('#player-profile-modal .top-tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      document.querySelectorAll('.pp-tab-content').forEach(c => c.classList.remove('active'));
+      document.getElementById('pp-tab-' + tab).classList.add('active');
+    }
+
+    function renderPlayerCareer(player) {
+      const tbody = document.getElementById('pp-career-body');
+      tbody.innerHTML = '';
+
+      let careerData = [];
+      if (player.career) {
+        try {
+          careerData = typeof player.career === 'string' ? JSON.parse(player.career) : player.career;
+        } catch(e) { careerData = []; }
+      }
+
+      if (!Array.isArray(careerData) || careerData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="color:var(--hint); text-align:center; padding:16px;">Данные о карьере пока отсутствуют</td></tr>';
+      } else {
+        careerData.forEach(c => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td class="left-align">${c.season || '2026'}</td>
+            <td class="left-align">${c.team || 'ФК Яйц'}</td>
+            <td>${c.mp || 0}</td>
+            <td>${c.gls || 0}</td>
+            <td>${c.ast || 0}</td>
+            <td>${c.sv || 0}</td>
+            <td><span class="career-asr">${c.asr || '6.0'}</span></td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      const editBtn = document.getElementById('pp-edit-career-btn');
+      if (editBtn) editBtn.style.display = isAdmin ? 'block' : 'none';
+    }
+
+    function renderPlayerMatchesHistory(player) {
+      const container = document.getElementById('pp-matches-list');
+      if (!container) return;
+
+      const playerMatches = allMatches.filter(m => {
+        let inGoals = false, inLineup = false;
+        if (m.goals_data) {
+          try {
+            const g = typeof m.goals_data === 'string' ? JSON.parse(m.goals_data) : m.goals_data;
+            if (Array.isArray(g)) {
+              inGoals = g.some(item => (item.author && item.author.toLowerCase() === player.name.toLowerCase()) || (item.assist && item.assist.toLowerCase() === player.name.toLowerCase()));
+            }
+          } catch(e){}
+        }
+        if (m.lineup1) {
+          try {
+            const l1 = typeof m.lineup1 === 'string' ? JSON.parse(m.lineup1) : m.lineup1;
+            if (l1.startingXI && l1.startingXI.some(p => p.name.toLowerCase() === player.name.toLowerCase())) inLineup = true;
+            if (l1.roster && l1.roster.some(rName => rName.toLowerCase() === player.name.toLowerCase())) inLineup = true;
+          } catch(e){}
+        }
+        return inGoals || inLineup;
+      });
+
+      if (playerMatches.length === 0) {
+        container.innerHTML = '<div class="empty-card-placeholder">Игрок еще не принимал участия в зафиксированных матчах</div>';
+        return;
+      }
+
+      let html = '';
+      playerMatches.forEach(m => {
+        html += `
+          <div class="card clickable-card" onclick="openMatchModal(${m.id})">
+            <div class="match-header">${m.match_date || ''}</div>
+            <div class="match-row">
+              <span>${m.team1 || ''}</span>
+              <span style="color:var(--accent);">${m.score || 'vs'}</span>
+              <span>${m.team2 || ''}</span>
+            </div>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    function openPlayerEditModal() {
+      if (!currentPlayerViewing) return;
+      document.getElementById('edit-profile-id').value = currentPlayerViewing.id;
+      document.getElementById('edit-profile-number').value = currentPlayerViewing.number || '';
+      document.getElementById('edit-profile-dob').value = currentPlayerViewing.dob || '';
+      document.getElementById('edit-profile-photo').value = currentPlayerViewing.photo_url || '';
+      document.getElementById('edit-profile-nat').value = currentPlayerViewing.nationality || '🇷🇺 RUS';
+      document.getElementById('edit-profile-height').value = currentPlayerViewing.height || '180 cm';
+      document.getElementById('edit-profile-foot').value = currentPlayerViewing.foot || 'Правая';
+
+      document.getElementById('player-details-edit-modal').classList.add('active');
+    }
+
+    function closePlayerEditModal() {
+      document.getElementById('player-details-edit-modal').classList.remove('active');
+    }
+
+    async function savePlayerProfileDetails() {
+      const pid = document.getElementById('edit-profile-id').value;
+      const number = document.getElementById('edit-profile-number').value.trim();
+      const dob = document.getElementById('edit-profile-dob').value;
+      const urlPhoto = document.getElementById('edit-profile-photo').value.trim();
+      const nationality = document.getElementById('edit-profile-nat').value.trim();
+      const height = document.getElementById('edit-profile-height').value.trim();
+      const foot = document.getElementById('edit-profile-foot').value.trim();
+
+      fileToDataUrl('edit-profile-photo-file', async (fileUrl) => {
+        const photo_url = fileUrl || urlPhoto;
+        const payload = { number, dob, photo_url, nationality, height, foot };
+
+        const { error } = await _supabase.from('squad').update(payload).eq('id', pid);
+        if (error) {
+          alert('Ошибка обновления профиля: ' + error.message);
+        } else {
+          closePlayerEditModal();
+          await loadSquad();
+          const updated = allSquad.find(p => String(p.id) === String(pid));
+          if (updated) openPlayerProfile(updated);
+        }
+      });
+    }
+
+    function openCareerEditModal() {
+      document.getElementById('edit-career-season').value = '2026';
+      document.getElementById('edit-career-mp').value = '0';
+      document.getElementById('edit-career-gls').value = '0';
+      document.getElementById('edit-career-ast').value = '0';
+      document.getElementById('edit-career-saves').value = '0';
+      document.getElementById('edit-career-asr').value = '6.0';
+
+      document.getElementById('career-edit-modal').classList.add('active');
+    }
+
+    function closeCareerEditModal() {
+      document.getElementById('career-edit-modal').classList.remove('active');
+    }
+
+    async function saveCareerStats() {
+      if (!currentPlayerViewing) return;
+      const season = document.getElementById('edit-career-season').value.trim() || '2026';
+      const mp = parseInt(document.getElementById('edit-career-mp').value, 10) || 0;
+      const gls = parseInt(document.getElementById('edit-career-gls').value, 10) || 0;
+      const ast = parseInt(document.getElementById('edit-career-ast').value, 10) || 0;
+      const sv = parseInt(document.getElementById('edit-career-saves').value, 10) || 0;
+      const asr = document.getElementById('edit-career-asr').value.trim() || '6.0';
+
+      let careerArr = [];
+      if (currentPlayerViewing.career) {
+        try { careerArr = typeof currentPlayerViewing.career === 'string' ? JSON.parse(currentPlayerViewing.career) : currentPlayerViewing.career; } catch(e){}
+      }
+      if (!Array.isArray(careerArr)) careerArr = [];
+
+      const existingIndex = careerArr.findIndex(c => c.season === season);
+      const seasonObj = { season, team: 'ФК Яйц', mp, gls, ast, sv, asr };
+
+      if (existingIndex >= 0) {
+        careerArr[existingIndex] = seasonObj;
+      } else {
+        careerArr.push(seasonObj);
+      }
+
+      const { error } = await _supabase.from('squad').update({ career: JSON.stringify(careerArr) }).eq('id', currentPlayerViewing.id);
+      if (error) alert('Ошибка сохранения карьеры: ' + error.message);
+      else {
+        closeCareerEditModal();
+        await loadSquad();
+        const updated = allSquad.find(p => String(p.id) === String(currentPlayerViewing.id));
+        if (updated) openPlayerProfile(updated);
+      }
+    }
+
+    async function deleteCareerSeason() {
+      if (!currentPlayerViewing) return;
+      const season = document.getElementById('edit-career-season').value.trim();
+      let careerArr = [];
+      if (currentPlayerViewing.career) {
+        try { careerArr = typeof currentPlayerViewing.career === 'string' ? JSON.parse(currentPlayerViewing.career) : currentPlayerViewing.career; } catch(e){}
+      }
+      careerArr = careerArr.filter(c => c.season !== season);
+
+      const { error } = await _supabase.from('squad').update({ career: JSON.stringify(careerArr) }).eq('id', currentPlayerViewing.id);
+      if (error) alert('Ошибка удаления сезона: ' + error.message);
+      else {
+        closeCareerEditModal();
+        await loadSquad();
+        const updated = allSquad.find(p => String(p.id) === String(currentPlayerViewing.id));
+        if (updated) openPlayerProfile(updated);
+      }
+    }
+
+    async function resetCareerStats() {
+      if (!currentPlayerViewing) return;
+      const { error } = await _supabase.from('squad').update({ career: JSON.stringify([]) }).eq('id', currentPlayerViewing.id);
+      if (error) alert('Ошибка сброса: ' + error.message);
+      else {
+        closeCareerEditModal();
+        await loadSquad();
+        const updated = allSquad.find(p => String(p.id) === String(currentPlayerViewing.id));
+        if (updated) openPlayerProfile(updated);
+      }
+    }
+
+    /* ИНИЦИАЛИЗАЦИЯ ПРИ ЗАГРУЗКЕ СТРАНИЦЫ */
     window.addEventListener('DOMContentLoaded', () => {
+      renderSecondaryPosPills();
       loadSquad();
       loadMatches();
-      renderSecondaryPosPills();
     });
   </script>
 </body>
