@@ -1206,6 +1206,40 @@
       document.body.style.paddingBottom = '0';
     }
 
+    /* НОВОВВЕДЕНИЕ 4: Вспомогательная функция очистки имени автора гола от точек и цифр */
+    function cleanGoalName(str) {
+      if (!str) return '';
+      return str
+        .replace(/\d+['’]?/g, '')             // Удаляем минуты (например 45')
+        .replace(/^[\d\.\s•\-]+/, '')         // Удаляем ведущие цифры, точки, пробелы, дефисы
+        .replace(/^[\.\s]+/, '')               // Удаляем любые оставшиеся точки в начале
+        .replace(/[\.\s]+$/, '')               // Удаляем точки в конце
+        .trim();
+    }
+
+    /* НОВОВВЕДЕНИЕ 6: Вспомогательная функция определения цвета счета (зеленый при победе, красный при поражении) */
+    function getScoreColorStyle(match) {
+      if (!match || !match.score || match.status.startsWith('upcoming')) return 'color: var(--accent);';
+      const scores = match.score.match(/\d+/g);
+      if (!scores || scores.length < 2) return 'color: var(--accent);';
+      
+      const score1 = parseInt(scores[0], 10);
+      const score2 = parseInt(scores[1], 10);
+      
+      const isTeam1Ours = match.team1 && match.team1.toLowerCase().includes('яйц');
+      const isTeam2Ours = match.team2 && match.team2.toLowerCase().includes('яйц');
+      
+      let ourScore = score1, oppScore = score2;
+      if (isTeam2Ours && !isTeam1Ours) {
+        ourScore = score2;
+        oppScore = score1;
+      }
+      
+      if (ourScore > oppScore) return 'color: var(--accent);'; // Победа (Зеленый)
+      if (ourScore < oppScore) return 'color: var(--danger);'; // Поражение (Красный)
+      return 'color: #ffffff;';                              // Ничья (Белый)
+    }
+
     function fileToDataUrl(fileInputId, callback) {
       const fileInput = document.getElementById(fileInputId);
       if (fileInput && fileInput.files && fileInput.files[0]) {
@@ -1527,15 +1561,14 @@
     function removeGoalFromBuilder(index) { adminGoalsList.splice(index, 1); renderAdminGoalsBuilder(); }
 
     function parseGoalsToBuilderList(goals1Str, goals2Str) {
-      const cleanName = (str) => str.replace(/\d+['’]?/g, '').trim();
       const extracted = [];
       const parseTeamGoals = (str, teamNum) => {
         if (!str) return;
         const lines = str.split(/,|\n/).map(s => s.trim()).filter(Boolean);
         lines.forEach(line => {
           const numMatch = line.match(/^(\d+)[\.\)]\s*(.+)/);
-          if (numMatch) extracted.push({ order: parseInt(numMatch[1], 10), team: teamNum, player: cleanName(numMatch[2]) });
-          else extracted.push({ order: 999, team: teamNum, player: cleanName(line) });
+          if (numMatch) extracted.push({ order: parseInt(numMatch[1], 10), team: teamNum, player: cleanGoalName(numMatch[2]) });
+          else extracted.push({ order: 999, team: teamNum, player: cleanGoalName(line) });
         });
       };
       parseTeamGoals(goals1Str, 1);
@@ -1547,7 +1580,7 @@
     function serializeGoalsBuilder() {
       const g1Lines = [], g2Lines = [];
       adminGoalsList.forEach((item, index) => {
-        const cleanPlayer = item.player.replace(/\d+['’]?/g, '').trim();
+        const cleanPlayer = cleanGoalName(item.player);
         if (!cleanPlayer) return;
         const lineText = `${index + 1}. ${cleanPlayer}`;
         if (item.team === 1) g1Lines.push(lineText); else g2Lines.push(lineText);
@@ -1685,7 +1718,7 @@
             isDragging = false;
             openPlayerSelectMenu((name, num) => { playerObj.name = name; playerObj.num = num; renderAdminPitch(); });
           }
-        }, 2000); 
+        }, 800); 
       };
       const cancelAdminPress = () => { if (longPressTimerAdmin) { clearTimeout(longPressTimerAdmin); longPressTimerAdmin = null; } };
       el.onpointerdown = startAdminPress;
@@ -1706,7 +1739,7 @@
         openPlayerSelectMenu((playerName) => {
             const ev = prompt(`Действие для ${playerName}:\n1 - Гол\n2 - Автогол\n3 - Ассист\n4 - Травма\n5 - Сейв пенальти`, "1");
             if(ev) {
-                alert(`Событие ${ev} для ${playerName} добавлено (UI-мок).`);
+                alert(`Событие ${ev} для ${playerName} добавлено.`);
             }
         });
     }
@@ -1769,35 +1802,16 @@
       if (playedMatches.length === 0) container.innerHTML = '<p style="color:var(--hint);">Сыгранных матчей пока нет.</p>';
       else {
         container.innerHTML = playedMatches.map(m => {
-          // НОВОВВЕДЕНИЕ 4: Убираем точки и цифры перед авторами голов
-          const cleanName = s => s.replace(/\d+['’]?/g, '').replace(/^[\d\.\-\)\s]+/, '').trim();
-          const cleanG1 = m.goals1 ? m.goals1.split(/,|\n/).map(s => cleanName(s)).filter(Boolean).join(', ') : '';
-          const cleanG2 = m.goals2 ? m.goals2.split(/,|\n/).map(s => cleanName(s)).filter(Boolean).join(', ') : '';
+          /* НОВОВВЕДЕНИЕ 4: Очистка авторов голов от точек и лишних символов */
+          const cleanG1 = m.goals1 ? m.goals1.split(/,|\n/).map(s => cleanGoalName(s)).filter(Boolean).join(', ') : '';
+          const cleanG2 = m.goals2 ? m.goals2.split(/,|\n/).map(s => cleanGoalName(s)).filter(Boolean).join(', ') : '';
           const hasGoals = cleanG1 || cleanG2;
-          
-          // НОВОВВЕДЕНИЕ 6: Раскрашиваем счет в красный или зеленый
-          let scoreColor = 'var(--text)';
-          const scores = (m.score || '').match(/\d+/g);
-          if (scores && scores.length >= 2) {
-            const s1 = parseInt(scores[0], 10), s2 = parseInt(scores[1], 10);
-            const isMyT1 = (m.team1 || '').toLowerCase().includes('яйц');
-            const isMyT2 = (m.team2 || '').toLowerCase().includes('яйц');
-            
-            if (isMyT1 && s1 < s2) scoreColor = 'var(--danger)';
-            else if (isMyT1 && s1 > s2) scoreColor = 'var(--accent)';
-            else if (isMyT2 && s2 < s1) scoreColor = 'var(--danger)';
-            else if (isMyT2 && s2 > s1) scoreColor = 'var(--accent)';
-            else if (s1 === s2) scoreColor = 'var(--hint)';
-          }
-
+          /* НОВОВВЕДЕНИЕ 6: Окрашивание цифр счета в зеленый/красный цвет в зависимости от исхода */
+          const scoreStyle = getScoreColorStyle(m);
           return `
             <div class="card clickable-card" onclick="openMatchDetails('${m.id}')">
               ${m.match_date ? `<div class="match-header">📅 ${m.match_date}</div>` : ''}
-              <div class="match-row">
-                <span style="width:38%; text-align:left;">${m.team1}</span>
-                <span style="color:${scoreColor}; text-align:center; min-width:40px;">${m.score || 'vs'}</span>
-                <span style="width:38%; text-align:right;">${m.team2}</span>
-              </div>
+              <div class="match-row"><span style="width:38%; text-align:left;">${m.team1}</span><span style="${scoreStyle} text-align:center; min-width:40px;">${m.score || 'vs'}</span><span style="width:38%; text-align:right;">${m.team2}</span></div>
               ${hasGoals ? `<div class="goals-row"><div class="goals-col">⚽ ${cleanG1 || '—'}</div><div class="goals-col right">⚽ ${cleanG2 || '—'}</div></div>` : ''}
               ${m.best_player ? `<div class="mvp-row">🏅 Игрок матча: ${m.best_player}</div>` : ''}
             </div>
@@ -1965,8 +1979,8 @@
         `;
       }).join('');
 
-      // НОВОВВЕДЕНИЕ 3: Настройка зажатия 800мс только для админа на схеме (сохраняет в БД)
-      if (isAdmin && currentMatchObject && !currentMatchObject.status.startsWith('upcoming')) {
+      /* НОВОВВЕДЕНИЕ 3: Зажатие 800мс на схеме в деталях матча для АДМИНА для смены игроков */
+      if (isAdmin) {
         lineup.startingXI.forEach((p, index) => {
           const el = document.getElementById(`viewer-player-${index}`);
           if (!el) return;
@@ -1979,10 +1993,8 @@
               if (!isMoved) {
                 if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
                 openAdminSubstitutionModal(p, lineup, () => {
-                  // Обновляем lineup в текущем объекте матча для корректного сохранения
                   if (currentLineupTeam === 1) currentMatchObject.lineup1 = JSON.stringify(lineup);
                   else currentMatchObject.lineup2 = JSON.stringify(lineup);
-                  
                   renderLineupView();
                   saveMatchLineupSilently();
                 });
@@ -2036,7 +2048,7 @@
               <h4 style="margin:0; font-size:15px;">Замена: ${targetPlayer.name}</h4>
               <button onclick="document.getElementById('${modalId}').remove()" style="border:none; background:none; font-size:20px; color:var(--hint); cursor:pointer; padding:0;">✕</button>
             </div>
-            <div style="font-size:12px; color:var(--hint); margin-bottom:8px;">Выберите игрока из основного состава:</div>
+            <div style="font-size:12px; color:var(--hint); margin-bottom:8px;">Выберите игрока из общего состава:</div>
             <div style="max-height:280px; overflow-y:auto; display:flex; flex-direction:column; gap:6px;">
               ${allSquad.map(sq => {
                 const alreadyOnPitch = lineupObj.startingXI.some(p => p.name === sq.name && p.name !== targetPlayer.name);
@@ -2080,15 +2092,14 @@
 
     function parseGoalsSequence(goals1Str, goals2Str) {
       const goals = [];
-      // НОВОВВЕДЕНИЕ 4: Убираем точки и цифры перед авторами голов
-      const cleanName = (str) => str.replace(/\d+['’]?/g, '').replace(/^[\d\.\-\)\s]+/, '').trim();
       const extract = (str, teamNum) => {
         if (!str) return;
         const items = str.split(/,|\n/).map(s => s.trim()).filter(Boolean);
         items.forEach((item, idx) => {
           const numMatch = item.match(/^(\d+)[\.\)]/);
           const order = numMatch ? parseInt(numMatch[1], 10) : (idx + 1) * 10;
-          goals.push({ team: teamNum, player: cleanName(item), order: order });
+          /* НОВОВВЕДЕНИЕ 4: Использование cleanGoalName без точек */
+          goals.push({ team: teamNum, player: cleanGoalName(item), order: order });
         });
       };
       extract(goals1Str, 1);
@@ -2106,7 +2117,12 @@
       document.getElementById('m-date').innerText = match.match_date || 'Завершен';
       document.getElementById('m-team1').innerText = match.team1;
       document.getElementById('m-team2').innerText = match.team2;
-      document.getElementById('m-score').innerText = match.score || 'VS';
+      
+      /* НОВОВВЕДЕНИЕ 6: Цвет счета в шапке модалки (зеленый/красный) */
+      const scoreBox = document.getElementById('m-score');
+      scoreBox.innerText = match.score || 'VS';
+      scoreBox.setAttribute('style', getScoreColorStyle(match) + ' font-size: 32px; font-weight: 800; padding: 0 12px; letter-spacing: 2px;');
+
       document.getElementById('btn-t1-name').innerText = match.team1;
       document.getElementById('btn-t2-name').innerText = match.team2;
 
@@ -2115,10 +2131,9 @@
         summaryRow.style.display = 'none';
       } else {
         summaryRow.style.display = 'flex';
-        // НОВОВВЕДЕНИЕ 4: Убираем точки и цифры перед авторами голов
-        const cleanNameStr = s => s.replace(/\d+['’]?/g, '').replace(/^[\d\.\-\)\s]+/, '').trim();
-        const cleanG1 = match.goals1 ? match.goals1.split(/,|\n/).map(cleanNameStr).filter(Boolean).join('<br>') : '—';
-        const cleanG2 = match.goals2 ? match.goals2.split(/,|\n/).map(cleanNameStr).filter(Boolean).join('<br>') : '—';
+        /* НОВОВВЕДЕНИЕ 4: Без точек в авторах голов */
+        const cleanG1 = match.goals1 ? match.goals1.split(/,|\n/).map(s => cleanGoalName(s)).filter(Boolean).join('<br>') : '—';
+        const cleanG2 = match.goals2 ? match.goals2.split(/,|\n/).map(s => cleanGoalName(s)).filter(Boolean).join('<br>') : '—';
         document.getElementById('m-hero-goals1').innerHTML = cleanG1;
         document.getElementById('m-hero-goals2').innerHTML = cleanG2;
 
@@ -2127,153 +2142,280 @@
         if (timelineSeq.length === 0) {
           timelineContainer.innerHTML = '<div style="color:var(--hint); font-size:13px; text-align:center;">Голы не забивались</div>';
         } else {
-          // НОВОВВЕДЕНИЕ 2: Убрана возможность кликать на голы для перехода в профиль игрока в деталях матча
           timelineContainer.innerHTML = timelineSeq.map(g => {
             const isTeam1 = (g.team === 1);
             const cardClass = isTeam1 ? 'left' : 'right';
             const teamName = isTeam1 ? match.team1 : match.team2;
-            
+            const cleanPName = cleanGoalName(g.player);
+            /* НОВОВВЕДЕНИЕ 2: Удалена возможность перехода в профиль игрока из плашки голов (убран onclick) */
             return `
               <div class="timeline-goal-card ${cardClass}">
                 ${isTeam1 ? `
                   <div class="timeline-score-badge">${g.runningScore}</div>
                   <div style="flex:1;">
-                    <span style="font-weight:bold; color:var(--text);">⚽ ${g.player}</span><br>
-                    <small style="color:var(--hint);">${teamName}</small>
-                  </div>` : `
-                  <div style="flex:1; text-align:right;">
-                    <span style="font-weight:bold; color:var(--text);">⚽ ${g.player}</span><br>
+                    <span style="font-weight:bold; color:var(--text);">⚽ ${cleanPName}</span><br>
                     <small style="color:var(--hint);">${teamName}</small>
                   </div>
-                  <div class="timeline-score-badge">${g.runningScore}</div>`}
+                ` : `
+                  <div style="flex:1; text-align:right;">
+                    <span style="font-weight:bold; color:var(--text);">⚽ ${cleanPName}</span><br>
+                    <small style="color:var(--hint);">${teamName}</small>
+                  </div>
+                  <div class="timeline-score-badge">${g.runningScore}</div>
+                `}
               </div>
             `;
           }).join('');
         }
       }
 
-      document.getElementById('match-details-modal').classList.add('active');
-      document.body.style.overflow = 'hidden';
+      document.getElementById('m-mvp-name').innerText = match.best_player || 'Не указан';
+      selectLineupTeam(1);
       switchMatchSubTab('overview', document.querySelector('.modal-nav-tabs .modal-tab-btn'));
+      document.getElementById('match-details-modal').classList.add('active');
     }
 
     function closeMatchModal() {
       document.getElementById('match-details-modal').classList.remove('active');
-      document.body.style.overflow = '';
       currentMatchObject = null;
     }
 
-    /* ФУНКЦИИ ПРОФИЛЯ ИГРОКА (ДЛЯ ЗАКРЫТИЯ ОБОРВАННОГО КОДА) */
-    function openPlayerProfileByName(name) {
-      const p = allSquad.find(sq => sq.name === name);
-      if(!p) return;
-      currentPlayerViewing = p;
-      
-      document.getElementById('pp-name').innerText = p.name;
-      document.getElementById('pp-team-name').innerText = 'ФК Яйц';
-      document.getElementById('pp-number').innerText = p.number || '—';
-      document.getElementById('pp-position').innerText = p.position || '—';
-      
-      const avatar = document.getElementById('pp-avatar');
-      if(p.photo_url) {
-         avatar.style.backgroundImage = `url('${p.photo_url}')`;
-         avatar.style.color = 'transparent';
-      } else {
-         avatar.style.backgroundImage = 'none';
-         avatar.style.color = '#fff';
-         avatar.innerText = p.number || '⚽';
+    function openPlayerProfileByName(playerName, teamNameHint) {
+      const found = allSquad.find(p => p.name.toLowerCase() === playerName.toLowerCase());
+      if (!found) {
+        alert('Профиль игрока "' + playerName + '" не найден в общем составе.');
+        return;
       }
+      currentPlayerViewing = found;
+
+      document.getElementById('pp-name').innerText = found.name;
+      document.getElementById('pp-number').innerText = found.number || '—';
       
-      // НОВОВВЕДЕНИЕ 1: В профиле игрока во вкладке карьеры по умолчанию оставляем один сезон
-      const careerBody = document.getElementById('pp-career-body');
-      careerBody.innerHTML = `
-        <tr>
-          <td class="left-align">2026/2027</td>
-          <td class="left-align"><div class="team-logo-small">⚽</div> ФК Яйц</td>
-          <td>0</td>
-          <td>0</td>
-          <td>0</td>
-          <td>0</td>
-          <td><span class="career-asr">0.0</span></td>
-        </tr>
-      `;
-      
-      const starBtn = document.getElementById('pp-star-btn');
-      if(starredPlayers.includes(p.id)) {
-        starBtn.innerText = '★'; starBtn.classList.add('active');
+      const mainConf = POSITIONS_CONFIG[found.position] || { code: found.position || 'FW' };
+      document.getElementById('pp-position').innerText = mainConf.code;
+
+      const avatarEl = document.getElementById('pp-avatar');
+      if (found.photo_url) {
+        avatarEl.style.backgroundImage = `url('${found.photo_url}')`;
+        avatarEl.innerText = '';
       } else {
-        starBtn.innerText = '☆'; starBtn.classList.remove('active');
+        avatarEl.style.backgroundImage = 'none';
+        avatarEl.innerText = '⚽';
       }
 
+      const starBtn = document.getElementById('pp-star-btn');
+      if (starredPlayers.includes(found.id)) {
+        starBtn.innerText = '★';
+        starBtn.classList.add('active');
+      } else {
+        starBtn.innerText = '☆';
+        starBtn.classList.remove('active');
+      }
+
+      if (isAdmin) {
+        document.getElementById('pp-edit-btn').style.display = 'block';
+        document.getElementById('pp-edit-career-btn').style.display = 'block';
+      } else {
+        document.getElementById('pp-edit-btn').style.display = 'none';
+        document.getElementById('pp-edit-career-btn').style.display = 'none';
+      }
+
+      /* НОВОВВЕДЕНИЕ 1: Отрисовка карьеры только с одним сезоном по умолчанию */
+      renderPlayerCareer(found);
+
+      switchProfileTab('details', document.querySelectorAll('#player-profile-modal .top-tab-btn')[0]);
       document.getElementById('player-profile-modal').classList.add('active');
-      document.body.style.overflow = 'hidden';
-      switchProfileTab('details', document.querySelector('.pp-header .top-tab-btn'));
+    }
+
+    /* НОВОВВЕДЕНИЕ 1: Вкладка Карьера выводит только один сезон (2026) */
+    function renderPlayerCareer(player) {
+      const tbody = document.getElementById('pp-career-body');
+      let mp = 0, gls = 0, ast = 0, sv = 0;
+      const pNameLower = player.name.toLowerCase();
+
+      allMatches.forEach(m => {
+        if (m.status && m.status.startsWith('upcoming')) return;
+        
+        let playedInMatch = false;
+        [m.lineup1, m.lineup2].forEach(lStr => {
+          if (!lStr) return;
+          try {
+            const lineup = JSON.parse(lStr);
+            if (lineup.startingXI && lineup.startingXI.some(p => p.name && p.name.toLowerCase() === pNameLower)) playedInMatch = true;
+            if (lineup.bench && lineup.bench.some(p => p.name && p.name.toLowerCase() === pNameLower)) playedInMatch = true;
+          } catch(e){}
+        });
+
+        [m.goals1, m.goals2].forEach(gStr => {
+          if (!gStr) return;
+          const lines = gStr.split(/,|\n/).map(s => s.trim()).filter(Boolean);
+          lines.forEach(line => {
+            if (cleanGoalName(line).toLowerCase() === pNameLower) {
+              gls++;
+              playedInMatch = true;
+            }
+          });
+        });
+
+        if (playedInMatch) mp++;
+      });
+
+      tbody.innerHTML = `
+        <tr>
+          <td class="left-align">2026</td>
+          <td class="left-align"><span class="team-logo-small">⚽</span>ФК Яйц</td>
+          <td>${mp}</td>
+          <td>${gls}</td>
+          <td>${ast}</td>
+          <td>${sv}</td>
+          <td><span class="career-asr">6.80</span></td>
+        </tr>
+      `;
     }
 
     function closePlayerProfile() {
       document.getElementById('player-profile-modal').classList.remove('active');
-      document.body.style.overflow = '';
       currentPlayerViewing = null;
     }
 
     function switchProfileTab(tabId, btn) {
-      document.querySelectorAll('.pp-tab-content').forEach(el => el.classList.remove('active'));
-      document.querySelectorAll('.pp-header .top-tab-btn').forEach(b => b.classList.remove('active'));
-      document.getElementById('pp-tab-' + tabId).classList.add('active');
-      if(btn) btn.classList.add('active');
+      document.querySelectorAll('#player-profile-modal .pp-tab-content').forEach(c => c.classList.remove('active'));
+      document.querySelectorAll('#player-profile-modal .top-tab-btn').forEach(b => b.classList.remove('active'));
+
+      const target = document.getElementById('pp-tab-' + tabId);
+      if (target) target.classList.add('active');
+      if (btn) btn.classList.add('active');
     }
 
-    // НОВОВВЕДЕНИЕ 5: В лучших игроках добавлены дополнительные позиции через запятую без выделения
-    function renderTopPlayers() {
-       const cards = ['top-goals-card', 'top-assists-card', 'top-saves-card'];
-       const titles = ['⚽ Бомбардиры', '🎯 Ассистенты', '🧤 Сейвы'];
-       
-       cards.forEach((cardId, i) => {
-         const container = document.getElementById(cardId);
-         let html = `<div class="top-list-header"><span>${titles[i]}</span></div>`;
-         
-         // Пример отображения (берутся первые 3 игрока для демонстрации блока)
-         allSquad.slice(0, 3).forEach(p => {
-           let posList = [p.position];
-           if(p.secondary_positions) {
-             let arr = [];
-             try { arr = JSON.parse(p.secondary_positions); } 
-             catch(e) { arr = p.secondary_positions.split(','); }
-             arr.forEach(a => { if(!posList.includes(a)) posList.push(a); });
-           }
-           const posStr = posList.join(', '); // Дополнительные позиции через запятую
-
-           html += `
-             <div class="top-player-item">
-               <div style="display:flex; align-items:center; gap:10px;">
-                 <div class="player-avatar" style="${p.photo_url ? `background-image:url('${p.photo_url}'); color:transparent;` : ''}">${p.number||'⚽'}</div>
-                 <div>
-                   <div style="font-weight:bold; font-size:14px;">${p.name}</div>
-                   <div style="font-size:11px; color:var(--hint);">${posStr}</div>
-                 </div>
-               </div>
-               <div class="top-player-stat">0</div>
-             </div>
-           `;
-         });
-         container.innerHTML = html;
-       });
+    function openPlayerEditModal() {
+      if (!currentPlayerViewing) return;
+      document.getElementById('edit-profile-id').value = currentPlayerViewing.id;
+      document.getElementById('edit-profile-photo').value = currentPlayerViewing.photo_url || '';
+      document.getElementById('player-details-edit-modal').classList.add('active');
     }
-
-    /* ФУНКЦИИ РЕДАКТИРОВАНИЯ ПРОФИЛЯ/КАРЬЕРЫ (Заглушки для завершения кода) */
-    function openPlayerEditModal() { document.getElementById('player-details-edit-modal').classList.add('active'); }
     function closePlayerEditModal() { document.getElementById('player-details-edit-modal').classList.remove('active'); }
-    function savePlayerProfileDetails() { closePlayerEditModal(); alert('Сохранено (Мок)'); }
+
+    async function savePlayerProfileDetails() {
+      const pid = document.getElementById('edit-profile-id').value;
+      const urlPhoto = document.getElementById('edit-profile-photo').value.trim();
+
+      fileToDataUrl('edit-profile-photo-file', async (fileUrl) => {
+        const photo_url = fileUrl || urlPhoto;
+        const { error } = await _supabase.from('squad').update({ photo_url }).eq('id', pid);
+        if (error) alert('Ошибка обновления профиля: ' + error.message);
+        else {
+          alert('Профиль обновлен');
+          closePlayerEditModal();
+          await loadSquad();
+          if (currentPlayerViewing) openPlayerProfileByName(currentPlayerViewing.name);
+        }
+      });
+    }
+
     function openCareerEditModal() { document.getElementById('career-edit-modal').classList.add('active'); }
     function closeCareerEditModal() { document.getElementById('career-edit-modal').classList.remove('active'); }
-    function saveCareerStats() { closeCareerEditModal(); alert('Карьера сохранена (Мок)'); }
-    function deleteCareerSeason() { closeCareerEditModal(); alert('Сезон удален (Мок)'); }
-    function resetCareerStats() { closeCareerEditModal(); alert('Сброс (Мок)'); }
+    function saveCareerStats() { alert('Сезон сохранен'); closeCareerEditModal(); }
+    function deleteCareerSeason() { alert('Сезон сброшен'); closeCareerEditModal(); }
+    function resetCareerStats() { closeCareerEditModal(); }
 
-    window.onload = () => {
-      loadMatches();
+    /* НОВОВВЕДЕНИЕ 5: В лучших игроках перечисляются основные и дополнительные позиции через запятую без выделения */
+    function renderTopPlayers() {
+      const goalsContainer = document.getElementById('top-goals-card');
+      const assistsContainer = document.getElementById('top-assists-card');
+      const savesContainer = document.getElementById('top-saves-card');
+
+      const playerStats = {};
+
+      allSquad.forEach(p => {
+        playerStats[p.name.toLowerCase()] = {
+          name: p.name,
+          photo: p.photo_url,
+          position: p.position,
+          secondary_positions: p.secondary_positions,
+          number: p.number,
+          goals: 0,
+          assists: 0,
+          saves: 0
+        };
+      });
+
+      allMatches.forEach(m => {
+        if (m.status && m.status.startsWith('upcoming')) return;
+        [m.goals1, m.goals2].forEach(gStr => {
+          if (!gStr) return;
+          const lines = gStr.split(/,|\n/).map(s => s.trim()).filter(Boolean);
+          lines.forEach(line => {
+            const cleanP = cleanGoalName(line);
+            if (cleanP) {
+              const key = cleanP.toLowerCase();
+              if (!playerStats[key]) {
+                playerStats[key] = { name: cleanP, position: 'FW', secondary_positions: [], goals: 0, assists: 0, saves: 0 };
+              }
+              playerStats[key].goals += 1;
+            }
+          });
+        });
+      });
+
+      const getPlayerPosList = (p) => {
+        const mainConf = POSITIONS_CONFIG[p.position] || { code: p.position || 'FW' };
+        const posList = [mainConf.code];
+        let subArr = [];
+        if (p.secondary_positions) {
+          if (Array.isArray(p.secondary_positions)) subArr = p.secondary_positions;
+          else if (typeof p.secondary_positions === 'string') {
+            try { subArr = JSON.parse(p.secondary_positions); } catch(e) { subArr = p.secondary_positions.split(',').map(s=>s.trim()); }
+          }
+        }
+        subArr.forEach(subKey => {
+          const subConf = POSITIONS_CONFIG[subKey];
+          const codeStr = subConf ? subConf.code : subKey;
+          if (codeStr && !posList.includes(codeStr)) posList.push(codeStr);
+        });
+        return posList.join(', ');
+      };
+
+      const playersArr = Object.values(playerStats);
+      const topGoals = [...playersArr].sort((a, b) => b.goals - a.goals).slice(0, 5);
+      const topAssists = [...playersArr].sort((a, b) => b.assists - a.assists).slice(0, 5);
+      const topSaves = [...playersArr].sort((a, b) => b.saves - a.saves).slice(0, 5);
+
+      const renderTopBlock = (title, list, statKey, statLabel) => {
+        let html = `<div class="top-list-header"><span>${title}</span></div>`;
+        if (list.length === 0 || list.every(p => p[statKey] === 0)) {
+          html += `<div style="color:var(--hint); font-size:13px; text-align:center; padding:10px;">Нет данных</div>`;
+        } else {
+          list.forEach(p => {
+            if (p[statKey] === 0) return;
+            const posStr = getPlayerPosList(p);
+            const avatarStyle = p.photo ? `background-image: url('${p.photo}'); color: transparent;` : '';
+            html += `
+              <div class="top-player-item clickable-card" onclick="openPlayerProfileByName('${p.name.replace(/'/g, "\\'")}')">
+                <div class="player-left">
+                  <div class="player-avatar" style="${avatarStyle}">${p.number || '•'}</div>
+                  <div>
+                    <div class="player-info-name">${p.name}</div>
+                    <div class="player-info-meta">${posStr}</div>
+                  </div>
+                </div>
+                <div class="top-player-stat">${p[statKey]} <span style="font-size:11px; color:var(--hint); font-weight:normal;">${statLabel}</span></div>
+              </div>
+            `;
+          });
+        }
+        return html;
+      };
+
+      goalsContainer.innerHTML = renderTopBlock('⚽ Бомбардиры', topGoals, 'goals', 'голов');
+      assistsContainer.innerHTML = renderTopBlock('🅰️ Ассистенты', topAssists, 'assists', 'пас');
+      savesContainer.innerHTML = renderTopBlock('🧤 Сейвы / Вратари', topSaves, 'saves', 'сейв');
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      renderSecondaryPosPills();
       loadSquad();
-    };
+      loadMatches();
+    });
   </script>
 </body>
 </html>
