@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -870,6 +869,10 @@
 
         <input type="text" id="player-status-input" placeholder="Статус (например, ➕ Травмирован)">
         
+        <label style="font-size:12px; color:var(--hint); display:block; margin-top:8px;">3. Фото игрока (выберите из медиатеки)</label>
+        <input type="file" id="player-photo-file-input" accept="image/*" style="padding: 6px;">
+        <input type="text" id="player-photo-input" placeholder="Или укажите ссылку на фото (URL)">
+
         <button class="form-btn" id="save-squad-btn" onclick="saveSquadPlayer()">Добавить игрока в состав</button>
         <button class="cancel-btn" id="cancel-squad-btn" style="display:none;" onclick="cancelSquadEdit()">Отмена редактирования</button>
         
@@ -990,11 +993,10 @@
           <div>
             <div class="pp-player-name" id="pp-name">Имя Игрока</div>
             <div class="pp-team-sub">
-              <span>⚽</span> <span id="pp-team-name">ФК Яйц</span>
+              <span id="pp-team-name">ФК Яйц</span>
             </div>
           </div>
         </div>
-        <!-- Убрано количество подписчиков -->
       </div>
 
       <div class="top-nav-tabs">
@@ -1052,12 +1054,12 @@
         <table class="career-table">
           <thead>
             <tr>
-              <th class="left-align">Год</th>
+              <th class="left-align">Сезон</th>
               <th class="left-align">Команда</th>
               <th>MP</th>
-              <th>MIN</th>
               <th>GLS</th>
               <th>AST</th>
+              <th>SV</th>
               <th>ASR</th>
             </tr>
           </thead>
@@ -1065,7 +1067,7 @@
           </tbody>
         </table>
         
-        <button id="pp-edit-career-btn" class="form-btn" style="margin-top:20px; display:none;" onclick="openCareerEditModal()">Редактировать статистику</button>
+        <button id="pp-edit-career-btn" class="form-btn" style="margin-top:20px; display:none;" onclick="openCareerEditModal()">Добавить / Редактировать сезон</button>
       </div>
 
       <div id="pp-tab-media" class="pp-tab-content">
@@ -1085,7 +1087,9 @@
       <div class="card">
         <input type="hidden" id="edit-profile-id">
         
-        <label style="font-size:12px; color:var(--hint);">Ссылка на фото (URL)</label>
+        <label style="font-size:12px; color:var(--hint);">Фото игрока (файл)</label>
+        <input type="file" id="edit-profile-photo-file" accept="image/*" style="padding: 6px;">
+        <label style="font-size:12px; color:var(--hint);">Или ссылка на фото (URL)</label>
         <input type="text" id="edit-profile-photo" placeholder="https://example.com/photo.jpg">
         
         <label style="font-size:12px; color:var(--hint);">Национальность (например, 🇷🇺 RUS)</label>
@@ -1108,16 +1112,16 @@
   <div id="career-edit-modal" class="match-modal">
     <div class="modal-top-bar">
       <button class="back-btn" onclick="closeCareerEditModal()">←</button>
-      <span style="font-weight: bold; font-size: 15px;">Статистика</span>
+      <span style="font-weight: bold; font-size: 15px;">Управление сезоном</span>
       <div style="width: 24px;"></div>
     </div>
     <div style="padding: 16px;">
       <div class="card">
+        <label style="font-size:12px; color:var(--hint);">Сезон (название, например, 2026 или Сезон 1)</label>
+        <input type="text" id="edit-career-season" placeholder="2026">
+
         <label style="font-size:12px; color:var(--hint);">Игры (MP)</label>
         <input type="number" id="edit-career-mp">
-
-        <label style="font-size:12px; color:var(--hint);">Сыграно минут (MIN)</label>
-        <input type="text" id="edit-career-min">
 
         <label style="font-size:12px; color:var(--hint);">Голы (GLS)</label>
         <input type="number" id="edit-career-gls">
@@ -1125,13 +1129,14 @@
         <label style="font-size:12px; color:var(--hint);">Ассисты (AST)</label>
         <input type="number" id="edit-career-ast">
         
-        <label style="font-size:12px; color:var(--hint);">Сейвы (Сумма, для вратарей)</label>
+        <label style="font-size:12px; color:var(--hint);">Сейвы (SV, для вратарей)</label>
         <input type="number" id="edit-career-saves">
 
         <label style="font-size:12px; color:var(--hint);">Рейтинг Sofascore (ASR)</label>
         <input type="text" id="edit-career-asr" placeholder="например, 6.82">
 
-        <button class="form-btn" onclick="saveCareerStats()">Сохранить статистику</button>
+        <button class="form-btn" onclick="saveCareerStats()">Сохранить сезон</button>
+        <button class="delete-btn" style="width:100%; margin-top:6px; padding:11px;" onclick="deleteCareerSeason()">Удалить этот сезон</button>
         <button class="cancel-btn" onclick="resetCareerStats()">Сбросить на АВТО</button>
       </div>
     </div>
@@ -1179,6 +1184,7 @@
     let allSquad = [];
     let editingMatchId = null;
     let editingSquadPlayerId = null;
+    let editingCareerSeasonKey = null;
 
     let adminGoalsList = []; 
     let adminLineup1 = getDefaultLineup("Команда 1");
@@ -1190,13 +1196,25 @@
     let starredPlayers = JSON.parse(localStorage.getItem('starred_players') || '[]');
 
     const userId = tg.initDataUnsafe?.user?.id;
+    const isAdmin = (userId === ADMIN_TELEGRAM_ID);
     
-    if (userId === ADMIN_TELEGRAM_ID) {
+    if (isAdmin) {
       document.getElementById('admin-nav-btn').style.display = 'flex';
     } else {
       const bNav = document.getElementById('bottom-nav');
       if(bNav) bNav.style.display = 'none';
       document.body.style.paddingBottom = '0';
+    }
+
+    function fileToDataUrl(fileInputId, callback) {
+      const fileInput = document.getElementById(fileInputId);
+      if (fileInput && fileInput.files && fileInput.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) { callback(e.target.result); };
+        reader.readAsDataURL(fileInput.files[0]);
+      } else {
+        callback(null);
+      }
     }
 
     function toggleAccordion(cardId) {
@@ -1396,21 +1414,26 @@
       const number = document.getElementById('player-number-input').value.trim();
       const position = document.getElementById('player-pos-input').value;
       const status = document.getElementById('player-status-input').value.trim();
+      const urlPhoto = document.getElementById('player-photo-input').value.trim();
 
       if (!name) return alert('Введите имя игрока');
-      const payload = { name, number, position, secondary_positions: JSON.stringify(selectedSecondaryPositions), status };
-      let error = null;
 
-      if (editingSquadPlayerId) {
-        const res = await _supabase.from('squad').update(payload).eq('id', editingSquadPlayerId);
-        error = res.error;
-      } else {
-        const res = await _supabase.from('squad').insert([payload]);
-        error = res.error;
-      }
+      fileToDataUrl('player-photo-file-input', async (fileDataUrl) => {
+        const photo_url = fileDataUrl || urlPhoto;
+        const payload = { name, number, position, secondary_positions: JSON.stringify(selectedSecondaryPositions), status, photo_url };
+        let error = null;
 
-      if (error) alert('Ошибка сохранения игрока: ' + error.message);
-      else { resetSquadForm(); loadSquad(); }
+        if (editingSquadPlayerId) {
+          const res = await _supabase.from('squad').update(payload).eq('id', editingSquadPlayerId);
+          error = res.error;
+        } else {
+          const res = await _supabase.from('squad').insert([payload]);
+          error = res.error;
+        }
+
+        if (error) alert('Ошибка сохранения игрока: ' + error.message);
+        else { resetSquadForm(); loadSquad(); }
+      });
     }
 
     function editSquadPlayer(id) {
@@ -1422,6 +1445,8 @@
       document.getElementById('player-number-input').value = player.number || '';
       document.getElementById('player-pos-input').value = player.position || 'CF';
       document.getElementById('player-status-input').value = player.status || '';
+      document.getElementById('player-photo-input').value = player.photo_url || '';
+      document.getElementById('player-photo-file-input').value = '';
 
       selectedSecondaryPositions = [];
       if (player.secondary_positions) {
@@ -1443,6 +1468,8 @@
       document.getElementById('player-number-input').value = '';
       document.getElementById('player-pos-input').value = 'CF';
       document.getElementById('player-status-input').value = '';
+      document.getElementById('player-photo-input').value = '';
+      document.getElementById('player-photo-file-input').value = '';
       selectedSecondaryPositions = [];
       document.getElementById('save-squad-btn').innerText = 'Добавить игрока в состав';
       document.getElementById('cancel-squad-btn').style.display = 'none';
@@ -1674,13 +1701,11 @@
       el.onpointerup = el.onpointercancel = function(e) { isDragging = false; cancelAdminPress(); };
     }
 
-    // События матча 
     function addPitchEvent(e) {
         e.preventDefault();
         openPlayerSelectMenu((playerName) => {
             const ev = prompt(`Действие для ${playerName}:\n1 - Гол\n2 - Автогол\n3 - Ассист\n4 - Травма\n5 - Сейв пенальти`, "1");
             if(ev) {
-                // В реальном приложении сохраняем в массив событий матча, пока просто добавляем в базу или выводим
                 alert(`Событие ${ev} для ${playerName} добавлено (UI-мок).`);
             }
         });
@@ -1888,7 +1913,6 @@
       renderLineupView();
     }
 
-    let longPressTimerView = null;
     function renderLineupView() {
       if (!currentMatchObject) return;
       const teamName = currentLineupTeam === 1 ? currentMatchObject.team1 : currentMatchObject.team2;
@@ -1911,13 +1935,49 @@
         const safeName = (p.name || 'Пусто').replace(/'/g, "\\'");
         const squadPlayer = allSquad.find(sq => sq.name === p.name);
         const avatarStyle = (squadPlayer && squadPlayer.photo_url) ? `background-image: url('${squadPlayer.photo_url}'); color: transparent;` : '';
+        
         return `
-          <div class="pitch-player-abs clickable-card" data-index="${index}" style="left:${p.x}%; top:${p.y}%;" onclick="openPlayerProfileByName('${safeName}', '${teamName}')">
+          <div class="pitch-player-abs" id="viewer-player-${index}" data-name="${safeName}" style="left:${p.x}%; top:${p.y}%;">
             <div class="player-avatar-circle ${p.isGk ? 'gk' : ''}" style="${avatarStyle}">${p.num || '?'}</div>
             <div class="player-name-label">${p.num ? `<span style="color:#d1d5db; margin-right:3px;">${p.num}</span>` : ''}${p.name || 'Пусто'}</div>
           </div>
         `;
       }).join('');
+
+      // Настройка зажатия 800мс только для админа на схеме
+      if (isAdmin && currentMatchObject && !currentMatchObject.status.startsWith('upcoming')) {
+        lineup.startingXI.forEach((p, index) => {
+          const el = document.getElementById(`viewer-player-${index}`);
+          if (!el) return;
+          let pressTimer = null;
+          let isMoved = false;
+
+          const startPress = (e) => {
+            isMoved = false;
+            pressTimer = setTimeout(() => {
+              if (!isMoved) {
+                if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+                openAdminSubstitutionModal(p, lineup, () => {
+                  renderLineupView();
+                  saveMatchLineupSilently();
+                });
+              }
+            }, 800);
+          };
+
+          const cancelPress = () => {
+            if (pressTimer) {
+              clearTimeout(pressTimer);
+              pressTimer = null;
+            }
+          };
+
+          el.onpointerdown = startPress;
+          el.onpointermove = () => { isMoved = true; cancelPress(); };
+          el.onpointerup = cancelPress;
+          el.onpointercancel = cancelPress;
+        });
+      }
 
       const subsContainer = document.getElementById('subs-list');
       if(lineup.bench && lineup.bench.length > 0) {
@@ -1939,6 +1999,60 @@
       }
     }
 
+    function openAdminSubstitutionModal(targetPlayer, lineupObj, onUpdated) {
+      const modalId = 'admin-sub-modal';
+      const existing = document.getElementById(modalId);
+      if (existing) existing.remove();
+
+      const modalHtml = `
+        <div id="${modalId}" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center; z-index:11000;">
+          <div style="background:var(--card-bg); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:16px; width:90%; max-width:320px; color:var(--text);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <h4 style="margin:0; font-size:15px;">Замена: ${targetPlayer.name}</h4>
+              <button onclick="document.getElementById('${modalId}').remove()" style="border:none; background:none; font-size:20px; color:var(--hint); cursor:pointer; padding:0;">✕</button>
+            </div>
+            <div style="font-size:12px; color:var(--hint); margin-bottom:8px;">Выберите игрока из основного состава:</div>
+            <div style="max-height:280px; overflow-y:auto; display:flex; flex-direction:column; gap:6px;">
+              ${allSquad.map(sq => {
+                const alreadyOnPitch = lineupObj.startingXI.some(p => p.name === sq.name && p.name !== targetPlayer.name);
+                if (alreadyOnPitch) {
+                  return `
+                    <div style="padding:10px; background:var(--card-inner); border-radius:8px; opacity:0.4; cursor:not-allowed; display:flex; align-items:center; justify-content:space-between;">
+                      <span style="font-weight:700; font-size:13px;">${sq.name}</span>
+                      <span style="font-size:11px; color:var(--danger);">Уже на поле</span>
+                    </div>
+                  `;
+                }
+                const safeSqName = sq.name.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                return `
+                  <div style="padding:10px; background:var(--card-inner); border-radius:8px; cursor:pointer; font-weight:700; font-size:13px;" onclick="window.executeAdminSub('${safeSqName}', '${sq.number || ''}')">
+                    ${sq.name} (${sq.number ? '№' + sq.number : sq.position})
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+      document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+      window.executeAdminSub = function(newName, newNum) {
+        targetPlayer.name = newName;
+        targetPlayer.num = newNum ? parseInt(newNum, 10) : targetPlayer.num;
+        document.getElementById(modalId).remove();
+        onUpdated();
+      };
+    }
+
+    async function saveMatchLineupSilently() {
+      if (!currentMatchObject) return;
+      const payload = {
+        lineup1: currentMatchObject.lineup1,
+        lineup2: currentMatchObject.lineup2
+      };
+      await _supabase.from('matches').update(payload).eq('id', currentMatchObject.id);
+    }
+
     function parseGoalsSequence(goals1Str, goals2Str) {
       const goals = [];
       const cleanName = (str) => str.replace(/\d+['’]?/g, '').replace(/^\d+[\.\)]\s*/, '').trim();
@@ -1955,331 +2069,416 @@
       extract(goals2Str, 2);
       goals.sort((a, b) => a.order - b.order);
       let score1 = 0, score2 = 0;
-      goals.forEach(g => { if (g.team === 1) score1++; if (g.team === 2) score2++; g.runningScore = `${score1} - ${score2}`; });
+      goals.forEach(g => { if (g.team === 1) score1++; if (g.team === 2) score2++; g.runningScore = `${score1} : ${score2}`; });
       return goals;
     }
 
-    function openMatchDetails(id) {
-      const match = allMatches.find(m => String(m.id) === String(id));
+    function openMatchDetails(matchId) {
+      const match = allMatches.find(m => String(m.id) === String(matchId));
       if (!match) return;
       currentMatchObject = match;
-      if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+      document.getElementById('m-date').innerText = match.match_date || 'Завершен';
+      document.getElementById('m-team1').innerText = match.team1;
+      document.getElementById('m-team2').innerText = match.team2;
+      document.getElementById('m-score').innerText = match.score || 'VS';
+      document.getElementById('btn-t1-name').innerText = match.team1;
+      document.getElementById('btn-t2-name').innerText = match.team2;
 
-      document.getElementById('m-team1').innerText = match.team1 || 'Команда 1';
-      document.getElementById('m-team2').innerText = match.team2 || 'Команда 2';
-      document.getElementById('m-score').innerText = match.score || 'vs';
-      
-      let datePrefix = match.match_date ? '📅 ' + match.match_date : '';
-      if(match.status.startsWith('upcoming')) {
-         datePrefix += (match.status==='upcoming_roster' ? ' (Заявка)' : ' (Анонс)');
-      } else if (!match.match_date) {
-         datePrefix = 'Завершен';
-      }
-      document.getElementById('m-date').innerText = datePrefix;
-
-      document.getElementById('btn-t1-name').innerText = match.team1 || 'Ком. 1';
-      document.getElementById('btn-t2-name').innerText = match.team2 || 'Ком. 2';
-
-      const cleanName = str => str.replace(/\d+['’]?/g, '').replace(/^\d+[\.\)]\s*/, '').trim();
-      const g1List = match.goals1 ? match.goals1.split(/,|\n/).map(s => cleanName(s)).filter(Boolean) : [];
-      const g2List = match.goals2 ? match.goals2.split(/,|\n/).map(s => cleanName(s)).filter(Boolean) : [];
-      const summaryRow = document.getElementById('m-hero-goals-summary'), heroG1 = document.getElementById('m-hero-goals1'), heroG2 = document.getElementById('m-hero-goals2');
-
-      if (g1List.length > 0 || g2List.length > 0) {
+      const summaryRow = document.getElementById('m-hero-goals-summary');
+      if (match.status.startsWith('upcoming')) {
+        summaryRow.style.display = 'none';
+      } else {
         summaryRow.style.display = 'flex';
-        heroG1.innerHTML = g1List.map(g => `<div class="clickable-card" onclick="openPlayerProfileByName('${g.replace(/'/g, "\\'")}', '${match.team1}')">${g}</div>`).join('') || '—';
-        heroG2.innerHTML = g2List.map(g => `<div class="clickable-card" onclick="openPlayerProfileByName('${g.replace(/'/g, "\\'")}', '${match.team2}')">${g}</div>`).join('') || '—';
-      } else summaryRow.style.display = 'none';
+        const cleanG1 = match.goals1 ? match.goals1.split(/,|\n/).map(s => s.replace(/\d+['’]?/g, '').replace(/^\d+[\.\)]\s*/, '').trim()).filter(Boolean).join('<br>') : '—';
+        const cleanG2 = match.goals2 ? match.goals2.split(/,|\n/).map(s => s.replace(/\d+['’]?/g, '').replace(/^\d+[\.\)]\s*/, '').trim()).filter(Boolean).join('<br>') : '—';
+        document.getElementById('m-hero-goals1').innerHTML = cleanG1;
+        document.getElementById('m-hero-goals2').innerHTML = cleanG2;
 
-      const timelineContainer = document.getElementById('m-timeline-container');
-      const parsedGoals = parseGoalsSequence(match.goals1, match.goals2);
-      if (parsedGoals.length === 0) timelineContainer.innerHTML = '<p style="color:var(--hint); font-size:13px; margin:0;">Голов в матче не было.</p>';
-      else {
-        const reversedGoals = [...parsedGoals].reverse();
-        timelineContainer.innerHTML = `<div class="timeline-container">${reversedGoals.map(g => {
-          const teamNameForGoal = g.team === 1 ? match.team1 : match.team2;
-          const safePlayer = g.player.replace(/'/g, "\\'");
-          if (g.team === 1) return `<div class="timeline-goal-card left clickable-card" onclick="openPlayerProfileByName('${safePlayer}', '${teamNameForGoal}')"><span style="font-size:16px;">⚽</span><span class="timeline-score-badge">${g.runningScore}</span><span style="font-weight:700; font-size:14px; color:#fff;">${g.player}</span></div>`;
-          else return `<div class="timeline-goal-card right clickable-card" onclick="openPlayerProfileByName('${safePlayer}', '${teamNameForGoal}')"><span style="font-weight:700; font-size:14px; color:#fff;">${g.player}</span><span class="timeline-score-badge">${g.runningScore}</span><span style="font-size:16px;">⚽</span></div>`;
-        }).join('')}</div>`;
+        const timelineSeq = parseGoalsSequence(match.goals1, match.goals2);
+        const timelineContainer = document.getElementById('m-timeline-container');
+        if (timelineSeq.length === 0) {
+          timelineContainer.innerHTML = '<div style="color:var(--hint); font-size:13px; text-align:center;">Голы не забивались</div>';
+        } else {
+          timelineContainer.innerHTML = timelineSeq.map(g => {
+            const isTeam1 = (g.team === 1);
+            const cardClass = isTeam1 ? 'left' : 'right';
+            const teamName = isTeam1 ? match.team1 : match.team2;
+            const safeGoalName = g.player.replace(/'/g, "\\'");
+            return `
+              <div class="timeline-goal-card ${cardClass}">
+                ${isTeam1 ? `<div class="timeline-score-badge">${g.runningScore}</div><div style="flex:1;"><span style="font-weight:bold; cursor:pointer; color:var(--text);" onclick="openPlayerProfileByName('${safeGoalName}')">⚽ ${g.player}</span><br><small style="color:var(--hint);">${teamName}</small></div>` : `<div style="flex:1; text-align:right;"><span style="font-weight:bold; cursor:pointer; color:var(--text);" onclick="openPlayerProfileByName('${safeGoalName}')">⚽ ${g.player}</span><br><small style="color:var(--hint);">${teamName}</small></div><div class="timeline-score-badge">${g.runningScore}</div>`}
+              </div>
+            `;
+          }).join('');
+        }
       }
-      document.getElementById('m-mvp-name').innerText = match.best_player ? match.best_player : 'Не указан';
-      selectLineupTeam(1); switchMatchSubTab('overview', document.querySelector('.modal-nav-tabs .modal-tab-btn'));
+
+      document.getElementById('m-mvp-name').innerText = match.best_player || 'Не указан';
+      selectLineupTeam(1);
+      switchMatchSubTab('overview', document.querySelector('.modal-nav-tabs .modal-tab-btn'));
       document.getElementById('match-details-modal').classList.add('active');
-      if (tg.BackButton) { tg.BackButton.show(); tg.BackButton.onClick(closeMatchModal); }
     }
 
     function closeMatchModal() {
       document.getElementById('match-details-modal').classList.remove('active');
-      if (tg.BackButton && !document.getElementById('player-profile-modal').classList.contains('active')) { tg.BackButton.hide(); tg.BackButton.offClick(closeMatchModal); }
-    }
-    
-    function switchProfileTab(tabId, btnElement) {
-      document.querySelectorAll('#player-profile-modal .top-tab-btn').forEach(b => b.classList.remove('active'));
-      if (btnElement) btnElement.classList.add('active');
-      else document.querySelector('#player-profile-modal .top-tab-btn').classList.add('active');
-      document.querySelectorAll('.pp-tab-content').forEach(c => c.classList.remove('active'));
-      const target = document.getElementById('pp-tab-' + tabId);
-      if (target) target.classList.add('active');
+      currentMatchObject = null;
     }
 
-    function openPlayerProfileByName(playerName, teamNameOverride = null) {
-      if (!playerName || playerName === 'Пусто') return;
-      if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
-
-      const foundPlayer = allSquad.find(p => p.name.toLowerCase().trim() === playerName.toLowerCase().trim());
-      currentPlayerViewing = foundPlayer; 
-      const teamName = teamNameOverride || 'ФК Яйц';
-      const number = foundPlayer?.number || '7';
-      const posCode = foundPlayer?.position || 'FW';
-      const posConf = POSITIONS_CONFIG[posCode] || { code: posCode };
-
-      if (userId === ADMIN_TELEGRAM_ID && foundPlayer) {
-        document.getElementById('pp-edit-btn').style.display = 'inline-block';
-        document.getElementById('pp-edit-career-btn').style.display = 'block';
-      } else {
-        document.getElementById('pp-edit-btn').style.display = 'none';
-        document.getElementById('pp-edit-career-btn').style.display = 'none';
+    function openPlayerProfileByName(playerName, teamNameHint) {
+      const found = allSquad.find(p => p.name.toLowerCase() === playerName.toLowerCase());
+      if (!found) {
+        alert('Профиль игрока "' + playerName + '" не найден в общем составе.');
+        return;
       }
-
-      document.getElementById('pp-name').innerText = playerName;
-      document.getElementById('pp-team-name').innerText = teamName;
-      document.getElementById('pp-club-title').innerText = teamName;
-
-      const starBtn = document.getElementById('pp-star-btn');
-      if(foundPlayer && starredPlayers.includes(foundPlayer.id)) {
-          starBtn.innerText = '⭐';
-          starBtn.classList.add('active');
-      } else {
-          starBtn.innerText = '☆';
-          starBtn.classList.remove('active');
-      }
+      currentPlayerViewing = found;
+      document.getElementById('pp-name').innerText = found.name;
+      document.getElementById('pp-team-name').innerText = teamNameHint || 'ФК Яйц';
+      document.getElementById('pp-club-title').innerText = teamNameHint || 'ФК Яйц';
 
       const avatarEl = document.getElementById('pp-avatar');
-      if (foundPlayer && foundPlayer.photo_url) {
-        avatarEl.style.backgroundImage = `url('${foundPlayer.photo_url}')`; avatarEl.style.color = 'transparent'; avatarEl.innerText = number; 
+      if (found.photo_url) {
+        avatarEl.style.backgroundImage = `url('${found.photo_url}')`;
+        avatarEl.style.color = 'transparent';
+        avatarEl.innerText = '';
       } else {
-        avatarEl.style.backgroundImage = 'none'; avatarEl.style.color = '#fff'; avatarEl.innerText = number ? number : '⚽';
+        avatarEl.style.backgroundImage = '';
+        avatarEl.style.color = '#fff';
+        avatarEl.innerText = found.number || '⚽';
       }
 
-      document.getElementById('pp-nationality').innerHTML = foundPlayer?.nationality || '🇷🇺 RUS';
-      document.getElementById('pp-age').innerText = foundPlayer?.age || '20 ЛЕТ';
-      document.getElementById('pp-height').innerText = foundPlayer?.height || '180 cm';
-      document.getElementById('pp-foot').innerText = foundPlayer?.foot || 'Правая';
-      document.getElementById('pp-position').innerText = posConf.code;
-      document.getElementById('pp-number').innerText = number;
+      document.getElementById('pp-nationality').innerText = found.nationality || '🇷🇺 RUS';
+      document.getElementById('pp-age').innerText = found.age || '20 ЛЕТ';
+      document.getElementById('pp-height').innerText = found.height || '180 cm';
+      document.getElementById('pp-foot').innerText = found.foot || 'Правая';
+      document.getElementById('pp-position').innerText = found.position || 'FW';
+      document.getElementById('pp-number').innerText = found.number || '10';
 
-      const playerMatches = allMatches.filter(m => {
-        if(m.status.startsWith('upcoming')) return false;
-        let played = false;
-        if(m.lineup1 && m.lineup1.includes(`"name":"${playerName}"`)) played = true;
-        if(m.lineup2 && m.lineup2.includes(`"name":"${playerName}"`)) played = true;
-        const cleanName = s => s.replace(/\d+['’]?/g, '').replace(/^\d+[\.\)]\s*/, '').trim();
-        if(m.goals1 && m.goals1.split(/,|\n/).map(s => cleanName(s)).includes(playerName)) played = true;
-        if(m.goals2 && m.goals2.split(/,|\n/).map(s => cleanName(s)).includes(playerName)) played = true;
-        return played;
-      });
-
-      const matchesContainer = document.getElementById('pp-matches-list');
-      if (playerMatches.length === 0) matchesContainer.innerHTML = '<div class="empty-card-placeholder">Сыгранных матчей нет</div>';
-      else matchesContainer.innerHTML = playerMatches.map(m => `
-          <div class="card clickable-card" onclick="openMatchDetails('${m.id}')">
-            <div class="match-header">${m.match_date || ''}</div>
-            <div class="match-row"><span style="width:38%; text-align:left;">${m.team1}</span><span style="color:var(--accent); text-align:center; min-width:40px;">${m.score}</span><span style="width:38%; text-align:right;">${m.team2}</span></div>
-          </div>
-        `).join('');
-
-      let cStats = { mp: 0, min: '-', gls: 0, ast: '-', asr: '-' };
-      let isManual = false;
-      let autoMp = playerMatches.length;
-      let autoGls = 0;
-      playerMatches.forEach(m => {
-          const parseG = (str) => {
-             if(!str) return 0;
-             let count = 0;
-             str.split(/,|\n/).forEach(s => { if(s.replace(/\d+['’]?/g, '').replace(/^\d+[\.\)]\s*/, '').trim() === playerName) count++; });
-             return count;
-          }
-          autoGls += parseG(m.goals1) + parseG(m.goals2);
-      });
-
-      if (foundPlayer && foundPlayer.career_stats) {
-          try { const parsed = JSON.parse(foundPlayer.career_stats); if (parsed.manual) { isManual = true; cStats = parsed; } } catch(e) {}
+      const starBtn = document.getElementById('pp-star-btn');
+      if (starredPlayers.includes(found.id)) {
+        starBtn.innerText = '★';
+        starBtn.classList.add('active');
+      } else {
+        starBtn.innerText = '☆';
+        starBtn.classList.remove('active');
       }
 
-      if (!isManual) { cStats.mp = autoMp; cStats.gls = autoGls; }
-      document.getElementById('pp-career-body').innerHTML = `
-          <tr>
-            <td class="left-align">26/27</td><td class="left-align"><span class="team-logo-small">⚽</span>${teamName}</td>
-            <td>${cStats.mp}</td><td>${cStats.min || '-'}</td><td>${cStats.gls}</td><td>${cStats.ast || '-'}</td>
-            <td><span class="${cStats.asr !== '-' ? 'career-asr' : ''}">${cStats.asr || '-'}</span></td>
-          </tr>
-      `;
-      switchProfileTab('details');
+      const editIcon = document.getElementById('pp-edit-btn');
+      const editCareerBtn = document.getElementById('pp-edit-career-btn');
+      if (isAdmin) {
+        editIcon.style.display = 'block';
+        editCareerBtn.style.display = 'block';
+      } else {
+        editIcon.style.display = 'none';
+        editCareerBtn.style.display = 'none';
+      }
+
+      renderPlayerMatchesHistory(found.name);
+      renderPlayerCareerTable(found);
+
+      switchProfileTab('details', document.querySelector('#player-profile-modal .top-tab-btn'));
       document.getElementById('player-profile-modal').classList.add('active');
-      if (tg.BackButton) { tg.BackButton.show(); tg.BackButton.onClick(closePlayerProfile); }
     }
 
     function closePlayerProfile() {
       document.getElementById('player-profile-modal').classList.remove('active');
       currentPlayerViewing = null;
-      const isMatchModalOpen = document.getElementById('match-details-modal').classList.contains('active');
-      if (tg.BackButton) {
-        if (isMatchModalOpen) { tg.BackButton.show(); tg.BackButton.onClick(closeMatchModal); } 
-        else { tg.BackButton.hide(); tg.BackButton.offClick(closePlayerProfile); }
+    }
+
+    function switchProfileTab(tabName, btn) {
+      document.querySelectorAll('#player-profile-modal .top-tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('.pp-tab-content').forEach(c => c.classList.remove('active'));
+      const target = document.getElementById('pp-tab-' + tabName);
+      if (target) target.classList.add('active');
+    }
+
+    function renderPlayerMatchesHistory(playerName) {
+      const container = document.getElementById('pp-matches-list');
+      const playerMatches = allMatches.filter(m => {
+        if (m.status.startsWith('upcoming')) return false;
+        const inG1 = m.goals1 && m.goals1.toLowerCase().includes(playerName.toLowerCase());
+        const inG2 = m.goals2 && m.goals2.toLowerCase().includes(playerName.toLowerCase());
+        const inMvp = m.best_player && m.best_player.toLowerCase().includes(playerName.toLowerCase());
+        let inLineup = false;
+        try {
+          const l1 = m.lineup1 ? JSON.parse(m.lineup1) : null;
+          const l2 = m.lineup2 ? JSON.parse(m.lineup2) : null;
+          if (l1 && l1.startingXI && l1.startingXI.some(p => p.name.toLowerCase() === playerName.toLowerCase())) inLineup = true;
+          if (l2 && l2.startingXI && l2.startingXI.some(p => p.name.toLowerCase() === playerName.toLowerCase())) inLineup = true;
+        } catch(e) {}
+        return inG1 || inG2 || inMvp || inLineup;
+      });
+
+      if (playerMatches.length === 0) {
+        container.innerHTML = '<div class="empty-card-placeholder">Матчи с участием игрока не найдены</div>';
+        return;
       }
+
+      container.innerHTML = playerMatches.map(m => `
+        <div class="card clickable-card" onclick="closePlayerProfile(); openMatchDetails('${m.id}')">
+          <div class="match-header">${m.match_date || ''}</div>
+          <div class="match-row"><span style="width:38%; text-align:left;">${m.team1}</span><span style="color:var(--accent); text-align:center;">${m.score || 'vs'}</span><span style="width:38%; text-align:right;">${m.team2}</span></div>
+        </div>
+      `).join('');
+    }
+
+    function renderPlayerCareerTable(player) {
+      const tbody = document.getElementById('pp-career-body');
+      let careerData = {};
+      try {
+        careerData = player.career_stats ? (typeof player.career_stats === 'string' ? JSON.parse(player.career_stats) : player.career_stats) : {};
+      } catch(e) { careerData = {}; }
+
+      let seasons = Object.keys(careerData);
+      if (seasons.length === 0) {
+        seasons = ['2026'];
+        careerData['2026'] = { mp: 0, gls: 0, ast: 0, saves: 0, asr: '6.50' };
+      }
+
+      let html = '';
+      seasons.forEach(season => {
+        const s = careerData[season];
+        const safeSeason = season.replace(/'/g, "\\'");
+        html += `
+          <tr ${isAdmin ? `style="cursor:pointer;" onclick="openCareerSeasonEdit('${safeSeason}')"` : ''}>
+            <td class="left-align">${season}</td>
+            <td class="left-align"><span class="team-logo-small">⚽</span> ФК Яйц</td>
+            <td>${s.mp || 0}</td>
+            <td>${s.gls || 0}</td>
+            <td>${s.ast || 0}</td>
+            <td>${s.saves || 0}</td>
+            <td><span class="career-asr">${s.asr || '6.50'}</span></td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
     }
 
     function openPlayerEditModal() {
-      if (!currentPlayerViewing) return;
+      if(!currentPlayerViewing) return;
       document.getElementById('edit-profile-id').value = currentPlayerViewing.id;
       document.getElementById('edit-profile-photo').value = currentPlayerViewing.photo_url || '';
+      document.getElementById('edit-profile-photo-file').value = '';
       document.getElementById('edit-profile-nat').value = currentPlayerViewing.nationality || '';
       document.getElementById('edit-profile-age').value = currentPlayerViewing.age || '';
       document.getElementById('edit-profile-height').value = currentPlayerViewing.height || '';
       document.getElementById('edit-profile-foot').value = currentPlayerViewing.foot || '';
       document.getElementById('player-details-edit-modal').classList.add('active');
-      if (tg.BackButton) tg.BackButton.onClick(closePlayerEditModal);
     }
 
     function closePlayerEditModal() {
       document.getElementById('player-details-edit-modal').classList.remove('active');
-      if (tg.BackButton) { tg.BackButton.offClick(closePlayerEditModal); tg.BackButton.onClick(closePlayerProfile); }
     }
 
     async function savePlayerProfileDetails() {
       const id = document.getElementById('edit-profile-id').value;
-      const photo_url = document.getElementById('edit-profile-photo').value.trim();
+      const urlPhoto = document.getElementById('edit-profile-photo').value.trim();
       const nationality = document.getElementById('edit-profile-nat').value.trim();
       const age = document.getElementById('edit-profile-age').value.trim();
       const height = document.getElementById('edit-profile-height').value.trim();
       const foot = document.getElementById('edit-profile-foot').value.trim();
-      const payload = { photo_url, nationality, age, height, foot };
-      const { error } = await _supabase.from('squad').update(payload).eq('id', id);
-      if (error) alert('Ошибка при сохранении профиля: ' + error.message);
-      else { alert('Профиль обновлен!'); closePlayerEditModal(); await loadSquad(); openPlayerProfileByName(currentPlayerViewing.name); }
+
+      fileToDataUrl('edit-profile-photo-file', async (fileDataUrl) => {
+        const photo_url = fileDataUrl || urlPhoto;
+        const payload = { photo_url, nationality, age, height, foot };
+        const { error } = await _supabase.from('squad').update(payload).eq('id', id);
+        if (error) alert('Ошибка обновления профиля: ' + error.message);
+        else {
+          alert('Профиль обновлен!');
+          closePlayerEditModal();
+          await loadSquad();
+          openPlayerProfileByName(currentPlayerViewing.name);
+        }
+      });
     }
 
     function openCareerEditModal() {
       if(!currentPlayerViewing) return;
-      let mp = '', min = '', gls = '', ast = '', asr = '', saves = '';
-      if (currentPlayerViewing.career_stats) {
-          try {
-              const st = JSON.parse(currentPlayerViewing.career_stats);
-              if (st.manual) { mp = st.mp; min = st.min; gls = st.gls; ast = st.ast; asr = st.asr; saves = st.saves || ''; }
-          } catch(e){}
-      }
-      document.getElementById('edit-career-mp').value = mp;
-      document.getElementById('edit-career-min').value = min;
-      document.getElementById('edit-career-gls').value = gls;
-      document.getElementById('edit-career-ast').value = ast;
-      document.getElementById('edit-career-asr').value = asr;
-      document.getElementById('edit-career-saves').value = saves;
+      editingCareerSeasonKey = null;
+      document.getElementById('edit-career-season').value = '2026';
+      document.getElementById('edit-career-mp').value = 0;
+      document.getElementById('edit-career-gls').value = 0;
+      document.getElementById('edit-career-ast').value = 0;
+      document.getElementById('edit-career-saves').value = 0;
+      document.getElementById('edit-career-asr').value = '6.80';
       document.getElementById('career-edit-modal').classList.add('active');
-      if (tg.BackButton) tg.BackButton.onClick(closeCareerEditModal);
+    }
+
+    function openCareerSeasonEdit(seasonKey) {
+      if(!currentPlayerViewing) return;
+      editingCareerSeasonKey = seasonKey;
+      let careerData = {};
+      try { careerData = currentPlayerViewing.career_stats ? JSON.parse(currentPlayerViewing.career_stats) : {}; } catch(e) {}
+      const s = careerData[seasonKey] || { mp: 0, gls: 0, ast: 0, saves: 0, asr: '6.50' };
+
+      document.getElementById('edit-career-season').value = seasonKey;
+      document.getElementById('edit-career-mp').value = s.mp || 0;
+      document.getElementById('edit-career-gls').value = s.gls || 0;
+      document.getElementById('edit-career-ast').value = s.ast || 0;
+      document.getElementById('edit-career-saves').value = s.saves || 0;
+      document.getElementById('edit-career-asr').value = s.asr || '6.50';
+      document.getElementById('career-edit-modal').classList.add('active');
     }
 
     function closeCareerEditModal() {
       document.getElementById('career-edit-modal').classList.remove('active');
-      if (tg.BackButton) { tg.BackButton.offClick(closeCareerEditModal); tg.BackButton.onClick(closePlayerProfile); }
+      editingCareerSeasonKey = null;
     }
 
     async function saveCareerStats() {
-      const stats = {
-          manual: true,
-          mp: document.getElementById('edit-career-mp').value,
-          min: document.getElementById('edit-career-min').value,
-          gls: document.getElementById('edit-career-gls').value,
-          ast: document.getElementById('edit-career-ast').value,
-          asr: document.getElementById('edit-career-asr').value,
-          saves: document.getElementById('edit-career-saves').value
-      };
-      await updateCareerInDB(stats);
-    }
+      if(!currentPlayerViewing) return;
+      const newSeasonName = document.getElementById('edit-career-season').value.trim() || '2026';
+      const mp = parseInt(document.getElementById('edit-career-mp').value) || 0;
+      const gls = parseInt(document.getElementById('edit-career-gls').value) || 0;
+      const ast = parseInt(document.getElementById('edit-career-ast').value) || 0;
+      const saves = parseInt(document.getElementById('edit-career-saves').value) || 0;
+      const asr = document.getElementById('edit-career-asr').value.trim() || '6.50';
 
-    async function resetCareerStats() { await updateCareerInDB(null); }
+      let careerData = {};
+      try { careerData = currentPlayerViewing.career_stats ? JSON.parse(currentPlayerViewing.career_stats) : {}; } catch(e) {}
 
-    async function updateCareerInDB(statsObj) {
-      const payload = { career_stats: statsObj ? JSON.stringify(statsObj) : null };
+      if (editingCareerSeasonKey && editingCareerSeasonKey !== newSeasonName) {
+        delete careerData[editingCareerSeasonKey];
+      }
+
+      careerData[newSeasonName] = { mp, gls, ast, saves, asr };
+
+      const payload = { career_stats: JSON.stringify(careerData) };
       const { error } = await _supabase.from('squad').update(payload).eq('id', currentPlayerViewing.id);
-      if (error) alert('ОШИБКА: Добавьте текстовую колонку `career_stats`');
-      else { closeCareerEditModal(); await loadSquad(); openPlayerProfileByName(currentPlayerViewing.name); switchProfileTab('career'); }
+      if (error) alert('Ошибка сохранения статистики: ' + error.message);
+      else {
+        alert('Статистика сохранена!');
+        closeCareerEditModal();
+        await loadSquad();
+        openPlayerProfileByName(currentPlayerViewing.name);
+      }
     }
-    
-    // РЕНДЕР ТОП ИГРОКОВ
+
+    async function deleteCareerSeason() {
+      if(!currentPlayerViewing || !editingCareerSeasonKey) return;
+      if(!confirm(`Удалить сезон ${editingCareerSeasonKey}?`)) return;
+
+      let careerData = {};
+      try { careerData = currentPlayerViewing.career_stats ? JSON.parse(currentPlayerViewing.career_stats) : {}; } catch(e) {}
+      delete careerData[editingCareerSeasonKey];
+
+      const payload = { career_stats: JSON.stringify(careerData) };
+      const { error } = await _supabase.from('squad').update(payload).eq('id', currentPlayerViewing.id);
+      if (error) alert('Ошибка удаления сезона: ' + error.message);
+      else {
+        alert('Сезон удален!');
+        closeCareerEditModal();
+        await loadSquad();
+        openPlayerProfileByName(currentPlayerViewing.name);
+      }
+    }
+
+    function resetCareerStats() {
+      document.getElementById('edit-career-mp').value = 5;
+      document.getElementById('edit-career-gls').value = 2;
+      document.getElementById('edit-career-ast').value = 1;
+      document.getElementById('edit-career-saves').value = 0;
+      document.getElementById('edit-career-asr').value = '6.95';
+    }
+
     function renderTopPlayers() {
-        let statsList = [];
-        allSquad.forEach(p => {
-            let gls = 0, ast = 0, saves = 0;
-            if(p.career_stats) {
-                try {
-                    let st = JSON.parse(p.career_stats);
-                    if(st.manual) {
-                        gls = parseInt(st.gls) || 0;
-                        ast = parseInt(st.ast) || 0;
-                        saves = parseInt(st.saves) || 0;
-                    }
-                }catch(e){}
-            } else {
-                // Авто-подсчет голов
-                const pMatches = allMatches.filter(m => !m.status.startsWith('upcoming'));
-                pMatches.forEach(m => {
-                    const parseG = (str) => {
-                        if(!str) return 0;
-                        let count = 0;
-                        str.split(/,|\n/).forEach(s => { if(s.replace(/\d+['’]?/g, '').replace(/^\d+[\.\)]\s*/, '').trim() === p.name) count++; });
-                        return count;
-                    }
-                    gls += parseG(m.goals1) + parseG(m.goals2);
-                });
-            }
-            statsList.push({ ...p, gls, ast, saves });
-        });
+      let statsMap = {};
+      allSquad.forEach(p => {
+        statsMap[p.name.toLowerCase()] = {
+          name: p.name,
+          position: p.position,
+          goals: 0,
+          assists: 0,
+          saves: 0,
+          photo: p.photo_url
+        };
+      });
 
-        const genTopCard = (title, key, limit=3) => {
-            let sorted = [...statsList].sort((a,b) => b[key] - a[key]).filter(x => x[key] > 0);
-            const toShow = sorted.slice(0, limit);
-            if(sorted.length === 0) return `<div class="top-list-header"><span>${title}</span></div><div class="empty-card-placeholder">Нет данных</div>`;
-            
-            let listHtml = toShow.map(p => {
-                const posStr = POSITIONS_CONFIG[p.position]?.label || 'Игрок';
-                const avatarStyle = p.photo_url ? `background-image:url('${p.photo_url}'); background-size:cover; color:transparent;` : '';
-                return `
-                <div class="top-player-item clickable-card" onclick="openPlayerProfileByName('${p.name.replace(/'/g, "\\'")}')">
-                    <div style="display:flex; align-items:center; gap:12px;">
-                        <div style="width:40px; height:40px; background:#323238; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:14px; border: 1px solid rgba(255,255,255,0.1); ${avatarStyle}">${p.number || '?'}</div>
-                        <div style="display:flex; flex-direction:column; gap:2px;">
-                            <div style="font-size:15px; font-weight:600; color:#fff;">${p.name}</div>
-                            <div style="font-size:11px; color:var(--hint); display:flex; align-items:center; gap:4px;">
-                                <span style="font-size:10px;">⚽</span> ФК Яйц • ${posStr}
-                            </div>
-                        </div>
-                    </div>
-                    <div class="top-player-stat">${p[key]}</div>
-                </div>
-                `;
-            }).join('');
-            
-            return `
-                <div class="top-list-header">
-                    <span>${title}</span>
-                    <span class="view-all" onclick="alert('Модалка полного списка в разработке')">Все</span>
-                </div>
-                ${listHtml}
-            `;
-        }
+      allMatches.forEach(m => {
+        if (m.status.startsWith('upcoming')) return;
+        const processGoals = (str) => {
+          if (!str) return;
+          str.split(/,|\n/).forEach(line => {
+            const clean = line.replace(/\d+['’]?/g, '').replace(/^\d+[\.\)]\s*/, '').trim().toLowerCase();
+            if (clean && statsMap[clean]) statsMap[clean].goals++;
+          });
+        };
+        processGoals(m.goals1);
+        processGoals(m.goals2);
+      });
 
-        document.getElementById('top-goals-card').innerHTML = genTopCard('Голы', 'gls');
-        document.getElementById('top-assists-card').innerHTML = genTopCard('Ассисты', 'ast');
-        document.getElementById('top-saves-card').innerHTML = genTopCard('Сейвы (Вратари)', 'saves');
+      allSquad.forEach(p => {
+        try {
+          const cData = p.career_stats ? JSON.parse(p.career_stats) : {};
+          Object.values(cData).forEach(s => {
+            if (s.gls) statsMap[p.name.toLowerCase()].goals += parseInt(s.gls, 10) || 0;
+            if (s.ast) statsMap[p.name.toLowerCase()].assists += parseInt(s.ast, 10) || 0;
+            if (s.saves) statsMap[p.name.toLowerCase()].saves += parseInt(s.saves, 10) || 0;
+          });
+        } catch(e) {}
+      });
+
+      const playersArr = Object.values(statsMap);
+
+      const topGoals = [...playersArr].sort((a,b) => b.goals - a.goals).slice(0, 5);
+      const topAssists = [...playersArr].sort((a,b) => b.assists - a.assists).slice(0, 5);
+      const topSaves = [...playersArr].sort((a,b) => b.saves - a.saves).slice(0, 5);
+
+      renderTopCard('top-goals-card', '⚽ Лучшие бомбардиры', topGoals, 'goals', 'голов');
+      renderTopCard('top-assists-card', '🎯 Лучшие ассистенты', topAssists, 'assists', 'ассистов');
+      renderTopCard('top-saves-card', '🧤 Лучшие вратари', topSaves, 'saves', 'сейвов');
     }
 
-    renderSecondaryPosPills();
-    renderAdminGoalsBuilder();
-    toggleAdminFields();
-    selectAdminLineupTeam(1);
-    loadSquad();
-    loadMatches();
+    function renderTopCard(cardId, title, list, statKey, statUnit) {
+      const card = document.getElementById(cardId);
+      if(!card) return;
+
+      const fullListKey = cardId + '_expanded';
+      const isExpanded = window[fullListKey] || false;
+      const displayList = isExpanded ? list : list.slice(0, 3);
+
+      let html = `
+        <div class="top-list-header">
+          <span>${title}</span>
+          ${list.length > 3 ? `<span class="view-all" onclick="toggleTopCardExpand('${cardId}')">${isExpanded ? 'Свернуть' : 'Все'}</span>` : ''}
+        </div>
+      `;
+
+      if (displayList.length === 0 || displayList.every(item => item[statKey] === 0)) {
+        html += '<div style="color:var(--hint); font-size:13px;">Данные пока отсутствуют</div>';
+      } else {
+        displayList.forEach((p, idx) => {
+          const safeName = p.name.replace(/'/g, "\\'");
+          const avatarStyle = p.photo ? `background-image:url('${p.photo}'); color:transparent; background-size:cover;` : '';
+          html += `
+            <div class="top-player-item clickable-card" onclick="openPlayerProfileByName('${safeName}')">
+              <div class="player-left">
+                <span style="font-weight:800; color:var(--hint); width:16px; text-align:center;">${idx + 1}</span>
+                <div class="player-avatar" style="${avatarStyle}">${p.name[0]}</div>
+                <div>
+                  <div class="player-info-name">${p.name}</div>
+                  <div class="player-info-meta">${POSITIONS_CONFIG[p.position]?.code || p.position}</div>
+                </div>
+              </div>
+              <div class="top-player-stat">${p[statKey]}</div>
+            </div>
+          `;
+        });
+      }
+
+      card.innerHTML = html;
+    }
+
+    function toggleTopCardExpand(cardId) {
+      const fullListKey = cardId + '_expanded';
+      window[fullListKey] = !window[fullListKey];
+      renderTopPlayers();
+    }
+
+    window.onload = async function() {
+      await loadSquad();
+      await loadMatches();
+    };
   </script>
 </body>
 </html>
