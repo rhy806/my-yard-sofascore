@@ -3440,7 +3440,7 @@ function renderTopPlayers() {
     }
 
     // 1. Считываем основную и дополнительную позицию
-    const mainPos = p.position || p.pos || p.main_position '';
+    const mainPos = p.position || p.pos || p.main_position || '';
     const secPos = p.secondary_positions || p.secondary_position || p.sec_position || '';
     
     // Если в Supabase это массив (например, ["ЦАП"]), превращаем в строку
