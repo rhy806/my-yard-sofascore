@@ -737,30 +737,37 @@
   width: 100%;
 }
    
-    /* =========================================================
-   🔧 ИСПРАВЛЕНИЕ МЕНЮ: Распределение по ширине и подсветка
+/* =========================================================
+   🔧 ТОЧНОЕ ИСПРАВЛЕНИЕ МЕНЮ (.top-nav-tabs и .top-tab-btn)
    ========================================================= */
 
-/* 1. Растягиваем контейнер вкладок на всю ширину */
-.tabs-header, .tabs, .nav-tabs, .menu-tabs {
+/* 1. Растягиваем контейнер на всю ширину экрана */
+.top-nav-tabs {
   display: flex !important;
-  justify-content: space-around !important;
   width: 100% !important;
+  justify-content: space-between !important;
   box-sizing: border-box !important;
+  gap: 0 !important;
 }
 
-/* 2. Каждая вкладка занимает равное место и выровнена по центру */
-.tab-item, .nav-tab, .tab-btn {
+/* 2. СБРАСЫВАЕМ полоску и цвет у ВСЕХ кнопок по умолчанию */
+.top-tab-btn {
   flex: 1 !important;
   text-align: center !important;
-  border-bottom: 2px solid transparent !important; /* Убираем подсвечивание у неактивных */
-  padding: 8px 4px !important;
+  border: none !important;
+  border-bottom: 2px solid transparent !important; /* Прозрачная полоска */
+  background: transparent !important;
+  color: var(--hint, #8e8e93) !important;          /* Серый неактивный цвет */
+  padding: 10px 2px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
 }
 
-/* 3. Зеленая полоса и яркий цвет — ТОЛЬКО для активной вкладки */
-.tab-item.active, .nav-tab.active, .tab-btn.active {
-  border-bottom: 2px solid var(--accent) !important;
-  color: var(--accent) !important;
+/* 3. Подсвечиваем ИСКЛЮЧИТЕЛЬНО кнопку с классом .active */
+.top-tab-btn.active {
+  border-bottom: 2px solid var(--accent, #00e676) !important; /* Зеленая полоска */
+  color: var(--accent, #ffffff) !important;                   /* Подсветка текста */
 }
   </style>
 </head>
