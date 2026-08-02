@@ -3344,13 +3344,16 @@ async function toggleMaintenanceMode() {
   isMaintenanceActive = !isMaintenanceActive;
   localStorage.setItem('maintenance_active', isMaintenanceActive ? 'true' : 'false');
   
-  try {
-    if (typeof _supabase !== 'undefined' && _supabase) {
-      await _supabase.from('app_settings').upsert(
-  { key: 'maintenance', value: String(isMaintenanceActive) }, 
-  { onConflict: 'key' }
-);
-  } catch(e) {}
+ try {
+  if (typeof _supabase !== 'undefined' && _supabase) {
+    await _supabase.from('app_settings').upsert(
+      { key: 'maintenance', value: String(isMaintenanceActive) }, 
+      { onConflict: 'key' }
+    );
+  } // 1-я скобка: закрывает if
+} catch(e) { // 2-я скобка: закрывает try и начинает catch
+  console.warn("Ошибка сохранения в Supabase:", e);
+}
 
   updateMaintenanceUI();
   if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
