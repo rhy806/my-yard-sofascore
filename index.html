@@ -86,37 +86,58 @@
       transform: scale(0.95);
     }
 
-    /* ВКЛАДКИ НАВИГАЦИИ */
-    .top-nav-tabs {
-      display: flex;
-      gap: 20px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      overflow-x: auto;
-      scrollbar-width: none;
-    }
-    .top-nav-tabs::-webkit-scrollbar { display: none; }
+    /* =========================================================
+   ✨ СТИЛИ ВКЛАДОК (В точности как на скриншоте)
+   ========================================================= */
 
-    .top-tab-btn {
-      background: none;
-      border: none;
-      color: var(--hint);
-      font-size: 15px;
-      font-weight: 700;
-      padding: 10px 0;
-      cursor: pointer;
-      white-space: nowrap;
-      position: relative;
-    }
+/* Контейнер вкладок с тонкой разделяющей линией снизу */
+.top-nav-tabs {
+  display: flex !important;
+  width: 100% !important;
+  background-color: #121212 !important; /* Тёмный фон */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important; /* Тонкая серая полоска под всеми вкладками */
+  margin: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+}
 
-    .top-tab-btn.active { color: #ffffff; }
-    .top-tab-btn.active::after {
-      content: '';
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
-      height: 3px;
-      background: var(--accent);
-      border-radius: 3px 3px 0 0;
-    }
+/* Общие стили для всех кнопок */
+.top-tab-btn {
+  flex: 1 !important;
+  position: relative !important;
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  color: #8e8e93 !important; /* Серый цвет неактивных вкладок */
+  font-size: 15px !important;
+  font-weight: 700 !important; /* Плотный жирный шрифт */
+  padding: 12px 4px 10px 4px !important;
+  text-align: center !important;
+  cursor: pointer !important;
+  transition: color 0.15s ease !important;
+}
+
+/* Эффект при наведении мышкой */
+.top-tab-btn:hover {
+  color: #cccccc !important;
+}
+
+/* АКТИВНАЯ ВКЛАДКА: Яркий чистый белый текст */
+.top-tab-btn.active {
+  color: #ffffff !important;
+}
+
+/* Зелёная подчёркивающая полоска с округлением */
+.top-tab-btn.active::after {
+  content: '' !important;
+  position: absolute !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 3px !important;                 /* Толщина зелёной линии */
+  background-color: #00e676 !important;   /* Сочный зелёный цвет */
+  border-radius: 3px 3px 0 0 !important;   /* Закругления на концах */
+}
 
     .tab-content { display: none; padding: 16px; }
     .tab-content.active { display: block; }
