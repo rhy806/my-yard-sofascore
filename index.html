@@ -994,43 +994,46 @@
   <button class="top-tab-btn" onclick="switchMainTabBySwipe(3, this)">Лучшие игроки</button>
 </div>
 
-<!-- 2. Слайдер с твоим РЕАЛЬНЫМ контентом -->
+<!-- ОБЩИЙ КОНТЕЙНЕР ДЛЯ ВСЕХ ВКЛАДОК -->
 <div class="tabs-content-wrapper">
-  
-  <!-- 0. ДЕТАЛИ -->
+
+  <!-- ==========================================
+       🟢 0. ВКЛАДКА: ДЕТАЛИ
+       ========================================== -->
   <div class="tab-pane">
     <div class="section-title">ТЕКУЩАЯ ФОРМА</div>
-    <div id="recent-form" class="tab-card">
-    <div>
-      <!-- Твои кружочки L W -->
-    </div>
+    <div id="recent-form" class="tab-card"></div>
 
     <div class="section-title">СТАТИСТИКА КОМАНДЫ</div>
-    <div id="team-stats" class="tab-card">
-      <!-- Твоя статистика команды -->
-    </div>
-  </div>
+    <div id="team-stats" class="tab-card"></div>
+  </div> <!-- ⚠️ ЗАКРЫВАЕМ 0-Ю ВКЛАДКУ (Важно!) -->
 
-  <!-- 1. МАТЧИ -->
+
+  <!-- ==========================================
+       🟢 1. ВКЛАДКА: МАТЧИ
+       ========================================== -->
   <div class="tab-pane">
-    <div class="section-title">ПРЕДСТОЯЩИЕ МАТЧИ</div>
+    <div class="section-title">МАТЧИ КОМАНДЫ</div>
     <div id="matches-list"></div>
-      <!-- Карточка матча (ФК Яйц VS ФК ХПК) -->
-  </div>
+  </div> <!-- ⚠️ ЗАКРЫВАЕМ 1-Ю ВКЛАДКУ -->
 
-  <!-- 2. СОСТАВ (Здесь стили уже свои, просто оставляем контейнер) -->
+
+  <!-- ==========================================
+       🟢 2. ВКЛАДКА: СОСТАВ
+       ========================================== -->
   <div class="tab-pane">
-    <div id="squad-list-container">
-      <!-- Твой список игроков -->
-    </div>
-  </div>
+    <div id="squad-list-container"></div>
+  </div> <!-- ⚠️ ЗАКРЫВАЕМ 2-Ю ВКЛАДКУ -->
 
-  <!-- 3. ЛУЧШИЕ ИГРОКИ -->
+
+  <!-- ==========================================
+       🟢 3. ВКЛАДКА: ЛУЧШИЕ ИГРОКИ
+       ========================================== -->
   <div class="tab-pane">
     <div id="top-goals-card" class="tab-card"></div>
     <div id="top-assists-card" class="tab-card"></div>
     <div id="top-saves-card" class="tab-card"></div>
-  </div>
+  </div> <!-- ⚠️ ЗАКРЫВАЕМ 3-Ю ВКЛАДКУ -->
 
 </div>
 
