@@ -3401,7 +3401,6 @@ function renderHeroGoalsSummary(match) {
   g2Box.innerHTML = rightList.join('<br>');
 }
 
-
 /* =========================================================
    НОВОВВЕДЕНИЕ 4: Заявка отображается только для нашей команды
    ========================================================= */
@@ -3468,8 +3467,6 @@ function renderViewerRoster(match) {
 /* =========================================================
    НОВОВВЕДЕНИЕ 5 (Логика): Инициализация режима обслуживания
    ========================================================= */
-let isMaintenanceActive = false;
-
 function initMaintenanceMode() {
   const btn = document.getElementById('admin-maintenance-btn');
   if (typeof isAdmin !== 'undefined' && isAdmin && btn) {
