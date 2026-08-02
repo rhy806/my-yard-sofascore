@@ -86,22 +86,19 @@
       transform: scale(0.95);
     }
 
-/* =========================================================
-   ✨ ИДЕАЛЬНОЕ МЕНЮ (Красивый шрифт + Подсветка strictly .active)
-   ========================================================= */
-
-/* Контейнер */
+/* Контейнер меню с симметричными отступами по бокам */
 .top-nav-tabs {
   display: flex !important;
   width: 100% !important;
-  background-color: transperent !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background: transparent !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
   margin: 0 !important;
-  padding: 0 !important;
+  padding: 0 16px !important; /* 🔥 Отступы по 16px слева и справа */
   box-sizing: border-box !important;
+  justify-content: space-between !important;
 }
 
-/* 1. Все кнопки (Неактивные по умолчанию) */
+/* Кнопки меню */
 .top-nav-tabs .top-tab-btn {
   flex: 1 !important;
   position: relative !important;
@@ -110,36 +107,35 @@
   outline: none !important;
   box-shadow: none !important;
   
-  /* Совремнный шрифт как в Telegram / iOS / Android */
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
   font-size: 14px !important;
-  font-weight: 700 !important;          /* Жирный плотный шрифт */
-  letter-spacing: -0.2px !important;     /* Легкая утяжка букв для стиля */
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
   
-  color: #8f8f90 !important;             /* Приглушенный серый */
-  padding: 12px 2px 10px 2px !important;
+  color: rgba(255, 255, 255, 0.5) !important;
+  padding: 12px 4px 10px 4px !important;
   text-align: center !important;
   cursor: pointer !important;
+  white-space: nowrap !important; /* Запрещаем перенос строк */
   -webkit-tap-highlight-color: transparent !important;
 }
 
-/* Жесткое отключение зелёного цвета и полосок у неактивных кнопок */
+/* Неактивные кнопки */
 .top-nav-tabs .top-tab-btn:not(.active) {
-  color: #8f8f90 !important;
+  color: rgba(255, 255, 255, 0.5) !important;
 }
 
-.top-nav-tabs .top-tab-btn:not(.active)::after,
-.top-nav-tabs .top-tab-btn:not(.active)::before {
+.top-nav-tabs .top-tab-btn:not(.active)::after {
   display: none !important;
   content: none !important;
 }
 
-/* 2. Только активная кнопка (.active) */
+/* Активная кнопка */
 .top-nav-tabs .top-tab-btn.active {
-  color: #ffffff !important;             /* Ярко-белый текст */
+  color: #ffffff !important;
 }
 
-/* Зелёная полоска под активной кнопкой */
+/* Зеленая полоска ровно под активной кнопкой */
 .top-nav-tabs .top-tab-btn.active::after {
   content: '' !important;
   display: block !important;
@@ -147,9 +143,9 @@
   bottom: 0 !important;
   left: 0 !important;
   width: 100% !important;
-  height: 1px !important;
-  background-color: #00e676 !important;   /* Сочный зеленый */
-  border-radius: 1px 1px 0 0 !important;
+  height: 3px !important;
+  background-color: #00e676 !important;
+  border-radius: 3px 3px 0 0 !important;
 }
 
     .tab-content { display: none; padding: 16px; }
@@ -3439,23 +3435,41 @@ function renderTopPlayers() {
       });
     }
 
-    // 1. Считываем основную и дополнительную позицию
+// 1. Основная позиция
     const mainPos = p.position || p.pos || p.main_position || '';
-    const secPos = p.secondary_positions || p.secondary_position || p.sec_position || '';
     
-    // Если в Supabase это массив (например, ["ЦАП"]), превращаем в строку
-    if (Array.isArray(secPos)) {
-      secPos = secPos.join(', ');
-    }
-    
-    // 3. Форматируем вывод через запятую
-    let posFormatted = '';
-    if (mainPos && secPos && mainPos !== secPos) {
-      posFormatted = `${mainPos}, ${secPos}`;
-    } else {
-      posFormatted = mainPos || secPos;
+    // 2. Дополнительные позиции (очищаем JSON из Supabase)
+    let secPosRaw = p.secondary_positions || p.secondary_position || p.sec_position || '';
+    let secPosArr = [];
+
+    if (secPosRaw) {
+      if (typeof secPosRaw === 'string') {
+        try {
+          // Если пришла строка вида '["LW", "RW"]' — превращаем в массив
+          const parsed = JSON.parse(secPosRaw);
+          if (Array.isArray(parsed)) secPosArr = parsed;
+          else secPosArr = [secPosRaw];
+        } catch (e) {
+          // Если обычная строка
+          secPosArr = [secPosRaw];
+        }
+      } else if (Array.isArray(secPosRaw)) {
+        secPosArr = secPosRaw;
+      }
     }
 
+    // Собираем всё в единый массив и убираем дубликаты
+    const allPositions = [];
+    if (mainPos) allPositions.push(mainPos);
+    
+    secPosArr.forEach(pos => {
+      if (pos && !allPositions.includes(pos)) {
+        allPositions.push(pos);
+      }
+    });
+
+    // Объединяем всё просто через запятую
+    const posFormatted = allPositions.join(', ');
     return {
       name: p.name || 'Игрок',
       photo: p.photo_url || '',
