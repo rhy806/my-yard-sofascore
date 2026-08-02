@@ -1798,22 +1798,24 @@
   }
 }
 
-      if (btn && btn.classList.contains('top-tab-btn')) {
-        const navBtns = document.querySelectorAll('.bottom-nav .nav-item');
-        if (navBtns[0]) navBtns[0].classList.add('active');
-      } else {
-        const topBtns = document.querySelectorAll('.team-header .top-tab-btn');
-        if (tabId === 'details') topBtns[0]?.classList.add('active');
-        if (tabId === 'matches') topBtns[1]?.classList.add('active');
-        if (tabId === 'squad') topBtns[2]?.classList.add('active');
-        if (tabId === 'top') topBtns[3]?.classList.add('active');
-      }
-
-      if(tabId === 'top') renderTopPlayers();
-      if(tabId === 'details') renderTeamStats();
-      if(tabId === 'subscriptions') renderSubscriptionsList();
+     // Безопасная подсветка кнопок
+  if (btn) {
+    btn.classList.add('active');
+  } else {
+    const btnMap = { 'details': 0, 'matches': 1, 'squad': 2, 'top': 3 };
+    const allTopBtns = document.querySelectorAll('.top-tab-btn');
+    const idx = btnMap[tabId];
+    if (idx !== undefined && allTopBtns[idx]) {
+      allTopBtns[idx].classList.add('active');
     }
+  }
 
+  // Запуск отрисовки вкладок
+  if (tabId === 'top') renderTopPlayers();
+  if (tabId === 'details') renderTeamStats();
+  if (tabId === 'subscriptions') renderSubscriptionsList();
+}
+    
     function handleSubscriptionsTabClick(btn) {
       const subscribed = allSquad.filter(p => starredPlayers.includes(p.id) || starredPlayers.includes(String(p.id)));
 
