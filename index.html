@@ -736,6 +736,32 @@
   max-width: 320px;
   width: 100%;
 }
+   
+    /* =========================================================
+   🔧 ИСПРАВЛЕНИЕ МЕНЮ: Распределение по ширине и подсветка
+   ========================================================= */
+
+/* 1. Растягиваем контейнер вкладок на всю ширину */
+.tabs-header, .tabs, .nav-tabs, .menu-tabs {
+  display: flex !important;
+  justify-content: space-around !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* 2. Каждая вкладка занимает равное место и выровнена по центру */
+.tab-item, .nav-tab, .tab-btn {
+  flex: 1 !important;
+  text-align: center !important;
+  border-bottom: 2px solid transparent !important; /* Убираем подсвечивание у неактивных */
+  padding: 8px 4px !important;
+}
+
+/* 3. Зеленая полоса и яркий цвет — ТОЛЬКО для активной вкладки */
+.tab-item.active, .nav-tab.active, .tab-btn.active {
+  border-bottom: 2px solid var(--accent) !important;
+  color: var(--accent) !important;
+}
   </style>
 </head>
 <body>
