@@ -3164,61 +3164,39 @@ function renderTeamStats() {
     }
   });
 
-  // ==========================================
-  // 🎯 ВОТ СЮДА ВСТАВЛЯЕТСЯ РАСЧЕТ ПРОЦЕНТА ПОБЕД
-  // ==========================================
+  // Расчет процента побед
   const winRate = totalMatches > 0 ? Math.round((wins / totalMatches) * 100) : 0;
 
-  // Отрисовка карточек с заменой «Ничьих» на «% побед»
+  // Отрисовка с правильными классами и рабочим процентом
   container.innerHTML = `
-    <div class="stat-card">
-      <div class="stat-value">${totalMatches}</div>
-      <div class="stat-label">Игр</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value">${wins}</div>
-      <div class="stat-label">Побед</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value">${winRate}%</div>
-      <div class="stat-label">% побед</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value">${losses}</div>
-      <div class="stat-label">Поражений</div>
+    <div class="team-stats-grid">
+      <div class="team-stat-box">
+        <div class="team-stat-val">${totalMatches}</div>
+        <div class="team-stat-lbl">МАТЧИ</div>
+      </div>
+      <div class="team-stat-box">
+        <div class="team-stat-val" style="color:var(--accent);">${wins}</div>
+        <div class="team-stat-lbl">ПОБЕДЫ</div>
+      </div>
+      <div class="team-stat-box">
+        <div class="team-stat-val" style="color:var(--white);">${winRate}%</div>
+        <div class="team-stat-lbl">ПРОЦЕНТ ПОБЕД</div>
+      </div>
+      <div class="team-stat-box">
+        <div class="team-stat-val" style="color:var(--danger);">${losses}</div>
+        <div class="team-stat-lbl">ПОРАЖЕНИЯ</div>
+      </div>
+      <div class="team-stat-box">
+        <div class="team-stat-val">${scored}</div>
+        <div class="team-stat-lbl">ЗАБИТО</div>
+      </div>
+      <div class="team-stat-box">
+        <div class="team-stat-val">${conceded}</div>
+        <div class="team-stat-lbl">ПРОПУЩЕНО</div>
+      </div>
     </div>
   `;
 }
-
-      container.innerHTML = `
-        <div class="team-stats-grid">
-          <div class="team-stat-box">
-            <div class="team-stat-val">${totalMatches}</div>
-            <div class="team-stat-lbl">МАТЧИ</div>
-          </div>
-          <div class="team-stat-box">
-            <div class="team-stat-val" style="color:var(--accent);">${wins}</div>
-            <div class="team-stat-lbl">ПОБЕДЫ</div>
-          </div>
-          <div class="team-stat-box">
-            <div class="team-stat-val" style="color:var(--white);id="team-stat-winrate">0%</div>
-            <div class="team-stat-lbl">ПРОЦЕНТ ПОБЕД</div>
-          </div>
-          <div class="team-stat-box">
-            <div class="team-stat-val" style="color:var(--danger);">${losses}</div>
-            <div class="team-stat-lbl">ПОРAЖЕНИЯ</div>
-          </div>
-          <div class="team-stat-box">
-            <div class="team-stat-val">${scored}</div>
-            <div class="team-stat-lbl">ЗАБИТО</div>
-          </div>
-          <div class="team-stat-box">
-            <div class="team-stat-val">${conceded}</div>
-            <div class="team-stat-lbl">ПРОПУЩЕНО</div>
-          </div>
-        </div>
-      `;
-    }
 
     /* НОВОВВЕДЕНИЕ 1: СТАТИСТИКА В ЛУЧШИХ ИГРОКАХ БЕРЕТСЯ ТОЛЬКО ИЗ ПРОФИЛЯ ИГРОКА И МЕНЮ КАРЬЕРА */
     function getPlayerTotalsFromCareer(player) {
