@@ -3234,19 +3234,81 @@
     loadSquad();
     loadMatches();
     
-    /* =========================================================
-   НОВОВВЕДЕНИЕ 1: Расчет лучших игроков ТОЛЬКО из профиля (Карьера)
+ /* =========================================================
+   БЕЗОПАСНЫЙ JS-БЛОК (Конфликт с isMaintenanceActive устранен)
    ========================================================= */
+
+function initMaintenanceMode() {
+  loadMaintenanceState();
+}
+
+async function loadMaintenanceState() {
+  try {
+    if (typeof _supabase !== 'undefined' && _supabase) {
+      const { data } = await _supabase.from('app_settings').select('value').eq('key', 'maintenance').single();
+      if (data) {
+        isMaintenanceActive = (data.value === 'true' || data.value === true);
+      } else {
+        isMaintenanceActive = (localStorage.getItem('maintenance_active') === 'true');
+      }
+    } else {
+      isMaintenanceActive = (localStorage.getItem('maintenance_active') === 'true');
+    }
+  } catch(e) {
+    isMaintenanceActive = (localStorage.getItem('maintenance_active') === 'true');
+  }
+  updateMaintenanceUI();
+}
+
+async function toggleMaintenanceMode() {
+  if (typeof isAdmin !== 'undefined' && !isAdmin) return;
+  isMaintenanceActive = !isMaintenanceActive;
+  localStorage.setItem('maintenance_active', isMaintenanceActive ? 'true' : 'false');
+  
+  try {
+    if (typeof _supabase !== 'undefined' && _supabase) {
+      await _supabase.from('app_settings').upsert({ key: 'maintenance', value: String(isMaintenanceActive) });
+    }
+  } catch(e) {}
+
+  updateMaintenanceUI();
+  if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
+    window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+  }
+}
+
+function updateMaintenanceUI() {
+  const btn = document.getElementById('admin-maintenance-btn');
+  const overlay = document.getElementById('maintenance-overlay');
+  const userIsAdmin = (typeof isAdmin !== 'undefined' && isAdmin === true);
+
+  if (btn) {
+    btn.style.display = userIsAdmin ? 'flex' : 'none';
+    btn.className = isMaintenanceActive ? 'maintenance-btn on' : 'maintenance-btn off';
+  }
+
+  if (overlay) {
+    if (isMaintenanceActive && !userIsAdmin) {
+      overlay.style.display = 'flex';
+    } else {
+      overlay.style.display = 'none';
+    }
+  }
+}
+
+/* --- Расчет ТОП игроков --- */
 function renderTopPlayers() {
   const goalsCard = document.getElementById('top-goals-card');
   const assistsCard = document.getElementById('top-assists-card');
   const savesCard = document.getElementById('top-saves-card');
   if (!goalsCard || !assistsCard || !savesCard) return;
 
-  let playersStats = allSquad.map(p => {
+  const squadData = (typeof allSquad !== 'undefined' && Array.isArray(allSquad)) ? allSquad : [];
+
+  let playersStats = squadData.map(p => {
     let totalGls = 0, totalAst = 0, totalSaves = 0;
     let careerArr = [];
-    if (p.career) {
+    if (p && p.career) {
       try {
         careerArr = typeof p.career === 'string' ? JSON.parse(p.career) : p.career;
       } catch (e) { careerArr = []; }
@@ -3259,9 +3321,9 @@ function renderTopPlayers() {
       });
     }
     return {
-      name: p.name,
-      photo: p.photo_url,
-      number: p.number,
+      name: p.name || 'Игрок',
+      photo: p.photo_url || '',
+      number: p.number || '',
       gls: totalGls,
       ast: totalAst,
       saves: totalSaves
@@ -3468,9 +3530,11 @@ function updateMaintenanceUI() {
   }
 }
 
-// Автозапуск проверки режима обслуживания
+/* --- Автозапуск --- */
 document.addEventListener("DOMContentLoaded", () => {
-  initMaintenanceMode();
+  setTimeout(() => {
+    initMaintenanceMode();
+  }, 200);
 });
   </script>
   <!-- Окно предупреждения об обновлениях для пользователей -->
@@ -3482,5 +3546,4 @@ document.addEventListener("DOMContentLoaded", () => {
   </div>
 </div>
 </body>
-
 </html>
