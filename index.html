@@ -958,55 +958,51 @@
   </div>
 </div>
 
-    <!-- Меню -->
+ \<!-- 1. Главное меню (возвращаем правильные вкладки) -->
 <div class="top-nav-tabs">
-  <button class="top-tab-btn active" onclick="switchMainTabBySwipe('details', this)">Детали</button>
-  <button class="top-tab-btn" onclick="switchMainTabBySwipe('matches', this)">Матчи</button>
-  <button class="top-tab-btn" onclick="switchMainTabBySwipe('career', this)">Карьера</button>
-  <button class="top-tab-btn" onclick="switchMainTabBySwipe('media', this)">Медиа</button>
+  <button class="top-tab-btn active" onclick="switchMainTabBySwipe(0, this)">Детали</button>
+  <button class="top-tab-btn" onclick="switchMainTabBySwipe(1, this)">Матчи</button>
+  <button class="top-tab-btn" onclick="switchMainTabBySwipe(2, this)">Состав</button>
+  <button class="top-tab-btn" onclick="switchMainTabBySwipe(3, this)">Лучшие игроки</button>
 </div>
 
-<!-- Обертка для свайпов -->
+<!-- 2. Слайдер с твоим РЕАЛЬНЫМ контентом -->
 <div class="tabs-content-wrapper">
-  <div id="tab-details" class="tab-pane">Контент вкладки Детали...</div>
-  <div id="tab-matches" class="tab-pane">Контент вкладки Матчи...</div>
-  <div id="tab-career" class="tab-pane">Контент вкладки Карьера...</div>
-  <div id="tab-media" class="tab-pane">Контент вкладки Медиа...</div>
-</div>
-
-  <!-- ВКЛАДКА 1: ДЕТАЛИ -->
-  <div id="tab-details" class="tab-content active">
-    <div class="section-title">Предстоящие матчи</div>
-    <div id="upcoming-match-widget"></div>
-
-    <div class="section-title" style="margin-top:22px;">Текущая форма</div>
-    <div id="team-form-widget" class="card">
-      <div style="color:var(--hint); text-align:center; font-size:14px; font-weight:600;">Недостаточно матчей для аналитики</div>
-    </div>
-
-    <div class="section-title" style="margin-top:22px;">Статистика команды</div>
-    <div id="team-stats-widget" class="card">
-      <div style="color:var(--hint); text-align:center; font-size:14px; font-weight:600;">Загрузка статистики...</div>
-    </div>
-  </div>
-
-  <!-- ВКЛАДКА 2: МАТЧИ -->
-  <div id="tab-matches" class="tab-content">
-    <h3 style="margin-top:0;">История матчей</h3>
-    <div id="matches-list">Загрузка...</div>
-  </div>
-
-  <!-- ВКЛАДКА 3: СОСТАВ -->
-  <div id="tab-squad" class="tab-content">
-    <div id="squad-list-container">Загрузка состава...</div>
-  </div>
   
-  <!-- ВКЛАДКА 4: ЛУЧШИЕ ИГРОКИ -->
-  <div id="tab-top" class="tab-content">
-    <div class="card" id="top-goals-card"></div>
-    <div class="card" id="top-assists-card"></div>
-    <div class="card" id="top-saves-card"></div>
+  <!-- 0-я вкладка: ДЕТАЛИ -->
+  <div class="tab-pane">
+    <!-- Сюда переносим Текущую форму и Статистику команды -->
+    <div class="section-title">ТЕКУЩАЯ ФОРМА</div>
+    <!-- твой блок с формой L W -->
+    
+    <div class="section-title">СТАТИСТИКА КОМАНДЫ</div>
+    <!-- твоя статистика -->
   </div>
+
+  <!-- 1-я вкладка: МАТЧИ -->
+  <div class="tab-pane">
+    <!-- Сюда переносим блок с Предстоящими и прошедшими матчами -->
+    <div class="section-title">ПРЕДСТОЯЩИЕ МАТЧИ</div>
+    <!-- твой карточка с матчем ФК Яйц VS ФК ХПК -->
+  </div>
+
+  <!-- 2-я вкладка: СОСТАВ -->
+  <div class="tab-pane">
+    <!-- Сюда переносим список всех игроков команды -->
+    <div id="squad-list-container">
+      <!-- Список состава -->
+    </div>
+  </div>
+
+  <!-- 3-я вкладка: ЛУЧШИЕ ИГРОКИ -->
+  <div class="tab-pane">
+    <!-- Сюда переносим ТОПы -->
+    <div id="top-goals-card"></div>
+    <div id="top-assists-card"></div>
+    <div id="top-saves-card"></div>
+  </div>
+
+</div>
 
   <!-- ВКЛАДКА 5: ПОДПИСКИ -->
   <div id="tab-subscriptions" class="tab-content">
@@ -3804,102 +3800,89 @@ document.addEventListener("DOMContentLoaded", () => {
 <!-- Весь твои HTML-код и блоки вкладок выше -->
 
   <!-- ⬇️ ВСЕ СКТРИПТЫ ВСТАВЛЯЮТСЯ СЮДА ⬇️ -->
-  <script>
+<script>
   document.addEventListener("DOMContentLoaded", () => {
-    const tabs = ['details', 'matches', 'career', 'media'];
     let currentIndex = 0;
-
     const wrapper = document.querySelector('.tabs-content-wrapper');
     if (!wrapper) return;
+
+    const totalTabs = wrapper.querySelectorAll('.tab-pane').length;
 
     let startX = 0;
     let currentX = 0;
     let isDragging = false;
 
-    // 1. НАЧАЛО КАСАНИЯ: фиксируем точку и отключаем анимацию (чтобы не было лагов за пальцем)
+    // 1. Начало касания
     wrapper.addEventListener('touchstart', (e) => {
       isDragging = true;
       startX = e.touches[0].clientX;
       currentX = startX;
 
-      const panes = wrapper.querySelectorAll('.tab-pane');
-      panes.forEach(pane => {
-        pane.style.transition = 'none'; // Отключаем плавность на время тяги
+      wrapper.querySelectorAll('.tab-pane').forEach(pane => {
+        pane.style.transition = 'none';
       });
     }, { passive: true });
 
-    // 2. ДВИЖЕНИЕ ПАЛЬЦА: контент буквально едет за пальцем в реальном времени
+    // 2. Движение пальцем
     wrapper.addEventListener('touchmove', (e) => {
       if (!isDragging) return;
       currentX = e.touches[0].clientX;
-      const diffX = currentX - startX; // На сколько пикселей сдвинули палец
+      const diffX = currentX - startX;
 
-      const panes = wrapper.querySelectorAll('.tab-pane');
-      panes.forEach(pane => {
-        // Смещаем экраны вслед за пальцем
+      wrapper.querySelectorAll('.tab-pane').forEach(pane => {
         pane.style.transform = `translateX(calc(-${currentIndex * 100}% + ${diffX}px))`;
       });
     }, { passive: true });
 
-    // 3. ОТПУСКАНИЕ ПАЛЬЦА: возвращаем анимацию и решаем, переключать ли вкладку
+    // 3. Отпускание пальца
     wrapper.addEventListener('touchend', () => {
       if (!isDragging) return;
       isDragging = false;
 
       const diffX = currentX - startX;
-      const threshold = window.innerWidth * 0.2; // Порог свайпа (20% ширины экрана)
+      const threshold = window.innerWidth * 0.2; // 20% ширины экрана
 
-      // Включаем обратно красивую плавную анимацию долета/доводки
-      const panes = wrapper.querySelectorAll('.tab-pane');
-      panes.forEach(pane => {
+      wrapper.querySelectorAll('.tab-pane').forEach(pane => {
         pane.style.transition = 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)';
       });
 
-      // Если протянули достаточно далеко — переключаем
-      if (diffX < -threshold && currentIndex < tabs.length - 1) {
+      if (diffX < -threshold && currentIndex < totalTabs - 1) {
         currentIndex++;
       } else if (diffX > threshold && currentIndex > 0) {
         currentIndex--;
       }
 
-      // Применяем итоговое положение
       updateTabUI();
-
-      // Сбрасываем координаты
-      startX = 0;
-      currentX = 0;
     });
 
-    // Функция переключения по клику на кнопки в меню
-    window.switchMainTabBySwipe = function(tabName, btnElement) {
-      const index = tabs.indexOf(tabName);
-      if (index !== -1) {
-        currentIndex = index;
-        
-        // При клике обязательно должна быть анимация
-        const panes = wrapper.querySelectorAll('.tab-pane');
-        panes.forEach(pane => {
-          pane.style.transition = 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)';
-        });
-        
-        updateTabUI();
-      }
+    // Функция клика по кнопкам в меню
+    window.switchMainTabBySwipe = function(index, btnElement) {
+      currentIndex = index;
+      
+      wrapper.querySelectorAll('.tab-pane').forEach(pane => {
+        pane.style.transition = 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)';
+      });
+      
+      updateTabUI();
     };
 
-    // Обновление интерфейса (активная кнопка + смещение контента)
     function updateTabUI() {
-      // Подсветка кнопок
+      // Обновляем активную кнопку в шапке
       const buttons = document.querySelectorAll('.top-nav-tabs .top-tab-btn');
       buttons.forEach((btn, idx) => {
         if (idx === currentIndex) btn.classList.add('active');
         else btn.classList.remove('active');
       });
 
-      // Доводка контента до нужной вкладки
-      const panes = wrapper.querySelectorAll('.tab-pane');
-      panes.forEach((pane) => {
+      // Передвигаем слайдер
+      wrapper.querySelectorAll('.tab-pane').forEach((pane) => {
         pane.style.transform = `translateX(-${currentIndex * 100}%)`;
       });
+
+      // Если переключились на вкладку "Лучшие игроки" (индекс 3), вызываем отрисовку топов
+      if (currentIndex === 3 && typeof renderTopPlayers === 'function') {
+        renderTopPlayers();
+      }
     }
   });
   </script>
