@@ -769,6 +769,45 @@
   border-bottom: 2px solid var(--accent, #00e676) !important; /* Зеленая полоска */
   color: var(--accent, #ffffff) !important;                   /* Подсветка текста */
 }
+    
+    /* =========================================================
+   🔥 БРОНЕБОЙНЫЙ СБРОС ДЛЯ КНОПОК МЕНЮ
+   ========================================================= */
+.top-nav-tabs {
+  display: flex !important;
+  width: 100% !important;
+  justify-content: space-between !important;
+}
+
+/* Сбрасываем ВСЁ у всех кнопок по умолчанию */
+.top-tab-btn {
+  flex: 1 !important;
+  text-align: center !important;
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 2px solid transparent !important;
+  box-shadow: none !important;
+  color: #8e8e93 !important; /* Серый текст */
+  padding: 10px 0 !important;
+  font-size: 13px !important;
+}
+
+/* Отключаем скрытые полоски (псевдоэлементы) у всех НЕАКТИВНЫХ кнопок */
+.top-tab-btn:not(.active)::after,
+.top-tab-btn:not(.active)::before {
+  display: none !important;
+  content: none !important;
+}
+
+/* Зелёный цвет и полоска — ИСКЛЮЧИТЕЛЬНО для .active */
+.top-tab-btn.active {
+  color: var(--accent, #00e676) !important;
+  border-bottom: 2px solid var(--accent, #00e676) !important;
+}
+
+.top-tab-btn.active::after {
+  display: block !important;
+}
   </style>
 </head>
 <body>
@@ -1745,17 +1784,19 @@
       renderAdminAbsences();
     }
 
-    function switchMainTab(tabId, btn) {
-      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-      document.querySelectorAll('.team-header .top-tab-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.bottom-nav .nav-item').forEach(b => b.classList.remove('active'));
+   function switchMainTab(tabId, btn) {
+  document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+  // Ищем вообще ВСЕ кнопки .top-tab-btn на странице и снимаем active
+  document.querySelectorAll('.top-tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.bottom-nav .nav-item').forEach(b => b.classList.remove('active'));
 
-      const targetTab = document.getElementById('tab-' + tabId);
-      if (targetTab) targetTab.classList.add('active');
+  const targetTab = document.getElementById('tab-' + tabId);
+  if (targetTab) targetTab.classList.add('active');
 
-      if (btn) {
-        btn.classList.add('active');
-      }
+  if (btn) {
+    btn.classList.add('active');
+  }
+}
 
       if (btn && btn.classList.contains('top-tab-btn')) {
         const navBtns = document.querySelectorAll('.bottom-nav .nav-item');
@@ -3103,24 +3144,50 @@
       container.innerHTML = html;
     }
 
-    function renderTeamStats() {
-      const container = document.getElementById('team-stats-widget');
-      if (!container) return;
+function renderTeamStats() {
+  const container = document.getElementById('team-stats-widget');
+  if (!container) return;
 
-      const finished = allMatches.filter(m => !m.status || !m.status.startsWith('upcoming'));
-      let totalMatches = finished.length;
-      let wins = 0, draws = 0, losses = 0, scored = 0, conceded = 0;
+  const finished = allMatches.filter(m => !m.status || !m.status.startsWith('upcoming'));
+  let totalMatches = finished.length;
+  let wins = 0, draws = 0, losses = 0, scored = 0, conceded = 0;
 
-      finished.forEach(m => {
-        const parts = (m.score || '').split(/[:\-]/).map(s => parseInt(s.trim()));
-        if (parts.length >= 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
-          scored += parts[0];
-          conceded += parts[1];
-          if (parts[0] > parts[1]) wins++;
-          else if (parts[0] < parts[1]) losses++;
-          else draws++;
-        }
-      });
+  finished.forEach(m => {
+    const parts = (m.score || '').split(/[:\-]/).map(s => parseInt(s.trim()));
+    if (parts.length >= 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+      scored += parts[0];
+      conceded += parts[1];
+      if (parts[0] > parts[1]) wins++;
+      else if (parts[0] < parts[1]) losses++;
+      else draws++;
+    }
+  });
+
+  // ==========================================
+  // 🎯 ВОТ СЮДА ВСТАВЛЯЕТСЯ РАСЧЕТ ПРОЦЕНТА ПОБЕД
+  // ==========================================
+  const winRate = totalMatches > 0 ? Math.round((wins / totalMatches) * 100) : 0;
+
+  // Отрисовка карточек с заменой «Ничьих» на «% побед»
+  container.innerHTML = `
+    <div class="stat-card">
+      <div class="stat-value">${totalMatches}</div>
+      <div class="stat-label">Игр</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">${wins}</div>
+      <div class="stat-label">Побед</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">${winRate}%</div>
+      <div class="stat-label">% побед</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">${losses}</div>
+      <div class="stat-label">Поражений</div>
+    </div>
+  `;
+}
 
       container.innerHTML = `
         <div class="team-stats-grid">
@@ -3133,8 +3200,8 @@
             <div class="team-stat-lbl">ПОБЕДЫ</div>
           </div>
           <div class="team-stat-box">
-            <div class="team-stat-val" style="color:var(--gold);">${draws}</div>
-            <div class="team-stat-lbl">НИЧЬИ</div>
+            <div class="team-stat-val" style="color:var(--white);id="team-stat-winrate">0%</div>
+            <div class="team-stat-lbl">ПРОЦЕНТ ПОБЕД</div>
           </div>
           <div class="team-stat-box">
             <div class="team-stat-val" style="color:var(--danger);">${losses}</div>
