@@ -914,6 +914,23 @@
   background-color: #00e676 !important;   /* Яркий зелёный цвет */
   border-radius: 3px 3px 0 0 !important;
 }
+    
+    /* Контейнер для плавных свайпов */
+.tabs-content-wrapper {
+  display: flex !important;
+  width: 100% !important;
+  overflow: hidden !important; /* Скрываем всё, что выезжает за границы */
+  position: relative !important;
+}
+
+/* Общий блок для каждой вкладки */
+.tab-pane {
+  min-width: 100% !important;
+  width: 100% !important;
+  flex-shrink: 0 !important;
+  transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1) !important; /* Плавный и мягкий амортизирующий эффект */
+  box-sizing: border-box !important;
+}
   </style>
 </head>
 <body>
@@ -941,13 +958,21 @@
   </div>
 </div>
 
-    <div class="top-nav-tabs">
-      <button class="top-tab-btn active" onclick="switchMainTab('details', this)">Детали</button>
-      <button class="top-tab-btn" onclick="switchMainTab('matches', this)">Матчи</button>
-      <button class="top-tab-btn" onclick="switchMainTab('squad', this)">Состав</button>
-      <button class="top-tab-btn" onclick="switchMainTab('top', this)">Лучшие игроки</button>
-    </div>
-  </div>
+    <!-- Меню -->
+<div class="top-nav-tabs">
+  <button class="top-tab-btn active" onclick="switchMainTabBySwipe('details', this)">Детали</button>
+  <button class="top-tab-btn" onclick="switchMainTabBySwipe('matches', this)">Матчи</button>
+  <button class="top-tab-btn" onclick="switchMainTabBySwipe('career', this)">Карьера</button>
+  <button class="top-tab-btn" onclick="switchMainTabBySwipe('media', this)">Медиа</button>
+</div>
+
+<!-- Обертка для свайпов -->
+<div class="tabs-content-wrapper">
+  <div id="tab-details" class="tab-pane">Контент вкладки Детали...</div>
+  <div id="tab-matches" class="tab-pane">Контент вкладки Матчи...</div>
+  <div id="tab-career" class="tab-pane">Контент вкладки Карьера...</div>
+  <div id="tab-media" class="tab-pane">Контент вкладки Медиа...</div>
+</div>
 
   <!-- ВКЛАДКА 1: ДЕТАЛИ -->
   <div id="tab-details" class="tab-content active">
@@ -3776,5 +3801,68 @@ document.addEventListener("DOMContentLoaded", () => {
     <p style="font-size:14px; color:var(--hint); margin:0;">Попробуйте позже.</p>
   </div>
 </div>
+<!-- Весь твои HTML-код и блоки вкладок выше -->
+
+  <!-- ⬇️ ВСЕ СКТРИПТЫ ВСТАВЛЯЮТСЯ СЮДА ⬇️ -->
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const tabs = ['details', 'matches', 'career', 'media'];
+      let currentIndex = 0;
+
+      const wrapper = document.querySelector('.tabs-content-wrapper');
+      if (!wrapper) return;
+
+      let touchStartX = 0;
+      let touchEndX = 0;
+
+      wrapper.addEventListener('touchstart', (e) => {
+        touchStartX = e.changedTouches[0].screenX;
+      }, { passive: true });
+
+      wrapper.addEventListener('touchend', (e) => {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+      }, { passive: true });
+
+      function handleSwipe() {
+        const swipeThreshold = 50;
+        if (touchStartX - touchEndX > swipeThreshold) {
+          if (currentIndex < tabs.length - 1) {
+            switchTabByIndex(currentIndex + 1);
+          }
+        } else if (touchEndX - touchStartX > swipeThreshold) {
+          if (currentIndex > 0) {
+            switchTabByIndex(currentIndex - 1);
+          }
+        }
+      }
+
+      window.switchMainTabBySwipe = function(tabName, btnElement) {
+        const index = tabs.indexOf(tabName);
+        if (index !== -1) {
+          currentIndex = index;
+          updateTabUI(btnElement, tabName);
+        }
+      };
+
+      function switchTabByIndex(index) {
+        currentIndex = index;
+        const buttons = document.querySelectorAll('.top-nav-tabs .top-tab-btn');
+        if (buttons[currentIndex]) {
+          buttons[currentIndex].click();
+        }
+      }
+
+      function updateTabUI(btnElement, tabName) {
+        document.querySelectorAll('.top-nav-tabs .top-tab-btn').forEach(b => b.classList.remove('active'));
+        if (btnElement) btnElement.classList.add('active');
+
+        const panes = wrapper.querySelectorAll('.tab-pane');
+        panes.forEach((pane) => {
+          pane.style.transform = `translateX(-${currentIndex * 100}%)`;
+        });
+      }
+    });
+  </script>
 </body>
 </html>
