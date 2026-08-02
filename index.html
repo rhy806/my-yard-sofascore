@@ -94,7 +94,7 @@
 .top-nav-tabs {
   display: flex !important;
   width: 100% !important;
-  background-color: #121212 !important;
+  background-color: transperent !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
   margin: 0 !important;
   padding: 0 !important;
@@ -149,7 +149,7 @@
   width: 100% !important;
   height: 1px !important;
   background-color: #00e676 !important;   /* Сочный зеленый */
-  border-radius: 3px 3px 0 0 !important;
+  border-radius: 1px 1px 0 0 !important;
 }
 
     .tab-content { display: none; padding: 16px; }
@@ -3414,7 +3414,7 @@ function updateMaintenanceUI() {
   }
 }
 
-/* --- Расчет ТОП игроков --- */
+/* --- Расчет ТОП игроков (С ПОЗИЦИЯМИ) --- */
 function renderTopPlayers() {
   const goalsCard = document.getElementById('top-goals-card');
   const assistsCard = document.getElementById('top-assists-card');
@@ -3438,10 +3438,19 @@ function renderTopPlayers() {
         totalSaves += (parseInt(c.saves || c.sv) || 0);
       });
     }
+
+    // 1. Считываем основную и дополнительную позицию
+    const mainPos = p.position || p.pos || '';
+    const secPos = p.sec_position || p.secondary_position || p.pos2 || '';
+    
+    // Склеиваем в формат "НАП , ЦАП" или оставляем просто "НАП"
+    const posFormatted = (mainPos && secPos) ? `${mainPos} , ${secPos}` : (mainPos || secPos);
+
     return {
       name: p.name || 'Игрок',
       photo: p.photo_url || '',
       number: p.number || '',
+      position: posFormatted, // Записываем готовые позиции
       gls: totalGls,
       ast: totalAst,
       saves: totalSaves
@@ -3457,12 +3466,19 @@ function renderTopPlayers() {
       sorted.slice(0, 5).forEach((p, idx) => {
         const safeName = p.name.replace(/'/g, "\\'");
         const avatarStyle = p.photo ? `background-image: url('${p.photo}'); color: transparent;` : '';
+        
+        // 2. Добавили вывода плашки с позицией, если она есть у игрока
+        const posHtml = p.position ? `<div class="player-pos-badge" style="font-size: 10px; color: var(--hint, #8e8e93); font-weight: 600;">${p.position}</div>` : '';
+
         html += `
           <div class="top-player-item clickable-card" onclick="openPlayerProfileByName('${safeName}')">
-            <div class="player-left">
+            <div class="player-left" style="display: flex; align-items: center; gap: 8px;">
               <div style="font-weight:800; width:20px; color:var(--hint); font-size:13px;">${idx + 1}.</div>
               <div class="player-avatar" style="${avatarStyle}">${p.number || '•'}</div>
-              <div class="player-info-name">${p.name}</div>
+              <div class="player-info-block">
+                <div class="player-info-name" style="font-weight:600; line-height:1.2;">${p.name}</div>
+                ${posHtml}
+              </div>
             </div>
             <div class="top-player-stat">${p[statKey]}</div>
           </div>
