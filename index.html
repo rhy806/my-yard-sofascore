@@ -1000,12 +1000,13 @@
   <!-- 0. ДЕТАЛИ -->
   <div class="tab-pane">
     <div class="section-title">ТЕКУЩАЯ ФОРМА</div>
-    <div class="tab-card">
+    <div id="recent-form" class="tab-card">
+    <div>
       <!-- Твои кружочки L W -->
     </div>
 
     <div class="section-title">СТАТИСТИКА КОМАНДЫ</div>
-    <div class="tab-card">
+    <div id="team-stats" class="tab-card">
       <!-- Твоя статистика команды -->
     </div>
   </div>
@@ -3913,7 +3914,17 @@ document.addEventListener("DOMContentLoaded", () => {
       wrapper.querySelectorAll('.tab-pane').forEach((pane) => {
         pane.style.transform = `translateX(-${currentIndex * 100}%)`;
       });
+      
+      // 0. Если переключились на вкладку "Детали" (индекс 0)
+      if (currentIndex === 0) {
+        if (typeof renderRecentForm === 'function') renderRecentForm();
+        if (typeof renderTeamStats === 'function') renderTeamStats();
+      }
 
+      // 1. Если переключились на "Матчи" (индекс 1)
+      if (currentIndex === 1 && typeof renderMatchesList === 'function') {
+         renderMatchesList();
+      }
       // Если переключились на вкладку "Лучшие игроки" (индекс 3), вызываем отрисовку топов
       if (currentIndex === 3 && typeof renderTopPlayers === 'function') {
         renderTopPlayers();
