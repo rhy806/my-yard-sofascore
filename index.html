@@ -86,19 +86,23 @@
       transform: scale(0.95);
     }
 
-/* Контейнер меню с симметричными отступами по бокам */
+/* =========================================================
+   ✨ ОБНОВЛЕННОЕ МЕНЮ (Крупный жирный шрифт + аккуратная полоска)
+   ========================================================= */
+
+/* Контейнер с равными боковыми отступами */
 .top-nav-tabs {
   display: flex !important;
   width: 100% !important;
   background: transparent !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
   margin: 0 !important;
-  padding: 0 16px !important; /* 🔥 Отступы по 16px слева и справа */
+  padding: 0 16px !important; /* Симметричные отступы от краёв */
   box-sizing: border-box !important;
   justify-content: space-between !important;
 }
 
-/* Кнопки меню */
+/* Все кнопки меню */
 .top-nav-tabs .top-tab-btn {
   flex: 1 !important;
   position: relative !important;
@@ -107,45 +111,52 @@
   outline: none !important;
   box-shadow: none !important;
   
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
-  font-size: 14px !important;
-  font-weight: 600 !important;
+  /* 🔥 Новый крупный шрифт высокой плотности */
+  font-family: "Montserrat", "Inter", system-ui, -apple-system, sans-serif !important;
+  font-size: 16px !important;           /* Увеличили размер шрифта (было 14px) */
+  font-weight: 800 !important;           /* Сделали максимально жирным */
+  letter-spacing: -0.3px !important;     /* Легкая плотная утяжка букв */
   line-height: 1.2 !important;
   
-  color: rgba(255, 255, 255, 0.5) !important;
-  padding: 12px 4px 10px 4px !important;
+  color: rgba(255, 255, 255, 0.45) !important; /* Приглушённый серый для неактивных */
+  padding: 12px 4px 12px 4px !important;
   text-align: center !important;
   cursor: pointer !important;
-  white-space: nowrap !important; /* Запрещаем перенос строк */
+  white-space: nowrap !important;
   -webkit-tap-highlight-color: transparent !important;
+  transition: color 0.15s ease !important;
 }
 
-/* Неактивные кнопки */
-.top-nav-tabs .top-tab-btn:not(.active) {
-  color: rgba(255, 255, 255, 0.5) !important;
+/* Эффект наведения */
+.top-nav-tabs .top-tab-btn:hover {
+  color: rgba(255, 255, 255, 0.75) !important;
 }
 
+/* Скрытие линий у неактивных кнопок */
 .top-nav-tabs .top-tab-btn:not(.active)::after {
   display: none !important;
   content: none !important;
 }
 
-/* Активная кнопка */
+/* 🌟 АКТИВНАЯ ВКЛАДКА */
 .top-nav-tabs .top-tab-btn.active {
-  color: #ffffff !important;
+  color: #ffffff !important; /* Сочный чистый белый цвет */
 }
 
-/* Зеленая полоска ровно под активной кнопкой */
+/* 🔹 Уменьшенная аккуратная зелёная полоска */
 .top-nav-tabs .top-tab-btn.active::after {
   content: '' !important;
   display: block !important;
   position: absolute !important;
   bottom: 0 !important;
-  left: 0 !important;
-  width: 100% !important;
-  height: 3px !important;
-  background-color: #00e676 !important;
-  border-radius: 3px 3px 0 0 !important;
+  
+  /* Делаем полоску не на всю ширину кнопки, а по центру (60% от ширины) */
+  left: 20% !important;
+  width: 60% !important;
+  
+  height: 2px !important;                 /* Тонкая аккуратная высота (было 3px) */
+  background-color: #00e676 !important;   /* Яркий зелёный */
+  border-radius: 2px 2px 0 0 !important;   /* Небольшое округление */
 }
 
     .tab-content { display: none; padding: 16px; }
