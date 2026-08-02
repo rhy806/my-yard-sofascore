@@ -997,17 +997,22 @@
 <!-- ОБЩИЙ КОНТЕЙНЕР ДЛЯ ВСЕХ ВКЛАДОК -->
 <div class="tabs-content-wrapper">
 
-  <!-- ==========================================
-       🟢 0. ВКЛАДКА: ДЕТАЛИ
-       ========================================== -->
-  <div class="tab-pane">
-    <div class="section-title">ТЕКУЩАЯ ФОРМА</div>
-    <div id="recent-form" class="tab-card"></div>
+ <!-- 🟢 0. ВКЛАДКА: ДЕТАЛИ -->
+<div class="tab-pane">
 
-    <div class="section-title">СТАТИСТИКА КОМАНДЫ</div>
-    <div id="team-stats" class="tab-card"></div>
-  </div> <!-- ⚠️ ЗАКРЫВАЕМ 0-Ю ВКЛАДКУ (Важно!) -->
+  <div class="section-title">ТЕКУЩАЯ ФОРМА</div>
+  <!-- 1. Для формы команды -->
+  <div id="team-form-widget" class="tab-card"></div>
 
+  <div class="section-title">СТАТИСТИКА КОМАНДЫ</div>
+  <!-- 2. Для статистики -->
+  <div id="team-stats-widget" class="tab-card"></div>
+
+  <div class="section-title">ПРЕДСТОЯЩИЕ МАТЧИ</div>
+  <!-- 3. Для предстоящего матча -->
+  <div id="upcoming-match-widget" class="tab-card"></div>
+
+</div>
 
   <!-- ==========================================
        🟢 1. ВКЛАДКА: МАТЧИ
@@ -3920,8 +3925,9 @@ document.addEventListener("DOMContentLoaded", () => {
       
       // 0. Если переключились на вкладку "Детали" (индекс 0)
       if (currentIndex === 0) {
-        if (typeof renderRecentForm === 'function') renderRecentForm();
         if (typeof renderTeamStats === 'function') renderTeamStats();
+        if (typeof renderUpcomingMatches === 'function') renderUpcomingMatches();
+        if (typeof renderUpcomingWidget === 'function') renderUpcomingWidget();
       }
 
       // 1. Если переключились на "Матчи" (индекс 1)
