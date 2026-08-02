@@ -986,7 +986,7 @@
   </div>
 </div>
 
- \<!-- 1. Главное меню (возвращаем правильные вкладки) -->
+  <!-- 1. Главное меню (возвращаем правильные вкладки) -->
 <div class="top-nav-tabs">
   <button class="top-tab-btn active" onclick="switchMainTabBySwipe(0, this)">Детали</button>
   <button class="top-tab-btn" onclick="switchMainTabBySwipe(1, this)">Матчи</button>
@@ -3730,7 +3730,7 @@ function renderViewerRoster(match) {
     const playerObj = allSquad.find(p => p.name === name);
     const posStr = playerObj ? getPlayerPositionsString(playerObj) : 'Игрок';
     const numStr = playerObj && playerObj.number ? '#' + playerObj.number : '•';
-    const safeName = name.replace(/'/g, "\\'");
+    const safeName = name.replace(/'/g, "'");
 
     html += `
       <div class="player-row-card clickable-card" onclick="openPlayerProfileByName('${safeName}')">
