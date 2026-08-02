@@ -3346,8 +3346,10 @@ async function toggleMaintenanceMode() {
   
   try {
     if (typeof _supabase !== 'undefined' && _supabase) {
-      await _supabase.from('app_settings').upsert({ key: 'maintenance', value: String(isMaintenanceActive) });
-    }
+      await _supabase.from('app_settings').upsert(
+  { key: 'maintenance', value: String(isMaintenanceActive) }, 
+  { onConflict: 'key' }
+);
   } catch(e) {}
 
   updateMaintenanceUI();
