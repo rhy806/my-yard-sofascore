@@ -86,57 +86,70 @@
       transform: scale(0.95);
     }
 
-    /* =========================================================
-   ✨ СТИЛИ ВКЛАДОК (В точности как на скриншоте)
+/* =========================================================
+   ✨ ИДЕАЛЬНОЕ МЕНЮ (Красивый шрифт + Подсветка strictly .active)
    ========================================================= */
 
-/* Контейнер вкладок с тонкой разделяющей линией снизу */
+/* Контейнер */
 .top-nav-tabs {
   display: flex !important;
   width: 100% !important;
-  background-color: #121212 !important; /* Тёмный фон */
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important; /* Тонкая серая полоска под всеми вкладками */
+  background-color: #121212 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
   margin: 0 !important;
   padding: 0 !important;
   box-sizing: border-box !important;
 }
 
-/* Общие стили для всех кнопок */
-.top-tab-btn {
+/* 1. Все кнопки (Неактивные по умолчанию) */
+.top-nav-tabs .top-tab-btn {
   flex: 1 !important;
   position: relative !important;
   background: transparent !important;
   border: none !important;
   outline: none !important;
-  color: #8e8e93 !important; /* Серый цвет неактивных вкладок */
-  font-size: 15px !important;
-  font-weight: 700 !important; /* Плотный жирный шрифт */
-  padding: 12px 4px 10px 4px !important;
+  box-shadow: none !important;
+  
+  /* Совремнный шрифт как в Telegram / iOS / Android */
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;          /* Жирный плотный шрифт */
+  letter-spacing: -0.2px !important;     /* Легкая утяжка букв для стиля */
+  
+  color: #8f8f90 !important;             /* Приглушенный серый */
+  padding: 12px 2px 10px 2px !important;
   text-align: center !important;
   cursor: pointer !important;
-  transition: color 0.15s ease !important;
+  -webkit-tap-highlight-color: transparent !important;
 }
 
-/* Эффект при наведении мышкой */
-.top-tab-btn:hover {
-  color: #cccccc !important;
+/* Жесткое отключение зелёного цвета и полосок у неактивных кнопок */
+.top-nav-tabs .top-tab-btn:not(.active) {
+  color: #8f8f90 !important;
 }
 
-/* АКТИВНАЯ ВКЛАДКА: Яркий чистый белый текст */
-.top-tab-btn.active {
-  color: #ffffff !important;
+.top-nav-tabs .top-tab-btn:not(.active)::after,
+.top-nav-tabs .top-tab-btn:not(.active)::before {
+  display: none !important;
+  content: none !important;
 }
 
-/* Зелёная подчёркивающая полоска с округлением */
-.top-tab-btn.active::after {
+/* 2. Только активная кнопка (.active) */
+.top-nav-tabs .top-tab-btn.active {
+  color: #ffffff !important;             /* Ярко-белый текст */
+}
+
+/* Зелёная полоска под активной кнопкой */
+.top-nav-tabs .top-tab-btn.active::after {
   content: '' !important;
+  display: block !important;
   position: absolute !important;
   bottom: 0 !important;
   left: 0 !important;
   width: 100% !important;
-  height: 3px !important;                 /* Толщина зелёной линии */
-  background-color: #00e676 !important;   /* Сочный зелёный цвет */
-  border-radius: 3px 3px 0 0 !important;   /* Закругления на концах */
+  height: 1px !important;
+  background-color: #00e676 !important;   /* Сочный зеленый */
+  border-radius: 3px 3px 0 0 !important;
 }
 
     .tab-content { display: none; padding: 16px; }
