@@ -1013,9 +1013,8 @@
   <!-- 1. МАТЧИ -->
   <div class="tab-pane">
     <div class="section-title">ПРЕДСТОЯЩИЕ МАТЧИ</div>
-    <div class="tab-card">
+    <div id="matches-cards" class="tab-card"></div>
       <!-- Карточка матча (ФК Яйц VS ФК ХПК) -->
-    </div>
   </div>
 
   <!-- 2. СОСТАВ (Здесь стили уже свои, просто оставляем контейнер) -->
@@ -2294,7 +2293,13 @@ function switchMainTab(tabId, btn) {
           </div>
         `;
       });
-      container.innerHTML = html;
+      
+      const container = document.getElementById('ИМЯ_ТВОЕГО_ID'); // твой поиск элемента
+  
+  // 🛡️ Вставили эту строчку: если контейнера нет на странице, код останавливается и не выдает ошибку
+  if (!container) return; 
+
+  container.innerHTML = html; // Твоя строчка 2297
     }
 
     function openMatchModalById(id) {
