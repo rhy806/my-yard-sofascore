@@ -2238,69 +2238,69 @@ function switchMainTab(tabId, btn) {
       if (isAdmin) renderAdminMatchesList();
     }
 
-    /* НОВОВВЕДЕНИЕ 2 & 3: ЗЕЛЕНЫЙ/КРАСНЫЙ СЧЕТ И ЧИСТЫЕ ИМЕНА В ХРОНОЛОГИИ ГОЛОВ */
-    function renderMatchesList() {
-      const container = document.getElementById('matches-list');
-      if (allMatches.length === 0) {
-        container.innerHTML = '<p style="color:var(--hint);">Матчей пока нет.</p>';
-        return;
+  /* НОВОВВЕДЕНИЕ 2 & 3: ЗЕЛЕНЫЙ/КРАСНЫЙ СЧЕТ И ЧИСТЫЕ ИМЕНА В ХРОНОЛОГИИ ГОЛОВ */
+  function renderMatchesList() {
+    const container = document.getElementById('matches-list');
+    
+    // 🛡️ 1. ЗАЩИТА: Проверяем наличие контейнера сразу в самом начале!
+    if (!container) return;
+
+    if (allMatches.length === 0) {
+      container.innerHTML = '<p style="color:var(--hint);">Матчей пока нет.</p>';
+      return;
+    }
+
+    let html = '';
+    allMatches.forEach(m => {
+      const isUpcoming = m.status && m.status.startsWith('upcoming');
+      const scoreStyle = getScoreColorStyle(m);
+
+      let cleanedGoals1 = '';
+      let cleanedGoals2 = '';
+
+      if (m.goals_timeline) {
+        try {
+          let timeline = typeof m.goals_timeline === 'string' ? JSON.parse(m.goals_timeline) : m.goals_timeline;
+          let list1 = [], list2 = [];
+          timeline.forEach(g => {
+            const cleanP = cleanGoalNameOnly(g.player);
+            if (cleanP) {
+              if (g.team === 1) list1.push(cleanP);
+              else list2.push(cleanP);
+            }
+          });
+          cleanedGoals1 = list1.join('<br>');
+          cleanedGoals2 = list2.join('<br>');
+        } catch(e) {}
       }
 
-      let html = '';
-      allMatches.forEach(m => {
-        const isUpcoming = m.status && m.status.startsWith('upcoming');
-        const scoreStyle = getScoreColorStyle(m);
+      if (!cleanedGoals1 && !cleanedGoals2) {
+        cleanedGoals1 = m.goals1 ? m.goals1.split('\n').map(line => cleanGoalNameOnly(line)).filter(Boolean).join('<br>') : '';
+        cleanedGoals2 = m.goals2 ? m.goals2.split('\n').map(line => cleanGoalNameOnly(line)).filter(Boolean).join('<br>') : '';
+      }
 
-        let cleanedGoals1 = '';
-        let cleanedGoals2 = '';
-
-        if (m.goals_timeline) {
-          try {
-            let timeline = typeof m.goals_timeline === 'string' ? JSON.parse(m.goals_timeline) : m.goals_timeline;
-            let list1 = [], list2 = [];
-            timeline.forEach(g => {
-              const cleanP = cleanGoalNameOnly(g.player);
-              if (cleanP) {
-                if (g.team === 1) list1.push(cleanP);
-                else list2.push(cleanP);
-              }
-            });
-            cleanedGoals1 = list1.join('<br>');
-            cleanedGoals2 = list2.join('<br>');
-          } catch(e) {}
-        }
-
-        if (!cleanedGoals1 && !cleanedGoals2) {
-          cleanedGoals1 = m.goals1 ? m.goals1.split('\n').map(line => cleanGoalNameOnly(line)).filter(Boolean).join('<br>') : '';
-          cleanedGoals2 = m.goals2 ? m.goals2.split('\n').map(line => cleanGoalNameOnly(line)).filter(Boolean).join('<br>') : '';
-        }
-
-        html += `
-          <div class="card clickable-card" onclick="openMatchModalById(${m.id})">
-            <div class="match-header">${m.match_date || 'Без даты'} • ${isUpcoming ? 'Предстоящий' : 'Завершен'}</div>
-            <div class="match-row">
-              <span style="flex:1;">${m.team1 || 'Команда 1'}</span>
-              <span style="${scoreStyle}">${m.score || 'vs'}</span>
-              <span style="flex:1; text-align:right;">${m.team2 || 'Команда 2'}</span>
-            </div>
-            ${!isUpcoming && (cleanedGoals1 || cleanedGoals2) ? `
-              <div class="goals-row">
-                <div class="goals-col">${cleanedGoals1}</div>
-                <div class="goals-col right">${cleanedGoals2}</div>
-              </div>
-            ` : ''}
-            ${m.best_player ? `<div class="mvp-row">⭐ MVP: ${m.best_player}</div>` : ''}
+      html += `
+        <div class="card clickable-card" onclick="openMatchModalById(${m.id})">
+          <div class="match-header">${m.match_date || 'Без даты'} • ${isUpcoming ? 'Предстоящий' : 'Завершен'}</div>
+          <div class="match-row">
+            <span style="flex:1;">${m.team1 || 'Команда 1'}</span>
+            <span style="${scoreStyle}">${m.score || 'vs'}</span>
+            <span style="flex:1; text-align:right;">${m.team2 || 'Команда 2'}</span>
           </div>
-        `;
-      });
-      
-      const container = document.getElementById('matches-list'); // твой поиск элемента
-  
-  // 🛡️ Вставили эту строчку: если контейнера нет на странице, код останавливается и не выдает ошибку
-  if (!container) return; 
-
-  container.innerHTML = html; // Твоя строчка 2297
-    }
+          ${!isUpcoming && (cleanedGoals1 || cleanedGoals2) ? `
+            <div class="goals-row">
+              <div class="goals-col">${cleanedGoals1}</div>
+              <div class="goals-col right">${cleanedGoals2}</div>
+            </div>
+          ` : ''}
+          ${m.best_player ? `<div class="mvp-row">⭐ MVP: ${m.best_player}</div>` : ''}
+        </div>
+      `;
+    });
+    
+    // 2. В конце просто обновляем содержимое без повторного объявления const container!
+    container.innerHTML = html;
+  }
 
     function openMatchModalById(id) {
       const match = allMatches.find(m => String(m.id) === String(id));
