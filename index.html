@@ -62,29 +62,6 @@
       letter-spacing: 0.3px;
     }
 
-    /* НОВОВВЕДЕНИЕ 5: КНОПКА ТЕХРАБОТ И ОВЕРЛЕЙ */
-    .maintenance-btn {
-      width: 44px; height: 44px;
-      border-radius: 50%;
-      border: 2px solid rgba(255,255,255,0.1);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-      cursor: pointer;
-      background-color: var(--danger);
-      margin-left: auto;
-    }
-    .maintenance-btn.active {
-      background-color: var(--accent);
-    }
-    .maintenance-overlay {
-      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-      background: var(--bg); z-index: 9999;
-      display: none; flex-direction: column; align-items: center; justify-content: center;
-      padding: 20px; text-align: center;
-    }
-
     /* ВКЛАДКИ НАВИГАЦИИ */
     .top-nav-tabs {
       display: flex;
@@ -615,7 +592,7 @@
 
     #player-details-edit-modal, #career-edit-modal, #admin-player-select-modal, #admin-player-stats-modal { z-index: 1100; }
 
-    /* СТИЛИ ДЛЯ TELEGRAM-ПОСТОВ В РАЗДЕЛЕ МЕДИА */
+    /* НОВОВВЕДЕНИЕ 1: СТИЛИ ДЛЯ TELEGRAM-ПОСТОВ В РАЗДЕЛЕ МЕДИА */
     .tg-post-card {
       background: var(--card-bg);
       border-radius: 14px;
@@ -648,12 +625,6 @@
 </head>
 <body>
 
-  <!-- НОВОВВЕДЕНИЕ 5: ОВЕРЛЕЙ ТЕХРАБОТ -->
-  <div id="maintenance-overlay" class="maintenance-overlay">
-    <h2>Ведутся обновления в работе бота</h2>
-    <p style="color:var(--hint);">Попробуйте позже.</p>
-  </div>
-
   <!-- ШАПКА ФК ЯЙЦ -->
   <div class="team-header">
     <div class="team-title-row">
@@ -661,8 +632,6 @@
       <div>
         <div class="team-name">Яйцаscore</div>
       </div>
-      <!-- НОВОВВЕДЕНИЕ 5: КНОПКА АДМИНА ДЛЯ ТЕХРАБОТ -->
-      <button id="admin-maintenance-btn" class="maintenance-btn" onclick="toggleMaintenance()">🛠️</button>
     </div>
 
     <div class="top-nav-tabs">
@@ -1049,7 +1018,9 @@
         
         <button id="pp-edit-career-btn" class="form-btn" style="margin-top:20px; display:none;" onclick="openCareerEditModal()">Добавить / Редактировать сезон</button>
       </div>
-      <div id="pp-tab-media" class="pp-tab-content">
+       <div id="pp-tab-media" class="pp-tab-content">
+        
+         <!-- НОВОВВЕДЕНИЕ 1: БЛОК ПУБЛИКАЦИИ И СПИСОК ПОСТОВ B СТИЛЕ ТЕЛЕГРАМ -->
         <div id="pp-media-admin-form" class="card" style="display:none; margin-bottom:16px;">
           <h4 style="margin-top:0; font-size:14px; color:var(--accent);">📢 Новая публикация (Админ)</h4>
           <label style="font-size:12px; color:var(--hint);">Фото или видео из галереи</label>
@@ -1151,7 +1122,7 @@
     </div>
   </div>
 
-  <!-- МОДАЛЬНОЕ ОКНО РАСЧЕТА РЕЙТИНГА И ДЕЙСТВИЙ ИГРОКА -->
+  <!-- НОВОВВЕДЕНИЕ 3: МОДАЛЬНОЕ ОКНО РАСЧЕТА РЕЙТИНГА И ДЕЙСТВИЙ ИГРОКА -->
   <div id="admin-player-stats-modal" class="match-modal">
     <div class="modal-top-bar">
       <button class="back-btn" onclick="closeAdminPlayerStatsModal()">←</button>
@@ -1279,37 +1250,11 @@
     if (bNav) bNav.style.display = 'flex';
     document.body.style.paddingBottom = '70px';
 
-    // НОВОВВЕДЕНИЕ 5: ЛОГИКА ТЕХРАБОТ
-    let isMaintenance = localStorage.getItem('bot_maintenance') === 'true';
-
-    function toggleMaintenance() {
-       isMaintenance = !isMaintenance;
-       localStorage.setItem('bot_maintenance', isMaintenance);
-       updateMaintenanceUI();
-    }
-
-    function updateMaintenanceUI() {
-       const btn = document.getElementById('admin-maintenance-btn');
-       if (btn) {
-           if (isMaintenance) btn.classList.add('active');
-           else btn.classList.remove('active');
-       }
-       if (!isAdmin && isMaintenance) {
-           document.getElementById('maintenance-overlay').style.display = 'flex';
-       } else {
-           document.getElementById('maintenance-overlay').style.display = 'none';
-       }
-    }
-
     if (isAdmin) {
       document.getElementById('admin-nav-btn').style.display = 'flex';
       const ppEditBtn = document.getElementById('pp-edit-btn');
       if (ppEditBtn) ppEditBtn.style.display = 'inline-block';
-      document.getElementById('admin-maintenance-btn').style.display = 'flex';
     }
-    
-    // Инициализация интерфейса техработ при загрузке
-    updateMaintenanceUI();
 
     /* Вспомогательные функции */
     function cleanGoalName(str) {
@@ -1613,7 +1558,7 @@
         `;
         return;
       }
-      
+ 
       let html = '<div class="section-title">Ваши подписки (' + subscribed.length + ')</div>';
       subscribed.forEach(p => {
         const posText = getPlayerPositionsString(p);
@@ -1866,32 +1811,12 @@
       let html = '';
       allMatches.forEach(m => {
         const isUpcoming = m.status && m.status.startsWith('upcoming');
-        
-        // НОВОВВЕДЕНИЕ 2: ЦВЕТ СЧЕТА ПРИ ПОБЕДЕ/ПОРАЖЕНИИ
-        let scoreStyle = 'color:var(--text); font-weight:bold; font-size:16px;';
-        if (isUpcoming) {
-            scoreStyle = 'color:var(--gold); font-weight:bold; font-size:14px;';
-        } else if (m.score) {
-            const parts = m.score.split(/[:-]/).map(p => parseInt(p.trim()));
-            if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
-                const team1 = m.team1 || '';
-                const team2 = m.team2 || '';
-                const isOurTeam1 = team1.includes('Яйц') || team1.includes('Яйцаscore');
-                const isOurTeam2 = team2.includes('Яйц') || team2.includes('Яйцаscore');
-                
-                if (isOurTeam1) {
-                    if (parts[0] > parts[1]) scoreStyle = 'color:var(--accent); font-weight:bold; font-size:16px;';
-                    else if (parts[0] < parts[1]) scoreStyle = 'color:var(--danger); font-weight:bold; font-size:16px;';
-                } else if (isOurTeam2) {
-                    if (parts[1] > parts[0]) scoreStyle = 'color:var(--accent); font-weight:bold; font-size:16px;';
-                    else if (parts[1] < parts[0]) scoreStyle = 'color:var(--danger); font-weight:bold; font-size:16px;';
-                }
-            }
-        }
+        let scoreStyle = 'color:var(--accent); font-weight:bold; font-size:16px;';
+        if (isUpcoming) scoreStyle = 'color:var(--gold); font-weight:bold; font-size:14px;';
 
-        // НОВОВВЕДЕНИЕ 3: УБИРАЕМ ЦИФРЫ ПЕРЕД ИМЕНАМИ И ДЕЛАЕМ ХРОНОЛОГИЮ В СТОЛБИК
-        let cleanedGoals1 = m.goals1 ? m.goals1.replace(/\d+/g, '').replace(/[\.\-:\(\)]/g, '').split(',').map(s => s.trim()).filter(Boolean).join('<br>') : '';
-        let cleanedGoals2 = m.goals2 ? m.goals2.replace(/\d+/g, '').replace(/[\.\-:\(\)]/g, '').split(',').map(s => s.trim()).filter(Boolean).join('<br>') : '';
+        /* НОВОВВЕДЕНИЕ 3: ОЧИСТКА СЧЕТА В ПОДПИСЯХ АВТОРОВ ГОЛОВ */
+        let cleanedGoals1 = m.goals1 ? m.goals1.replace(/\s*\(\d+:\d+\)/g, '').replace(/\s*\d+:\d+/g, '') : '';
+        let cleanedGoals2 = m.goals2 ? m.goals2.replace(/\s*\(\d+:\d+\)/g, '').replace(/\s*\d+:\d+/g, '') : '';
 
         html += `
           <div class="card clickable-card" onclick="openMatchModalById(${m.id})">
@@ -1982,11 +1907,10 @@
       let leftList = [];
       let rightList = [];
 
-      // НОВОВВЕДЕНИЕ 3: УБИРАЕМ ВРЕМЯ И ОСТАВЛЯЕМ ТОЛЬКО ИМЕНА В СТОЛБИК
       goalsArr.forEach(g => {
-        let cleanPlayer = cleanGoalName(g.player);
-        cleanPlayer = cleanPlayer.replace(/\d+/g, '').trim(); 
-        const itemStr = `${cleanPlayer}`; 
+        const cleanPlayer = cleanGoalName(g.player);
+        const timeStr = g.minute ? `${g.minute}'` : '';
+        const itemStr = `${cleanPlayer} ${timeStr}`.trim();
         if (g.team === 1) leftList.push(itemStr);
         else rightList.push(itemStr);
       });
@@ -2044,20 +1968,11 @@
       const pitchContainer = document.getElementById('viewer-pitch');
       const benchCard = document.getElementById('viewer-bench-card');
 
-      // НОВОВВЕДЕНИЕ 4: ЗАЯВКА ТОЛЬКО ДЛЯ НАШЕЙ КОМАНДЫ
       if (isUpcomingRoster) {
-        const teamName = teamNum === 1 ? currentMatchObject.team1 : currentMatchObject.team2;
-        const isOurTeam = (teamName && (teamName.includes('Яйц') || teamName.includes('Яйцаscore'))) || teamNum === 1;
-        
-        if (isOurTeam) {
-          rosterContainer.style.display = 'block';
-          renderViewerRoster(currentMatchObject);
-        } else {
-          rosterContainer.style.display = 'block';
-          rosterContainer.innerHTML = '<div style="color:var(--hint); font-size:13px; text-align:center; padding: 10px;">Заявка соперников скрыта</div>';
-        }
+        rosterContainer.style.display = 'block';
         pitchContainer.style.display = 'none';
         benchCard.style.display = 'none';
+        renderViewerRoster(currentMatchObject);
       } else {
         rosterContainer.style.display = 'none';
         pitchContainer.style.display = 'block';
@@ -2160,7 +2075,7 @@
           const safeName = bp.name ? bp.name.replace(/'/g, "\\'") : '';
           const playerObj = allSquad.find(s => s.name === bp.name);
           const avatarStyle = playerObj && playerObj.photo_url ? `background-image: url('${playerObj.photo_url}'); color: transparent;` : '';
-          benchHtml += `
+ benchHtml += `
             <div class="clickable-card" style="display:flex; align-items:center; gap:8px; background:var(--card-inner); padding:6px 10px; border-radius:8px;" onclick="openPlayerProfileByName('${safeName}')">
               <div class="player-avatar" style="width:28px; height:28px; font-size:11px; ${avatarStyle}">${bp.num || '•'}</div>
               <span style="font-size:12px; font-weight:600;">${bp.name}</span>
@@ -2232,7 +2147,6 @@
               <option value="2" ${g.team === 2 ? 'selected' : ''}>Ком. 2</option>
             </select>
             <input type="text" placeholder="Игрок" value="${g.player || ''}" oninput="updateGoalBuilderItem(${idx}, 'player', this.value)">
-            <input type="text" placeholder="Мин" style="width:50px;" value="${g.minute || ''}" oninput="updateGoalBuilderItem(${{idx}, 'player', this.value)">
             <input type="text" placeholder="Мин" style="width:50px;" value="${g.minute || ''}" oninput="updateGoalBuilderItem(${idx}, 'minute', this.value)">
             <input type="text" placeholder="Счет" style="width:60px;" value="${g.score || ''}" oninput="updateGoalBuilderItem(${idx}, 'score', this.value)">
             <button type="button" class="delete-btn" onclick="removeGoalFromBuilder(${idx})">✕</button>
@@ -2694,7 +2608,7 @@
           else draws++;
         }
       });
-
+      
       container.innerHTML = `
         <div class="team-stats-grid">
           <div class="team-stat-box">
@@ -3278,3 +3192,4 @@
   </script>
 </body>
 </html>
+ 
