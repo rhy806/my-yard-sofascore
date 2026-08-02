@@ -1784,21 +1784,20 @@
       renderAdminAbsences();
     }
 
-   function switchMainTab(tabId, btn) {
+  /* =========================================================
+   ПОЛНАЯ И ЧИСТАЯ ФУНКЦИЯ ПЕРЕКЛЮЧЕНИЯ ВКЛАДОК (Без лишних скобок)
+   ========================================================= */
+function switchMainTab(tabId, btn) {
+  // 1. Снимаем активный класс со всех экранов и кнопок
   document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-  // Ищем вообще ВСЕ кнопки .top-tab-btn на странице и снимаем active
   document.querySelectorAll('.top-tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.bottom-nav .nav-item').forEach(b => b.classList.remove('active'));
 
+  // 2. Показываем нужный экран
   const targetTab = document.getElementById('tab-' + tabId);
   if (targetTab) targetTab.classList.add('active');
 
-  if (btn) {
-    btn.classList.add('active');
-  }
-}
-
-     // Безопасная подсветка кнопок
+  // 3. Подсвечиваем кнопку
   if (btn) {
     btn.classList.add('active');
   } else {
@@ -1810,7 +1809,7 @@
     }
   }
 
-  // Запуск отрисовки вкладок
+  // 4. Запускаем отрисовку
   if (tabId === 'top') renderTopPlayers();
   if (tabId === 'details') renderTeamStats();
   if (tabId === 'subscriptions') renderSubscriptionsList();
