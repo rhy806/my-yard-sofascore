@@ -670,6 +670,72 @@
     .maint-icon { font-size: 54px; margin-bottom: 16px; }
     .maint-title { font-size: 20px; font-weight: 800; color: #fff; margin-bottom: 10px; }
     .maint-desc { font-size: 14px; color: var(--hint); line-height: 1.5; font-weight: 600; }
+    /* =========================================================
+   НОВОВВЕДЕНИЕ 5: Кнопка режимов обновлений и окно блокировки
+   ========================================================= */
+.team-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.maintenance-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* Бот доступен всем (Красная) */
+.maintenance-btn.off {
+  background-color: var(--danger);
+  color: #fff;
+}
+
+/* Обновления включены (Зелёная) */
+.maintenance-btn.on {
+  background-color: var(--accent);
+  color: #000;
+}
+
+.maintenance-btn:active {
+  transform: scale(0.95);
+}
+
+.maintenance-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--bg);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.maintenance-box {
+  background: var(--card-bg);
+  padding: 30px 20px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  max-width: 320px;
+  width: 100%;
+}
   </style>
 </head>
 <body>
@@ -685,16 +751,17 @@
 
   <!-- ШАПКА ФК ЯЙЦ -->
   <div class="team-header">
-    <div class="team-title-row">
-      <div style="display: flex; align-items: center; gap: 12px;">
-        <div class="team-badge-icon">⚽</div>
-        <div>
-          <div class="team-name">Яйцаscore</div>
-        </div>
+  <div class="team-title-row">
+    <div style="display:flex; align-items:center; gap:12px;">
+      <div class="team-badge-icon">⚽</div>
+      <div>
+        <div class="team-name">Яйцаscore</div>
       </div>
-      <!-- НОВОВВЕДЕНИЕ 5: КНОПКА АДМИНА ДЛЯ РЕЖИМА ОБНОВЛЕНИЙ -->
-      <button id="admin-maint-btn" class="maint-toggle-btn" onclick="toggleMaintenanceMode()" title="Режим обновлений бота">🛠️</button>
     </div>
+    <!-- Кнопка админа для режимов обслуживания -->
+    <button id="admin-maintenance-btn" class="maintenance-btn off" onclick="toggleMaintenanceMode()" style="display: none;" title="Режим обслуживания">🛠️</button>
+  </div>
+</div>
 
     <div class="top-nav-tabs">
       <button class="top-tab-btn active" onclick="switchMainTab('details', this)">Детали</button>
@@ -3166,6 +3233,254 @@
     checkMaintenanceMode();
     loadSquad();
     loadMatches();
+    
+    /* =========================================================
+   НОВОВВЕДЕНИЕ 1: Расчет лучших игроков ТОЛЬКО из профиля (Карьера)
+   ========================================================= */
+function renderTopPlayers() {
+  const goalsCard = document.getElementById('top-goals-card');
+  const assistsCard = document.getElementById('top-assists-card');
+  const savesCard = document.getElementById('top-saves-card');
+  if (!goalsCard || !assistsCard || !savesCard) return;
+
+  let playersStats = allSquad.map(p => {
+    let totalGls = 0, totalAst = 0, totalSaves = 0;
+    let careerArr = [];
+    if (p.career) {
+      try {
+        careerArr = typeof p.career === 'string' ? JSON.parse(p.career) : p.career;
+      } catch (e) { careerArr = []; }
+    }
+    if (Array.isArray(careerArr)) {
+      careerArr.forEach(c => {
+        totalGls += (parseInt(c.gls) || 0);
+        totalAst += (parseInt(c.ast) || 0);
+        totalSaves += (parseInt(c.saves || c.sv) || 0);
+      });
+    }
+    return {
+      name: p.name,
+      photo: p.photo_url,
+      number: p.number,
+      gls: totalGls,
+      ast: totalAst,
+      saves: totalSaves
+    };
+  });
+
+  const renderTopList = (title, icon, statKey, container) => {
+    let sorted = [...playersStats].filter(p => p[statKey] > 0).sort((a, b) => b[statKey] - a[statKey]);
+    let html = `<div class="top-list-header"><span>${icon} ${title}</span></div>`;
+    if (sorted.length === 0) {
+      html += `<div style="color:var(--hint); font-size:13px; text-align:center;">Нет данных в карьере игроков</div>`;
+    } else {
+      sorted.slice(0, 5).forEach((p, idx) => {
+        const safeName = p.name.replace(/'/g, "\\'");
+        const avatarStyle = p.photo ? `background-image: url('${p.photo}'); color: transparent;` : '';
+        html += `
+          <div class="top-player-item clickable-card" onclick="openPlayerProfileByName('${safeName}')">
+            <div class="player-left">
+              <div style="font-weight:800; width:20px; color:var(--hint); font-size:13px;">${idx + 1}.</div>
+              <div class="player-avatar" style="${avatarStyle}">${p.number || '•'}</div>
+              <div class="player-info-name">${p.name}</div>
+            </div>
+            <div class="top-player-stat">${p[statKey]}</div>
+          </div>
+        `;
+      });
+    }
+    container.innerHTML = html;
+  };
+
+  renderTopList('Лучшие бомбардиры', '⚽', 'gls', goalsCard);
+  renderTopList('Лучшие ассистенты', '🅰️', 'ast', assistsCard);
+  renderTopList('Лучшие вратари', '🧤', 'saves', savesCard);
+}
+    
+    /* =========================================================
+   НОВОВВЕДЕНИЕ 3: Очистка имени от цифр и отображение голов по порядку
+   ========================================================= */
+function getOnlyPlayerName(str) {
+  if (!str) return '';
+  return str.replace(/\d+/g, '').replace(/['’•\.\-\:]/g, '').trim();
+}
+
+function renderHeroGoalsSummary(match) {
+  const g1Box = document.getElementById('m-hero-goals1');
+  const g2Box = document.getElementById('m-hero-goals2');
+  const summaryContainer = document.getElementById('m-hero-goals-summary');
+
+  let goalsArr = [];
+  if (match.goals_timeline) {
+    try { goalsArr = typeof match.goals_timeline === 'string' ? JSON.parse(match.goals_timeline) : match.goals_timeline; }
+    catch(e) { goalsArr = []; }
+  }
+
+  if (!goalsArr || goalsArr.length === 0) {
+    g1Box.innerHTML = match.goals1 ? match.goals1.split('\n').map(getOnlyPlayerName).filter(Boolean).join('<br>') : '';
+    g2Box.innerHTML = match.goals2 ? match.goals2.split('\n').map(getOnlyPlayerName).filter(Boolean).join('<br>') : '';
+    summaryContainer.style.display = (match.goals1 || match.goals2) ? 'flex' : 'none';
+    return;
+  }
+
+  summaryContainer.style.display = 'flex';
+  let leftList = [];
+  let rightList = [];
+
+  goalsArr.forEach(g => {
+    const cleanPlayer = getOnlyPlayerName(g.player);
+    if (cleanPlayer) {
+      if (g.team === 1) leftList.push(cleanPlayer);
+      else rightList.push(cleanPlayer);
+    }
+  });
+
+  g1Box.innerHTML = leftList.join('<br>');
+  g2Box.innerHTML = rightList.join('<br>');
+}
+
+
+/* =========================================================
+   НОВОВВЕДЕНИЕ 4: Заявка отображается только для нашей команды
+   ========================================================= */
+function renderViewerRoster(match) {
+  const container = document.getElementById('viewer-roster');
+  if (!container) return;
+
+  const team1Name = (match.team1 || '').toLowerCase();
+  const team2Name = (match.team2 || '').toLowerCase();
+
+  const isTeam1Our = team1Name.includes('яйц') || (!team1Name.includes('яйц') && !team2Name.includes('яйц'));
+  const isTeam2Our = team2Name.includes('яйц');
+
+  const isCurrentTeamOur = (currentLineupTeam === 1 && isTeam1Our) || (currentLineupTeam === 2 && isTeam2Our);
+
+  if (!isCurrentTeamOur) {
+    container.innerHTML = '<div style="color:var(--hint); font-size:13px; text-align:center;">Заявка соперника не отображается</div>';
+    return;
+  }
+
+  let rosterList = [];
+  let lineupData = null;
+  const targetLineup = (currentLineupTeam === 1) ? match.lineup1 : match.lineup2;
+  if (targetLineup) {
+    try { lineupData = typeof targetLineup === 'string' ? JSON.parse(targetLineup) : targetLineup; }
+    catch(e) { lineupData = null; }
+  }
+
+  if (lineupData && lineupData.roster) {
+    rosterList = lineupData.roster;
+  }
+
+  if (!rosterList || rosterList.length === 0) {
+    container.innerHTML = '<div style="color:var(--hint); font-size:13px; text-align:center;">Заявка на матч не сформирована</div>';
+    return;
+  }
+
+  let html = `<h4 style="margin-top:0; font-size:14px; color:var(--accent);">📋 Заявка на матч (${rosterList.length})</h4>`;
+  html += '<div style="display:flex; flex-direction:column; gap:8px;">';
+
+  rosterList.forEach(name => {
+    const playerObj = allSquad.find(p => p.name === name);
+    const posStr = playerObj ? getPlayerPositionsString(playerObj) : 'Игрок';
+    const numStr = playerObj && playerObj.number ? '#' + playerObj.number : '•';
+    const safeName = name.replace(/'/g, "\\'");
+
+    html += `
+      <div class="player-row-card clickable-card" onclick="openPlayerProfileByName('${safeName}')">
+        <div class="player-left">
+          <div class="player-avatar" style="${playerObj && playerObj.photo_url ? `background-image:url('${playerObj.photo_url}'); color:transparent;` : ''}">${numStr}</div>
+          <div>
+            <div class="player-info-name">${name}</div>
+            <div class="player-info-meta">${posStr}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+
+/* =========================================================
+   НОВОВВЕДЕНИЕ 5 (Логика): Инициализация режима обслуживания
+   ========================================================= */
+let isMaintenanceActive = false;
+
+function initMaintenanceMode() {
+  const btn = document.getElementById('admin-maintenance-btn');
+  if (typeof isAdmin !== 'undefined' && isAdmin && btn) {
+    btn.style.display = 'flex';
+  }
+  loadMaintenanceState();
+}
+
+async function loadMaintenanceState() {
+  try {
+    if (typeof _supabase !== 'undefined') {
+      const { data } = await _supabase.from('app_settings').select('value').eq('key', 'maintenance').single();
+      if (data) {
+        isMaintenanceActive = (data.value === 'true' || data.value === true);
+      } else {
+        isMaintenanceActive = (localStorage.getItem('maintenance_active') === 'true');
+      }
+    } else {
+      isMaintenanceActive = (localStorage.getItem('maintenance_active') === 'true');
+    }
+  } catch(e) {
+    isMaintenanceActive = (localStorage.getItem('maintenance_active') === 'true');
+  }
+  updateMaintenanceUI();
+}
+
+async function toggleMaintenanceMode() {
+  if (typeof isAdmin !== 'undefined' && !isAdmin) return;
+  isMaintenanceActive = !isMaintenanceActive;
+  localStorage.setItem('maintenance_active', isMaintenanceActive ? 'true' : 'false');
+  
+  try {
+    if (typeof _supabase !== 'undefined') {
+      await _supabase.from('app_settings').upsert({ key: 'maintenance', value: String(isMaintenanceActive) });
+    }
+  } catch(e) {}
+
+  updateMaintenanceUI();
+  if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
+    window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+  }
+}
+
+function updateMaintenanceUI() {
+  const btn = document.getElementById('admin-maintenance-btn');
+  if (btn) {
+    btn.className = isMaintenanceActive ? 'maintenance-btn on' : 'maintenance-btn off';
+  }
+
+  const overlay = document.getElementById('maintenance-overlay');
+  if (overlay) {
+    const userIsAdmin = (typeof isAdmin !== 'undefined' && isAdmin);
+    if (isMaintenanceActive && !userIsAdmin) {
+      overlay.style.display = 'flex';
+    } else {
+      overlay.style.display = 'none';
+    }
+  }
+}
+
+// Автозапуск проверки режима обслуживания
+document.addEventListener("DOMContentLoaded", () => {
+  initMaintenanceMode();
+});
   </script>
+  <!-- Окно предупреждения об обновлениях для пользователей -->
+<div id="maintenance-overlay" class="maintenance-screen" style="display: none;">
+  <div class="maintenance-box">
+    <div style="font-size: 48px; margin-bottom: 16px;">🛠️</div>
+    <h2 style="font-size:18px; margin:0 0 8px 0; color:#fff;">Ведутся обновления в работе бота</h2>
+    <p style="font-size:14px; color:var(--hint); margin:0;">Попробуйте позже.</p>
+  </div>
+</div>
 </body>
+
 </html>
