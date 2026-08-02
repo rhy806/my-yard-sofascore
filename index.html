@@ -931,6 +931,34 @@
   transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1) !important; /* Плавный и мягкий амортизирующий эффект */
   box-sizing: border-box !important;
 }
+    /* =========================================================
+   📦 СТИЛИ КАРТОЧЕК И ОТСТУПОВ ДЛЯ ВКЛАДОК
+   ========================================================= */
+
+/* Отступы от краёв экрана для всех вкладок */
+.tab-pane {
+  padding: 12px 16px 24px 16px !important;
+  box-sizing: border-box !important;
+}
+
+/* Универсальная тёмная карточка с закруглёнными углами */
+.tab-card {
+  background: #18181b !important;               /* Тёмно-серый фон карточки */
+  border-radius: 16px !important;               /* Закругление углов */
+  padding: 16px !important;                     /* Отступы внутри карточки */
+  margin-bottom: 16px !important;               /* Отступ между карточками */
+  border: 1px solid rgba(255, 255, 255, 0.06) !important; /* Тонкая аккуратная рамка */
+}
+
+/* Заголовки над карточками */
+.section-title {
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: rgba(255, 255, 255, 0.5) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  margin: 12px 0 8px 4px !important;
+}
   </style>
 </head>
 <body>
@@ -969,37 +997,39 @@
 <!-- 2. Слайдер с твоим РЕАЛЬНЫМ контентом -->
 <div class="tabs-content-wrapper">
   
-  <!-- 0-я вкладка: ДЕТАЛИ -->
+  <!-- 0. ДЕТАЛИ -->
   <div class="tab-pane">
-    <!-- Сюда переносим Текущую форму и Статистику команды -->
     <div class="section-title">ТЕКУЩАЯ ФОРМА</div>
-    <!-- твой блок с формой L W -->
-    
+    <div class="tab-card">
+      <!-- Твои кружочки L W -->
+    </div>
+
     <div class="section-title">СТАТИСТИКА КОМАНДЫ</div>
-    <!-- твоя статистика -->
-  </div>
-
-  <!-- 1-я вкладка: МАТЧИ -->
-  <div class="tab-pane">
-    <!-- Сюда переносим блок с Предстоящими и прошедшими матчами -->
-    <div class="section-title">ПРЕДСТОЯЩИЕ МАТЧИ</div>
-    <!-- твой карточка с матчем ФК Яйц VS ФК ХПК -->
-  </div>
-
-  <!-- 2-я вкладка: СОСТАВ -->
-  <div class="tab-pane">
-    <!-- Сюда переносим список всех игроков команды -->
-    <div id="squad-list-container">
-      <!-- Список состава -->
+    <div class="tab-card">
+      <!-- Твоя статистика команды -->
     </div>
   </div>
 
-  <!-- 3-я вкладка: ЛУЧШИЕ ИГРОКИ -->
+  <!-- 1. МАТЧИ -->
   <div class="tab-pane">
-    <!-- Сюда переносим ТОПы -->
-    <div id="top-goals-card"></div>
-    <div id="top-assists-card"></div>
-    <div id="top-saves-card"></div>
+    <div class="section-title">ПРЕДСТОЯЩИЕ МАТЧИ</div>
+    <div class="tab-card">
+      <!-- Карточка матча (ФК Яйц VS ФК ХПК) -->
+    </div>
+  </div>
+
+  <!-- 2. СОСТАВ (Здесь стили уже свои, просто оставляем контейнер) -->
+  <div class="tab-pane">
+    <div id="squad-list-container">
+      <!-- Твой список игроков -->
+    </div>
+  </div>
+
+  <!-- 3. ЛУЧШИЕ ИГРОКИ -->
+  <div class="tab-pane">
+    <div id="top-goals-card" class="tab-card"></div>
+    <div id="top-assists-card" class="tab-card"></div>
+    <div id="top-saves-card" class="tab-card"></div>
   </div>
 
 </div>
