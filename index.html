@@ -4126,6 +4126,29 @@ window.switchMainTab = function(tabId, btnElement) {
 
   // 6. Сбрасываем скролл наверх
   window.scrollTo(0, 0);
+  
+  /* === Функция переключения на админку === */
+window.openAdminPanel = function() {
+  // 1. Принудительно скрываем все другие экраны
+  document.querySelectorAll('.main-tab').forEach(tab => {
+    tab.classList.remove('active');
+    tab.style.setProperty('display', 'none', 'important');
+  });
+
+  // 2. Закрываем оверлей (если открыт)
+  const overlay = document.getElementById('overlay');
+  if (overlay) overlay.classList.remove('active');
+
+  // 3. Снимаем активный статус с кнопок нижнего меню
+  document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
+
+  // 4. Показываем только tab_admin
+  const adminTab = document.getElementById('tab_admin');
+  if (adminTab) {
+    adminTab.classList.add('active');
+    adminTab.style.setProperty('display', 'block', 'important');
+    window.scrollTo(0, 0);
+  }
 };
   </script>
 
