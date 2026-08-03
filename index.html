@@ -1025,27 +1025,22 @@
 }
 
 
-/* ======================================================
-   3. УЛУЧШЕНИЕ СВАЙПА НА ТЕЛЕФОНЕ (Без застреваний)
-   ====================================================== */
+/* 3. УЛУЧШЕНИЕ СВАЙПА НА ТЕЛЕФОНЕ */
 body {
-  overflow-x: hidden; /* Запрещаем горизонтальную тряску страницы */
+  overflow-x: hidden;
 }
 
 .tabs-content-wrapper {
-  touch-action: pan-y pinch-zoom; /* Дает браузеру четко понять: свайп горизонтальный */
+  touch-action: pan-y pinch-zoom;
 }
-  <head>
-    <style>
-    /* ... Всякие ваши предыдущие стили ... */
 
-    /* 👇 ВСТАВЛЯТЬ СЮДА (перед закрывающим </style>) */
-    .pitch-container.active,
-    .roster-container.active,
-    .bench-card.active {
-      display: flex;
-      opacity: 1;
-    }
+/* АКТИВНЫЕ СОСТАВЫ И ПОЛЕ В ДЕТАЛЯХ МАТЧА */
+.pitch-container.active,
+.roster-container.active,
+.bench-card.active {
+  display: flex;
+  opacity: 1;
+}
 
   </style> <!-- 👈 Закрывающий тег -->
 </head>
