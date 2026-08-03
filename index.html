@@ -960,7 +960,9 @@
   margin: 12px 0 8px 4px !important;
 }
    
-    /* 1. ПЛАВНЫЕ МОДАЛЬНЫЕ ОКНА */
+/* ======================================================
+   1. ПЛАВНЫЕ МОДАЛЬНЫЕ ОКНА (Выезд СПРАВА + Фикс кликов на телефоне)
+   ====================================================== */
 .modal {
   position: fixed;
   top: 0;
@@ -970,63 +972,82 @@
   background: rgba(0, 0, 0, 0.65);
   backdrop-filter: blur(4px);
   display: flex;
-  align-items: center;
-  justify-content: center;
+  justify-content: flex-end; /* Окно прижимается к правому краю */
   z-index: 1000;
+  
+  /* 🔑 Главный фикс для телефона: скрытое окно НЕ перехватывает нажатия пальца */
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.25s ease, visibility 0.25s ease;
+  pointer-events: none; 
+  transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 
+/* Когда окно открыто — включаем нажатия */
 .modal.active {
   opacity: 1;
   visibility: visible;
+  pointer-events: auto;
 }
 
+/* ➡️ Эффект выезда справа */
 .modal-content {
-  transform: scale(0.92) translateY(15px);
-  transition: transform 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+  width: 100%;
+  max-width: 500px; /* Ширина на ПК, на телефоне будет на весь экран */
+  height: 100%;
+  background: #121212; /* Тёмный фон твоего сайта */
+  box-sizing: border-box;
+  overflow-y: auto;
+  
+  /* Изначально убираем за правый край экрана */
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .modal.active .modal-content {
-  transform: scale(1) translateY(0);
+  transform: translateX(0); /* Плавно выезжает справа */
 }
 
-/* 2. ТАБЫ ВНУТРИ ПРОФИЛЯ ИГРОКА */
+
+/* ======================================================
+   2. ТАБЫ ВНУТРИ ПРОФИЛЯ (Исправление переключения)
+   ====================================================== */
 .player-tab-pane {
-  display: none;
+  display: none !important;
   opacity: 0;
-  transform: translateY(10px);
+  transform: translateY(8px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
 }
 
 .player-tab-pane.active {
-  display: block;
-  animation: profileTabFadeIn 0.3s forwards cubic-bezier(0.25, 0.8, 0.25, 1);
+  display: block !important;
+  opacity: 1;
+  transform: translateY(0);
 }
 
-@keyframes profileTabFadeIn {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+
+/* ======================================================
+   3. УЛУЧШЕНИЕ СВАЙПА НА ТЕЛЕФОНЕ (Без застреваний)
+   ====================================================== */
+body {
+  overflow-x: hidden; /* Запрещаем горизонтальную тряску страницы */
 }
 
-/* 3. КНОПКИ НИЖНЕГО МЕНЮ И КАРТОЧКИ */
-.nav-item, 
-.player-tab-btn, 
-.clickable-card {
-  transition: transform 0.15s ease, opacity 0.15s ease, color 0.15s ease;
+.tabs-content-wrapper {
+  touch-action: pan-y pinch-zoom; /* Дает браузеру четко понять: свайп горизонтальный */
 }
+  <head>
+    <style>
+    /* ... Всякие ваши предыдущие стили ... */
 
-.nav-item:active, 
-.player-tab-btn:active, 
-.clickable-card:active {
-  transform: scale(0.95);
-  opacity: 0.8;
-}
+    /* 👇 ВСТАВЛЯТЬ СЮДА (перед закрывающим </style>) */
+    .pitch-container.active,
+    .roster-container.active,
+    .bench-card.active {
+      display: flex;
+      opacity: 1;
+    }
 
-.nav-item.active {
-  transform: scale(1.08);
-}
-  </style>
+  </style> <!-- 👈 Закрывающий тег -->
 </head>
 <body>
 
@@ -1722,7 +1743,7 @@
       if (!isAdmin && isMaintenanceActive) {
         if (overlay) overlay.style.display = 'flex';
       } else {
-        if (overlay) overlay.style.display = 'none';
+        if (overlay) overlay.classList.remove('active');
       }
     }
 
@@ -2266,7 +2287,7 @@ function switchMainTab(tabId, btn) {
       renderSecondaryPosPills();
 
       document.getElementById('save-squad-btn').innerText = 'Добавить игрока в состав';
-      document.getElementById('cancel-squad-btn').style.display = 'none';
+      document.getElementById('cancel-squad-btn')?.classList.remove('active');
     }
 
     function cancelSquadEdit() { resetSquadForm(); }
@@ -2414,11 +2435,11 @@ function switchMainTab(tabId, btn) {
       btn.classList.add('active');
 
       if (tab === 'overview') {
-        document.getElementById('subtab-overview').style.display = 'block';
-        document.getElementById('subtab-lineups').style.display = 'none';
+        document.getElementById('subtab-overview').classList.add('active');
+        document.getElementById('subtab-lineups')?.classList.remove('active');
       } else {
-        document.getElementById('subtab-overview').style.display = 'none';
-        document.getElementById('subtab-lineups').style.display = 'block';
+        document.getElementById('subtab-overview')?.classList.remove('active');
+        document.getElementById('subtab-lineups').classList.add('active');
       }
     }
 
@@ -2511,14 +2532,14 @@ function switchMainTab(tabId, btn) {
       const benchCard = document.getElementById('viewer-bench-card');
 
       if (isUpcomingRoster) {
-        rosterContainer.style.display = 'block';
-        pitchContainer.style.display = 'none';
-        benchCard.style.display = 'none';
+        rosterContainer.classList.add('active');
+        pitchContainer?.classList.remove('active');
+        benchCard?.classList.remove('active');
         renderViewerRoster(currentMatchObject, teamNum);
       } else {
-        rosterContainer.style.display = 'none';
-        pitchContainer.style.display = 'block';
-        benchCard.style.display = 'block';
+        rosterContainer?.classList.remove('active');
+        pitchContainer.classList.add('active');
+        benchCard.classList.add('active');
         renderViewerPitch(currentMatchObject, teamNum);
       }
 
@@ -3029,7 +3050,7 @@ function switchMainTab(tabId, btn) {
       renderAdminAbsences();
 
       document.getElementById('save-btn').innerText = 'Сохранить матч';
-      document.getElementById('cancel-btn').style.display = 'none';
+      document.getElementById('cancel-btn')?.classList.remove('active');
     }
 
     function renderAdminMatchesList() {
