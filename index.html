@@ -1043,12 +1043,11 @@ body {
 }
     
 .main-tab {
-  display: none;
-  width: 100%;
+  display: none !important;
 }
 
 .main-tab.active {
-  display: block;
+  display: block !important;
 }
 
   </style> <!-- 👈 Закрывающий тег -->
@@ -4054,29 +4053,36 @@ function switchPlayerTab(tabIndex) {
   });
 }
 
-      function switchMainTab(tabId, btnElement) {
-  // Скрываем все главные экраны
+function switchMainTab(tabId, btnElement) {
+  // 1. Принудительно скрываем ВСЕ главные экраны
   document.querySelectorAll('.main-tab').forEach(tab => {
     tab.classList.remove('active');
-    tab.style.display = 'none';
+    tab.style.setProperty('display', 'none', 'important');
   });
 
-  // Убираем активный класс у всех кнопок снизу
+  // 2. Закрываем возможные всплывающие оверлеи/детали
+  const overlay = document.getElementById('overlay');
+  if (overlay) overlay.classList.remove('active');
+
+  // 3. Сбрасываем подсветку у кнопок нижнего меню
   document.querySelectorAll('.nav-item').forEach(btn => {
     btn.classList.remove('active');
   });
 
-  // Показываем только выбранный экран
+  // 4. Включаем ТОЛЬКО нужный экран
   const activeTab = document.getElementById(tabId);
   if (activeTab) {
     activeTab.classList.add('active');
-    activeTab.style.display = 'block';
+    activeTab.style.setProperty('display', 'block', 'important');
   }
 
-  // Подсвечиваем нажатую кнопку
+  // 5. Подсвечиваем нажатую кнопку снизу
   if (btnElement) {
     btnElement.classList.add('active');
   }
+
+  // 6. Сбрасываем прокрутку наверх
+  window.scrollTo(0, 0);
 }
       
       // Если переключились на вкладку "Лучшие игроки" (индекс 3), вызываем отрисовку топов
@@ -4085,6 +4091,38 @@ function switchPlayerTab(tabIndex) {
       }
     }
   });
+
+  function switchMainTab(tabId, btnElement) {
+  // 1. Принудительно скрываем ВСЕ главные экраны
+  document.querySelectorAll('.main-tab').forEach(tab => {
+    tab.classList.remove('active');
+    tab.style.setProperty('display', 'none', 'important');
+  });
+
+  // 2. Закрываем возможные всплывающие оверлеи/детали
+  const overlay = document.getElementById('overlay');
+  if (overlay) overlay.classList.remove('active');
+
+  // 3. Сбрасываем подсветку у кнопок нижнего меню
+  document.querySelectorAll('.nav-item').forEach(btn => {
+    btn.classList.remove('active');
+  });
+
+  // 4. Включаем ТОЛЬКО нужный экран
+  const activeTab = document.getElementById(tabId);
+  if (activeTab) {
+    activeTab.classList.add('active');
+    activeTab.style.setProperty('display', 'block', 'important');
+  }
+
+  // 5. Подсвечиваем нажатую кнопку снизу
+  if (btnElement) {
+    btnElement.classList.add('active');
+  }
+
+  // 6. Сбрасываем прокрутку наверх
+  window.scrollTo(0, 0);
+}
   </script>
 
 </body>
