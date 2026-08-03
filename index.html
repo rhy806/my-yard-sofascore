@@ -1041,6 +1041,15 @@ body {
   display: flex;
   opacity: 1;
 }
+    
+.main-tab {
+  display: none;
+  width: 100%;
+}
+
+.main-tab.active {
+  display: block;
+}
 
   </style> <!-- 👈 Закрывающий тег -->
 </head>
@@ -4044,6 +4053,32 @@ function switchPlayerTab(tabIndex) {
     pane.classList.toggle('active', idx === tabIndex);
   });
 }
+
+      function switchMainTab(tabId, btnElement) {
+  // Скрываем все главные экраны
+  document.querySelectorAll('.main-tab').forEach(tab => {
+    tab.classList.remove('active');
+    tab.style.display = 'none';
+  });
+
+  // Убираем активный класс у всех кнопок снизу
+  document.querySelectorAll('.nav-item').forEach(btn => {
+    btn.classList.remove('active');
+  });
+
+  // Показываем только выбранный экран
+  const activeTab = document.getElementById(tabId);
+  if (activeTab) {
+    activeTab.classList.add('active');
+    activeTab.style.display = 'block';
+  }
+
+  // Подсвечиваем нажатую кнопку
+  if (btnElement) {
+    btnElement.classList.add('active');
+  }
+}
+      
       // Если переключились на вкладку "Лучшие игроки" (индекс 3), вызываем отрисовку топов
       if (currentIndex === 3 && typeof renderTopPlayers === 'function') {
         renderTopPlayers();
