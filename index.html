@@ -4128,7 +4128,7 @@ window.switchMainTab = function(tabId, btnElement) {
   window.scrollTo(0, 0);
   
 /* =========================================================
-   ОТКРЫТИЕ АДМИНКИ ОТДЕЛЬНЫМ ПОЛНОЭКРАННЫМ МЕНЮ (tab-admin)
+   ИСПРАВЛЕНИЕ: Полноэкранная админка БЕЗ поломки кликов и DOM
    ========================================================= */
 window.openAdminPanel = function() {
   const adminTab = document.getElementById('tab-admin');
@@ -4137,10 +4137,7 @@ window.openAdminPanel = function() {
     return;
   }
 
-  // 1. Вытаскиваем админку в корень страницы
-  document.body.appendChild(adminTab);
-
-  // 2. Перекрываем весь экран поверх всех вкладок
+  // 1. Делаем поверх всех вкладок, не меняя место элемента в HTML
   adminTab.style.setProperty('position', 'fixed', 'important');
   adminTab.style.setProperty('top', '0', 'important');
   adminTab.style.setProperty('left', '0', 'important');
@@ -4153,8 +4150,9 @@ window.openAdminPanel = function() {
   adminTab.style.setProperty('padding', '16px', 'important');
   adminTab.style.setProperty('box-sizing', 'border-box', 'important');
   adminTab.style.setProperty('display', 'block', 'important');
+  adminTab.style.setProperty('pointer-events', 'auto', 'important');
 
-  // 3. Создаем верхнюю кнопку "← Назад"
+  // 2. Создаем кнопку «← Назад», если её еще нет
   if (!document.getElementById('admin-close-btn-top')) {
     const closeBtn = document.createElement('button');
     closeBtn.id = 'admin-close-btn-top';
@@ -4170,7 +4168,9 @@ window.openAdminPanel = function() {
 window.closeAdminPanel = function() {
   const adminTab = document.getElementById('tab-admin');
   if (adminTab) {
+    // Полностью скрываем и отключаем перехват кликов
     adminTab.style.setProperty('display', 'none', 'important');
+    adminTab.style.setProperty('pointer-events', 'none', 'important');
   }
 };
   </script>
