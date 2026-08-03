@@ -4127,27 +4127,50 @@ window.switchMainTab = function(tabId, btnElement) {
   // 6. Сбрасываем скролл наверх
   window.scrollTo(0, 0);
   
-  /* === Функция переключения на админку === */
+/* =========================================================
+   ОТКРЫТИЕ АДМИНКИ ОТДЕЛЬНЫМ ПОЛНОЭКРАННЫМ МЕНЮ (tab-admin)
+   ========================================================= */
 window.openAdminPanel = function() {
-  // 1. Принудительно скрываем все другие экраны
-  document.querySelectorAll('.main-tab').forEach(tab => {
-    tab.classList.remove('active');
-    tab.style.setProperty('display', 'none', 'important');
-  });
+  const adminTab = document.getElementById('tab-admin');
+  if (!adminTab) {
+    console.error('Элемент #tab-admin не найден!');
+    return;
+  }
 
-  // 2. Закрываем оверлей (если открыт)
-  const overlay = document.getElementById('overlay');
-  if (overlay) overlay.classList.remove('active');
+  // 1. Вытаскиваем админку в корень страницы
+  document.body.appendChild(adminTab);
 
-  // 3. Снимаем активный статус с кнопок нижнего меню
-  document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
+  // 2. Перекрываем весь экран поверх всех вкладок
+  adminTab.style.setProperty('position', 'fixed', 'important');
+  adminTab.style.setProperty('top', '0', 'important');
+  adminTab.style.setProperty('left', '0', 'important');
+  adminTab.style.setProperty('width', '100vw', 'important');
+  adminTab.style.setProperty('height', '100vh', 'important');
+  adminTab.style.setProperty('z-index', '999999', 'important');
+  adminTab.style.setProperty('background', '#121212', 'important');
+  adminTab.style.setProperty('overflow-y', 'auto', 'important');
+  adminTab.style.setProperty('-webkit-overflow-scrolling', 'touch', 'important');
+  adminTab.style.setProperty('padding', '16px', 'important');
+  adminTab.style.setProperty('box-sizing', 'border-box', 'important');
+  adminTab.style.setProperty('display', 'block', 'important');
 
-  // 4. Показываем только tab_admin
-  const adminTab = document.getElementById('tab_admin');
+  // 3. Создаем верхнюю кнопку "← Назад"
+  if (!document.getElementById('admin-close-btn-top')) {
+    const closeBtn = document.createElement('button');
+    closeBtn.id = 'admin-close-btn-top';
+    closeBtn.innerText = '← Назад в приложение';
+    closeBtn.style.cssText = 'width: 100%; padding: 14px; margin-bottom: 16px; background: #2c2c2e; color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer;';
+    closeBtn.onclick = window.closeAdminPanel;
+    adminTab.insertBefore(closeBtn, adminTab.firstChild);
+  }
+
+  adminTab.scrollTop = 0;
+};
+
+window.closeAdminPanel = function() {
+  const adminTab = document.getElementById('tab-admin');
   if (adminTab) {
-    adminTab.classList.add('active');
-    adminTab.style.setProperty('display', 'block', 'important');
-    window.scrollTo(0, 0);
+    adminTab.style.setProperty('display', 'none', 'important');
   }
 };
   </script>
