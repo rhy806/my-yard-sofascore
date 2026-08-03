@@ -4127,50 +4127,6 @@ window.switchMainTab = function(tabId, btnElement) {
   // 6. Сбрасываем скролл наверх
   window.scrollTo(0, 0);
 };
- 
-  /* =========================================================
-   БЕЗОПАСНОЕ ОТКРЫТИЕ АДМИН-ПАНЕЛИ (#tab-admin)
-   ========================================================= */
-window.openAdminPanel = function() {
-  const admin = document.getElementById('tab-admin');
-  if (!admin) {
-    alert('Элемент с id="tab-admin" не найден!');
-    return;
-  }
-
-  // 1. Показываем админку поверх всего экрана (НЕ перемещая её в HTML)
-  admin.style.setProperty('position', 'fixed', 'important');
-  admin.style.setProperty('top', '0', 'important');
-  admin.style.setProperty('left', '0', 'important');
-  admin.style.setProperty('width', '100vw', 'important');
-  admin.style.setProperty('height', '100vh', 'important');
-  admin.style.setProperty('z-index', '999999', 'important');
-  admin.style.setProperty('background', '#121212', 'important'); // темный фон
-  admin.style.setProperty('overflow-y', 'auto', 'important');
-  admin.style.setProperty('padding', '16px', 'important');
-  admin.style.setProperty('box-sizing', 'border-box', 'important');
-  admin.style.setProperty('display', 'block', 'important');
-
-  // 2. Автоматически добавляем верхнюю кнопку «← Назад в приложение»
-  if (!document.getElementById('admin-close-btn-top')) {
-    const closeBtn = document.createElement('button');
-    closeBtn.id = 'admin-close-btn-top';
-    closeBtn.innerText = '← Назад в приложение';
-    closeBtn.style.cssText = 'width: 100%; padding: 14px; margin-bottom: 16px; background: #2c2c2e; color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer;';
-    closeBtn.onclick = window.closeAdminPanel;
-    admin.insertBefore(closeBtn, admin.firstChild);
-  }
-
-  admin.scrollTop = 0;
-};
-
-// Функция закрытия админки
-window.closeAdminPanel = function() {
-  const admin = document.getElementById('tab-admin');
-  if (admin) {
-    admin.style.setProperty('display', 'none', 'important');
-  }
-};
   </script>
 
 </body>
