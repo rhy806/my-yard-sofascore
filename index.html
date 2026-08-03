@@ -4095,38 +4095,29 @@ function switchMainTab(tabId, btnElement) {
 window.switchMainTab = function(tabId, btnElement) {
   console.log('Переключение на экран:', tabId);
 
-  // 1. Принудительно скрываем все главные экраны
-  document.querySelectorAll('.main-tab').forEach(tab => {
-    tab.classList.remove('active');
-    tab.style.setProperty('display', 'none', 'important');
-  });
+const adminBtn = document.getElementById('admin-btn');
+const adminTab = document.getElementById('tab-admin');
 
-  // 2. Закрываем всплывающее окно / оверлей (если открыт)
-  const overlay = document.getElementById('overlay');
-  if (overlay) overlay.classList.remove('active');
+if (adminBtn && adminTab) {
+    adminBtn.onclick = (e) => {
+        e.preventDefault();
 
-  // 3. Убираем подсветку со всех кнопок нижнего меню
-  document.querySelectorAll('.nav-item').forEach(btn => {
-    btn.classList.remove('active');
-  });
+        // Скрываем другие табы, если у тебя переключение по вкладам:
+        document.querySelectorAll('.tab-content').forEach(tab => {
+            tab.classList.remove('active');
+            tab.style.display = 'none';
+        });
 
-  // 4. Показываем ТОЛЬКО выбранный экран
-  const activeTab = document.getElementById(tabId);
-  if (activeTab) {
-    activeTab.classList.add('active');
-    activeTab.style.setProperty('display', 'block', 'important');
-  } else {
-    console.warn('Внимание: элемент с id="' + tabId + '" не найден!');
-  }
+        // Показываем админку
+        adminTab.classList.add('active');
+        adminTab.style.display = 'block';
 
-  // 5. Подсвечиваем нажатую кнопку
-  if (btnElement) {
-    btnElement.classList.add('active');
-  }
-
-  // 6. Сбрасываем скролл наверх
-  window.scrollTo(0, 0);
-};
+        // Плавный скролл вниз к админке
+        setTimeout(() => {
+            adminTab.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 50);
+    };
+}
   </script>
 
 </body>
