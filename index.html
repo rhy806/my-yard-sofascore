@@ -4092,37 +4092,41 @@ function switchMainTab(tabId, btnElement) {
     }
   });
 
-  function switchMainTab(tabId, btnElement) {
-  // 1. Принудительно скрываем ВСЕ главные экраны
+window.switchMainTab = function(tabId, btnElement) {
+  console.log('Переключение на экран:', tabId);
+
+  // 1. Принудительно скрываем все главные экраны
   document.querySelectorAll('.main-tab').forEach(tab => {
     tab.classList.remove('active');
     tab.style.setProperty('display', 'none', 'important');
   });
 
-  // 2. Закрываем возможные всплывающие оверлеи/детали
+  // 2. Закрываем всплывающее окно / оверлей (если открыт)
   const overlay = document.getElementById('overlay');
   if (overlay) overlay.classList.remove('active');
 
-  // 3. Сбрасываем подсветку у кнопок нижнего меню
+  // 3. Убираем подсветку со всех кнопок нижнего меню
   document.querySelectorAll('.nav-item').forEach(btn => {
     btn.classList.remove('active');
   });
 
-  // 4. Включаем ТОЛЬКО нужный экран
+  // 4. Показываем ТОЛЬКО выбранный экран
   const activeTab = document.getElementById(tabId);
   if (activeTab) {
     activeTab.classList.add('active');
     activeTab.style.setProperty('display', 'block', 'important');
+  } else {
+    console.warn('Внимание: элемент с id="' + tabId + '" не найден!');
   }
 
-  // 5. Подсвечиваем нажатую кнопку снизу
+  // 5. Подсвечиваем нажатую кнопку
   if (btnElement) {
     btnElement.classList.add('active');
   }
 
-  // 6. Сбрасываем прокрутку наверх
+  // 6. Сбрасываем скролл наверх
   window.scrollTo(0, 0);
-}
+};
   </script>
 
 </body>
