@@ -1828,6 +1828,41 @@
       container.innerHTML = html;
     }
     
+    function renderUpcomingWidget() {
+      const container = document.getElementById('upcoming-match-widget');
+      const upcoming = allMatches.find(m => m.status && m.status.startsWith('upcoming'));
+
+      if (!upcoming) {
+        container.innerHTML = `
+          <div class="upcoming-card">
+            <div style="text-align:center; color:var(--hint); font-size:14px; font-weight:600;">
+              Предстоящих матчей не запланировано
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="upcoming-card clickable-card" onclick="openMatchModal(${upcoming.id})">
+          <div class="upcoming-match-body">
+            <div class="upcoming-team">
+              <div class="upcoming-team-icon">⚽</div>
+              <div class="upcoming-team-name">${upcoming.team1 || 'ФК Яйц'}</div>
+            </div>
+            <div class="upcoming-center-info">
+              <div class="upcoming-status-title">VS</div>
+              <div class="upcoming-date-time">${upcoming.score || ''}<br>${upcoming.match_date || ''}</div>
+            </div>
+            <div class="upcoming-team">
+              <div class="upcoming-team-icon">⚽</div>
+              <div class="upcoming-team-name">${upcoming.team2 || 'Соперник'}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    
     function renderTeamFormWidget() {
       const container = document.getElementById('team-form-widget');
       const finishedMatches = allMatches.filter(m => m.status === 'finished');
