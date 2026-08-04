@@ -689,6 +689,14 @@
   color: #ff3b30;
 }
   </style>
+
+  <script>
+    const SUPABASE_URL = 'https://ssriiiiuljdeftigdiyl.supabase.co/rest/v1/'; // Твоя ссылка
+    const SUPABASE_ANON_KEY = 'sb_publishable_jWUTsulzCMEQV6O26zac-g_04tBxiy4';              // Твой anon-ключ
+
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  </script>
+  
 </head>
 <body>
 
@@ -3218,7 +3226,200 @@ document.addEventListener('click', (e) => {
 
 // Запуск при загрузке страницы
 renderMediaFeed();
-    
+
+const MEDIA_TABLE = 'media_posts';
+
+let mediaPosts = [];
+let selectedMediaBase64 = null;
+let selectedMediaType = 'image';
+let editingPostId = null;
+
+// Вспомогательная функция: преобразует created_at из Supabase в привычную дату и время
+function formatDate(isoString) {
+  if (!isoString) return '';
+  const date = new Date(isoString);
+  const day = date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const time = date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+  return `${day}, ${time}`;
+}
+
+// 1. Загрузка постов с сортировкой по created_at (свежие сверху)
+async function loadMediaPosts() {
+  try {
+    const client = typeof supabase !== 'undefined' ? supabase : _supabase;
+
+    const { data, error } = await client
+      .from(MEDIA_TABLE)
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    mediaPosts = data || [];
+    renderMediaFeed();
+  } catch (err) {
+    console.error('Ошибка загрузки медиа из Supabase:', err.message);
+  }
+}
+
+// Обработка выбора файла
+function handleFileSelect(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  document.getElementById('media-file-name').innerText = file.name;
+  selectedMediaType = file.type.startsWith('video') ? 'video' : 'image';
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    selectedMediaBase64 = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// Рендер медиа-ленты
+function renderMediaFeed() {
+  const container = document.getElementById('media-feed');
+  const adminPanel = document.getElementById('media-admin-form');
+
+  if (!container) return;
+
+  if (typeof isAdmin !== 'undefined' && isAdmin) {
+    if (adminPanel) adminPanel.style.display = 'flex';
+  } else {
+    if (adminPanel) adminPanel.style.display = 'none';
+  }
+
+  if (mediaPosts.length === 0) {
+    container.innerHTML = '<div class="empty-card-placeholder">Медиа файлы отсутствуют</div>';
+    return;
+  }
+
+  let html = '';
+  mediaPosts.forEach(post => {
+    const isVideo = post.type === 'video';
+    const mediaTag = isVideo 
+      ? `<video src="${post.src}" class="media-asset" controls playsinline></video>`
+      : `<img src="${post.src}" class="media-asset" alt="media">`;
+
+    const adminButtons = (typeof isAdmin !== 'undefined' && isAdmin) ? `
+      <div class="media-admin-actions">
+        <button class="btn-sm-edit" onclick="editMediaPost(${post.id})">Изм.</button>
+        <button class="btn-sm-delete" onclick="deleteMediaPost(${post.id})">Уд.</button>
+      </div>
+    ` : '';
+
+    // Форматируем системный created_at в красивую дату
+    const displayDate = formatDate(post.created_at);
+
+    html += `
+      <div class="media-card">
+        ${mediaTag}
+        ${post.caption ? `<div class="media-caption">${post.caption}</div>` : ''}
+        <div class="media-footer">
+          ${adminButtons}
+          <span class="media-date">${displayDate}</span>
+        </div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+
+// 2. Создание или обновление поста
+async function saveMediaPost() {
+  const captionInput = document.getElementById('media-caption-input');
+  const caption = captionInput.value.trim();
+  const client = typeof supabase !== 'undefined' ? supabase : _supabase;
+
+  if (editingPostId) {
+    const updateData = { caption: caption };
+    if (selectedMediaBase64) {
+      updateData.src = selectedMediaBase64;
+      updateData.type = selectedMediaType;
+    }
+
+    const { error } = await client
+      .from(MEDIA_TABLE)
+      .update(updateData)
+      .eq('id', editingPostId);
+
+    if (error) {
+      alert('Ошибка при обновлении: ' + error.message);
+      return;
+    }
+
+    editingPostId = null;
+    document.getElementById('media-save-btn').innerText = 'Опубликовать';
+  } else {
+    if (!selectedMediaBase64) {
+      alert('Пожалуйста, выберите фото или видео!');
+      return;
+    }
+
+    // Дату здесь НЕ передаем — Supabase сам проставит timestamp в created_at
+    const newPost = {
+      type: selectedMediaType,
+      src: selectedMediaBase64,
+      caption: caption
+    };
+
+    const { error } = await client
+      .from(MEDIA_TABLE)
+      .insert([newPost]);
+
+    if (error) {
+      alert('Ошибка публикации: ' + error.message);
+      return;
+    }
+  }
+
+  // Сброс формы
+  selectedMediaBase64 = null;
+  document.getElementById('media-file-input').value = '';
+  document.getElementById('media-file-name').innerText = 'Файл не выбран';
+  captionInput.value = '';
+
+  await loadMediaPosts();
+}
+
+function editMediaPost(id) {
+  const post = mediaPosts.find(p => p.id === id);
+  if (!post) return;
+
+  editingPostId = id;
+  document.getElementById('media-caption-input').value = post.caption || '';
+  document.getElementById('media-file-name').innerText = 'Заменить медиа (необязательно)';
+  document.getElementById('media-save-btn').innerText = 'Сохранить изменения';
+  
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function deleteMediaPost(id) {
+  if (confirm('Удалить эту публикацию у всех пользователей?')) {
+    const client = typeof supabase !== 'undefined' ? supabase : _supabase;
+
+    const { error } = await client
+      .from(MEDIA_TABLE)
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      alert('Ошибка при удалении: ' + error.message);
+    } else {
+      await loadMediaPosts();
+    }
+  }
+}
+
+document.addEventListener('click', (e) => {
+  if (e.target && e.target.textContent.trim().toLowerCase() === 'медиа') {
+    loadMediaPosts();
+  }
+});
+
+loadMediaPosts();
   </script>
 </body>
 </html>
