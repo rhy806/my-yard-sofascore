@@ -591,6 +591,103 @@
     .top-player-stat { font-size: 16px; font-weight: 800; color: #fff; }
 
     #player-details-edit-modal, #career-edit-modal, #admin-player-select-modal, #admin-player-stats-modal { z-index: 1100; }
+
+    /* Раздел Медиа */
+.media-admin-panel {
+  background: var(--bg-card, #1c1c1e);
+  border: 1px dashed var(--accent, #34c759);
+  border-radius: 16px;
+  padding: 12px;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.media-admin-panel input[type="text"] {
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.3);
+  color: #fff;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.media-file-label {
+  display: inline-block;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--accent, #34c759);
+  cursor: pointer;
+  text-align: center;
+}
+
+.media-card {
+  background: var(--bg-card, #1c1c1e);
+  border-radius: 20px;
+  padding: 12px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.media-asset {
+  width: 100%;
+  max-height: 420px;
+  object-fit: cover;
+  border-radius: 14px;
+  display: block;
+  background: #000;
+}
+
+.media-caption {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text, #ffffff);
+  margin-top: 10px;
+  word-break: break-word;
+}
+
+.media-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+  min-height: 20px;
+}
+
+.media-date {
+  font-size: 12px;
+  color: var(--hint, #8e8e93);
+  margin-left: auto;
+}
+
+.media-admin-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-sm-edit, .btn-sm-delete {
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-sm-edit {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.btn-sm-delete {
+  background: rgba(255, 59, 48, 0.2);
+  color: #ff3b30;
+}
   </style>
 </head>
 <body>
@@ -989,9 +1086,26 @@
         <button id="pp-edit-career-btn" class="form-btn" style="margin-top:20px; display:none;" onclick="openCareerEditModal()">Добавить / Редактировать сезон</button>
       </div>
 
-      <div id="pp-tab-media" class="pp-tab-content">
-        <div class="empty-card-placeholder">Медиа файлы отсутствуют</div>
-      </div>
+<div id="pp-tab-media" class="pp-tab-content">
+  <!-- Форма добавления/редактирования для админа -->
+  <div id="media-admin-form" class="media-admin-panel" style="display: none;">
+    <div style="font-weight: bold; font-size: 14px; color: var(--accent, #34c759); margin-bottom: 4px;">➕ Добавить медиа</div>
+    
+    <label class="media-file-label">
+      📁 Выбрать фото или видео из медиатеки
+      <input type="file" id="media-file-input" accept="image/*,video/*" style="display:none;" onchange="handleFileSelect(event)">
+    </label>
+    <div id="media-file-name" style="font-size: 12px; color: var(--hint, #8e8e93);">Файл не выбран</div>
+
+    <input type="text" id="media-caption-input" placeholder="Введите подпись...">
+    
+    <button id="media-save-btn" onclick="saveMediaPost()" class="form-btn" style="padding: 10px; margin-top: 4px;">Опубликовать
+    </button>
+  </div>
+
+  <!-- Лента публикаций -->
+  <div id="media-feed"></div>
+</div>
 
     </div>
   </div>
@@ -2945,6 +3059,155 @@
       loadSquad();
       loadMatches();
     });
+
+    // Массив постов
+let mediaPosts = JSON.parse(localStorage.getItem('app_media_posts')) || [
+  {
+    id: 1,
+    type: 'image',
+    src: 'https://i.postimg.cc/85zM6mVT/puredog.png',
+    caption: 'Кирилл Смирнов сыночек',
+    date: '02.08.2026, 18:53'
+  }
+];
+
+let selectedMediaBase64 = null;
+let selectedMediaType = 'image';
+let editingPostId = null;
+
+// Обработка выбора файла
+function handleFileSelect(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  document.getElementById('media-file-name').innerText = file.name;
+  selectedMediaType = file.type.startsWith('video') ? 'video' : 'image';
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    selectedMediaBase64 = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// Рендер медиа-ленты
+function renderMediaFeed() {
+  const container = document.getElementById('media-feed');
+  const adminPanel = document.getElementById('media-admin-form');
+
+  if (!container) return;
+
+  // Показываем панель только админу (проверка переменной isAdmin)
+  if (typeof isAdmin !== 'undefined' && isAdmin) {
+    adminPanel.style.display = 'flex';
+  } else {
+    adminPanel.style.display = 'none';
+  }
+
+  if (mediaPosts.length === 0) {
+    container.innerHTML = '<div class="empty-card-placeholder">Медиа файлы отсутствуют</div>';
+    return;
+  }
+
+  let html = '';
+  mediaPosts.forEach(post => {
+    const isVideo = post.type === 'video';
+    const mediaTag = isVideo 
+      ? `<video src="${post.src}" class="media-asset" controls playsinline></video>`
+      : `<img src="${post.src}" class="media-asset" alt="media">`;
+
+    const adminButtons = (typeof isAdmin !== 'undefined' && isAdmin) ? `
+      <div class="media-admin-actions">
+        <button class="btn-sm-edit" onclick="editMediaPost(${post.id})">Изм.</button>
+        <button class="btn-sm-delete" onclick="deleteMediaPost(${post.id})">Уд.</button>
+      </div>
+    ` : '';
+
+    html += `
+      <div class="media-card">
+        ${mediaTag}
+        ${post.caption ? `<div class="media-caption">${post.caption}</div>` : ''}
+        <div class="media-footer">
+          ${adminButtons}
+          <span class="media-date">${post.date}</span>
+        </div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+
+// Создание или обновление поста
+function saveMediaPost() {
+  const captionInput = document.getElementById('media-caption-input');
+  const caption = captionInput.value.trim();
+
+  if (editingPostId) {
+    // Редактирование существующего
+    const post = mediaPosts.find(p => p.id === editingPostId);
+    if (post) {
+      post.caption = caption;
+      if (selectedMediaBase64) {
+        post.src = selectedMediaBase64;
+        post.type = selectedMediaType;
+      }
+    }
+    editingPostId = null;
+    document.getElementById('media-save-btn').innerText = 'Опубликовать';
+  } else {
+    // Новый пост
+    if (!selectedMediaBase64) {
+      alert('Пожалуйста, выберите фото или видео из медиатеки!');
+      return;
+    }
+
+    const now = new Date();
+    const formattedDate = now.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' }) + 
+                          ', ' + now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+
+    const newPost = {
+      id: Date.now(),
+      type: selectedMediaType,
+      src: selectedMediaBase64,
+      caption: caption,
+      date: formattedDate
+    };
+
+    mediaPosts.unshift(newPost);
+  }
+
+  // Сброс формы
+  selectedMediaBase64 = null;
+  document.getElementById('media-file-input').value = '';
+  document.getElementById('media-file-name').innerText = 'Файл не выбран';
+  captionInput.value = '';
+
+  localStorage.setItem('app_media_posts', JSON.stringify(mediaPosts));
+  renderMediaFeed();
+}
+
+// Редактирование поста
+function editMediaPost(id) {
+  const post = mediaPosts.find(p => p.id === id);
+  if (!post) return;
+
+  editingPostId = id;
+  document.getElementById('media-caption-input').value = post.caption || '';
+  document.getElementById('media-file-name').innerText = 'Заменить медиа (необязательно)';
+  document.getElementById('media-save-btn').innerText = 'Сохранить изменения';
+  
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Удаление поста
+function deleteMediaPost(id) {
+  if (confirm('Удалить эту публикацию?')) {
+    mediaPosts = mediaPosts.filter(p => p.id !== id);
+    localStorage.setItem('app_media_posts', JSON.stringify(mediaPosts));
+    renderMediaFeed();
+  }
+}
   </script>
 </body>
 </html>
