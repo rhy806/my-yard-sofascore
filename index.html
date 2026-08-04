@@ -3085,183 +3085,7 @@ function handleFileSelect(event) {
   reader.readAsDataURL(file);
 }
 
-// Рендер медиа-ленты
-function renderMediaFeed() {
-  const container = document.getElementById('media-feed');
-  const adminPanel = document.getElementById('media-admin-form');
-
-  if (!container) return;
-
-  // Показываем панель только админу (проверка переменной isAdmin)
-  if (typeof isAdmin !== 'undefined' && isAdmin) {
-    adminPanel.style.display = 'flex';
-  } else {
-    adminPanel.style.display = 'none';
-  }
-
-  if (mediaPosts.length === 0) {
-    container.innerHTML = '<div class="empty-card-placeholder">Медиа файлы отсутствуют</div>';
-    return;
-  }
-
-  let html = '';
-  mediaPosts.forEach(post => {
-    const isVideo = post.type === 'video';
-    const mediaTag = isVideo 
-      ? `<video src="${post.src}" class="media-asset" controls playsinline></video>`
-      : `<img src="${post.src}" class="media-asset" alt="media">`;
-
-    const adminButtons = (typeof isAdmin !== 'undefined' && isAdmin) ? `
-      <div class="media-admin-actions">
-        <button class="btn-sm-edit" onclick="editMediaPost(${post.id})">Изм.</button>
-        <button class="btn-sm-delete" onclick="deleteMediaPost(${post.id})">Уд.</button>
-      </div>
-    ` : '';
-
-    html += `
-      <div class="media-card">
-        ${mediaTag}
-        ${post.caption ? `<div class="media-caption">${post.caption}</div>` : ''}
-        <div class="media-footer">
-          ${adminButtons}
-          <span class="media-date">${post.date}</span>
-        </div>
-      </div>
-    `;
-  });
-
-  container.innerHTML = html;
-}
-
-// Создание или обновление поста
-function saveMediaPost() {
-  const captionInput = document.getElementById('media-caption-input');
-  const caption = captionInput.value.trim();
-
-  if (editingPostId) {
-    // Редактирование существующего
-    const post = mediaPosts.find(p => p.id === editingPostId);
-    if (post) {
-      post.caption = caption;
-      if (selectedMediaBase64) {
-        post.src = selectedMediaBase64;
-        post.type = selectedMediaType;
-      }
-    }
-    editingPostId = null;
-    document.getElementById('media-save-btn').innerText = 'Опубликовать';
-  } else {
-    // Новый пост
-    if (!selectedMediaBase64) {
-      alert('Пожалуйста, выберите фото или видео из медиатеки!');
-      return;
-    }
-
-    const now = new Date();
-    const formattedDate = now.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' }) + 
-                          ', ' + now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-
-    const newPost = {
-      id: Date.now(),
-      type: selectedMediaType,
-      src: selectedMediaBase64,
-      caption: caption,
-      date: formattedDate
-    };
-
-    mediaPosts.unshift(newPost);
-  }
-
-  // Сброс формы
-  selectedMediaBase64 = null;
-  document.getElementById('media-file-input').value = '';
-  document.getElementById('media-file-name').innerText = 'Файл не выбран';
-  captionInput.value = '';
-
-  localStorage.setItem('app_media_posts', JSON.stringify(mediaPosts));
-  renderMediaFeed();
-}
-
-// Редактирование поста
-function editMediaPost(id) {
-  const post = mediaPosts.find(p => p.id === id);
-  if (!post) return;
-
-  editingPostId = id;
-  document.getElementById('media-caption-input').value = post.caption || '';
-  document.getElementById('media-file-name').innerText = 'Заменить медиа (необязательно)';
-  document.getElementById('media-save-btn').innerText = 'Сохранить изменения';
-  
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-// Удаление поста
-function deleteMediaPost(id) {
-  if (confirm('Удалить эту публикацию?')) {
-    mediaPosts = mediaPosts.filter(p => p.id !== id);
-    localStorage.setItem('app_media_posts', JSON.stringify(mediaPosts));
-    renderMediaFeed();
-  }
-}
-
-    // Автоматический запуск при клике на вкладку "Медиа"
-document.addEventListener('click', (e) => {
-  if (e.target && e.target.textContent.trim().toLowerCase() === 'медиа') {
-    renderMediaFeed();
-  }
-});
-
-// Запуск при загрузке страницы
-renderMediaFeed();
-
-const MEDIA_TABLE = 'media_posts';
-
-let selectedMediaBase64 = null;
-let selectedMediaType = 'image';
-let editingPostId = null;
-
-// Форматирование даты
-function formatDate(isoString) {
-  if (!isoString) return '';
-  const date = new Date(isoString);
-  const day = date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
-  const time = date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-  return `${day}, ${time}`;
-}
-
-// 1. Загрузка постов из Supabase
-async function loadMediaPosts() {
-  try {
-    const { data, error } = await supabaseClient
-      .from(MEDIA_TABLE)
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-
-    mediaPosts = data || [];
-    renderMediaFeed();
-  } catch (err) {
-    console.error('Ошибка загрузки медиа из Supabase:', err.message);
-  }
-}
-
-// Выбор файла
-function handleFileSelect(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  document.getElementById('media-file-name').innerText = file.name;
-  selectedMediaType = file.type.startsWith('video') ? 'video' : 'image';
-
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    selectedMediaBase64 = e.target.result;
-  };
-  reader.readAsDataURL(file);
-}
-
-// Рендер ленты
+// 1. Обновленный рендер ленты (скрывает тег картинки/видео, если файла нет)
 function renderMediaFeed() {
   const container = document.getElementById('media-feed');
   const adminPanel = document.getElementById('media-admin-form');
@@ -3275,16 +3099,20 @@ function renderMediaFeed() {
   }
 
   if (mediaPosts.length === 0) {
-    container.innerHTML = '<div class="empty-card-placeholder">Медиа файлы отсутствуют</div>';
+    container.innerHTML = '<div class="empty-card-placeholder">Посты отсутствуют</div>';
     return;
   }
 
   let html = '';
   mediaPosts.forEach(post => {
-    const isVideo = post.type === 'video';
-    const mediaTag = isVideo 
-      ? `<video src="${post.src}" class="media-asset" controls playsinline></video>`
-      : `<img src="${post.src}" class="media-asset" alt="media">`;
+    // Формируем тег медиа только если в посте есть картинка или видео
+    let mediaTag = '';
+    if (post.src) {
+      const isVideo = post.type === 'video';
+      mediaTag = isVideo 
+        ? `<video src="${post.src}" class="media-asset" controls playsinline></video>`
+        : `<img src="${post.src}" class="media-asset" alt="media">`;
+    }
 
     const adminButtons = (typeof isAdmin !== 'undefined' && isAdmin) ? `
       <div class="media-admin-actions">
@@ -3310,13 +3138,19 @@ function renderMediaFeed() {
   container.innerHTML = html;
 }
 
-// 2. Сохранение / обновление поста
+// 2. Обновленное сохранение (проверяет, чтобы пост не был абсолютно пустым)
 async function saveMediaPost() {
   const captionInput = document.getElementById('media-caption-input');
   const caption = captionInput.value.trim();
 
+  // Проверка: должен быть хотя бы текст или хотя бы файл
+  if (!caption && !selectedMediaBase64) {
+    alert('Напишите текст или выберите файл!');
+    return;
+  }
+
   if (editingPostId) {
-    const updateData = { caption: caption };
+    const updateData = { caption: caption || null };
     if (selectedMediaBase64) {
       updateData.src = selectedMediaBase64;
       updateData.type = selectedMediaType;
@@ -3335,15 +3169,10 @@ async function saveMediaPost() {
     editingPostId = null;
     document.getElementById('media-save-btn').innerText = 'Опубликовать';
   } else {
-    if (!selectedMediaBase64) {
-      alert('Пожалуйста, выберите фото или видео!');
-      return;
-    }
-
     const newPost = {
-      type: selectedMediaType,
-      src: selectedMediaBase64,
-      caption: caption
+      type: selectedMediaBase64 ? selectedMediaType : 'text',
+      src: selectedMediaBase64 || null,
+      caption: caption || null
     };
 
     const { error } = await supabaseClient
@@ -3356,6 +3185,7 @@ async function saveMediaPost() {
     }
   }
 
+  // Сброс формы
   selectedMediaBase64 = null;
   document.getElementById('media-file-input').value = '';
   document.getElementById('media-file-name').innerText = 'Файл не выбран';
@@ -3363,42 +3193,6 @@ async function saveMediaPost() {
 
   await loadMediaPosts();
 }
-
-function editMediaPost(id) {
-  const post = mediaPosts.find(p => p.id === id);
-  if (!post) return;
-
-  editingPostId = id;
-  document.getElementById('media-caption-input').value = post.caption || '';
-  document.getElementById('media-file-name').innerText = 'Заменить медиа (необязательно)';
-  document.getElementById('media-save-btn').innerText = 'Сохранить изменения';
-  
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-// 3. Удаление поста у всех пользователей
-async function deleteMediaPost(id) {
-  if (confirm('Удалить эту публикацию у всех пользователей?')) {
-    const { error } = await supabaseClient
-      .from(MEDIA_TABLE)
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      alert('Ошибка при удалении: ' + error.message);
-    } else {
-      await loadMediaPosts();
-    }
-  }
-}
-
-document.addEventListener('click', (e) => {
-  if (e.target && e.target.textContent.trim().toLowerCase() === 'медиа') {
-    loadMediaPosts();
-  }
-});
-
-loadMediaPosts();
   </script>
 </body>
 </html>
