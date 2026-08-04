@@ -3208,6 +3208,17 @@ function deleteMediaPost(id) {
     renderMediaFeed();
   }
 }
+
+    // Автоматический запуск при клике на вкладку "Медиа"
+document.addEventListener('click', (e) => {
+  if (e.target && e.target.textContent.trim().toLowerCase() === 'медиа') {
+    renderMediaFeed();
+  }
+});
+
+// Запуск при загрузке страницы
+renderMediaFeed();
+    
   </script>
 </body>
 </html>
