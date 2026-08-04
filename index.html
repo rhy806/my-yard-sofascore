@@ -1274,10 +1274,8 @@
 
   <script>
     const ADMIN_TELEGRAM_ID = 1435007314; 
-    const SUPABASE_URL = 'https://ssriiiiuljdeftigdiyl.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_jWUTsulzCMEQV6O26zac-g_04tBxiy4';
-    
-    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+   
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     const tg = window.Telegram.WebApp;
     tg.ready();
     tg.expand();
