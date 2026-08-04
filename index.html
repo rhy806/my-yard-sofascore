@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Яйцаscore</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
       --bg: #121214;
@@ -690,11 +689,13 @@
 }
   </style>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    const SUPABASE_URL = 'https://ssriiiiuljdeftigdiyl.supabase.co/rest/v1/'; // Твоя ссылка
-    const SUPABASE_ANON_KEY = 'sb_publishable_jWUTsulzCMEQV6O26zac-g_04tBxiy4';              // Твой anon-ключ
+  const SUPABASE_URL = 'https://ssriiiiuljdeftigdiyl.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_jWUTsulzCMEQV6O26zac-g_04tBxiy4';
 
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  // Имя переменной изменено на supabaseClient, чтобы избежать конфликта
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   </script>
   
 </head>
@@ -3069,7 +3070,7 @@
     });
 
     // Массив постов
-let mediaPosts = JSON.parse(localStorage.getItem('app_media_posts')) || [
+let mediaPosts = [];
   {
     id: 1,
     type: 'image',
@@ -3229,12 +3230,11 @@ renderMediaFeed();
 
 const MEDIA_TABLE = 'media_posts';
 
-let mediaPosts = [];
 let selectedMediaBase64 = null;
 let selectedMediaType = 'image';
 let editingPostId = null;
 
-// Вспомогательная функция: преобразует created_at из Supabase в привычную дату и время
+// Форматирование даты
 function formatDate(isoString) {
   if (!isoString) return '';
   const date = new Date(isoString);
@@ -3243,12 +3243,10 @@ function formatDate(isoString) {
   return `${day}, ${time}`;
 }
 
-// 1. Загрузка постов с сортировкой по created_at (свежие сверху)
+// 1. Загрузка постов из Supabase
 async function loadMediaPosts() {
   try {
-    const client = typeof supabase !== 'undefined' ? supabase : _supabase;
-
-    const { data, error } = await client
+    const { data, error } = await supabaseClient
       .from(MEDIA_TABLE)
       .select('*')
       .order('created_at', { ascending: false });
@@ -3262,7 +3260,7 @@ async function loadMediaPosts() {
   }
 }
 
-// Обработка выбора файла
+// Выбор файла
 function handleFileSelect(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -3277,7 +3275,7 @@ function handleFileSelect(event) {
   reader.readAsDataURL(file);
 }
 
-// Рендер медиа-ленты
+// Рендер ленты
 function renderMediaFeed() {
   const container = document.getElementById('media-feed');
   const adminPanel = document.getElementById('media-admin-form');
@@ -3309,7 +3307,6 @@ function renderMediaFeed() {
       </div>
     ` : '';
 
-    // Форматируем системный created_at в красивую дату
     const displayDate = formatDate(post.created_at);
 
     html += `
@@ -3327,11 +3324,10 @@ function renderMediaFeed() {
   container.innerHTML = html;
 }
 
-// 2. Создание или обновление поста
+// 2. Сохранение / обновление поста
 async function saveMediaPost() {
   const captionInput = document.getElementById('media-caption-input');
   const caption = captionInput.value.trim();
-  const client = typeof supabase !== 'undefined' ? supabase : _supabase;
 
   if (editingPostId) {
     const updateData = { caption: caption };
@@ -3340,7 +3336,7 @@ async function saveMediaPost() {
       updateData.type = selectedMediaType;
     }
 
-    const { error } = await client
+    const { error } = await supabaseClient
       .from(MEDIA_TABLE)
       .update(updateData)
       .eq('id', editingPostId);
@@ -3358,14 +3354,13 @@ async function saveMediaPost() {
       return;
     }
 
-    // Дату здесь НЕ передаем — Supabase сам проставит timestamp в created_at
     const newPost = {
       type: selectedMediaType,
       src: selectedMediaBase64,
       caption: caption
     };
 
-    const { error } = await client
+    const { error } = await supabaseClient
       .from(MEDIA_TABLE)
       .insert([newPost]);
 
@@ -3375,7 +3370,6 @@ async function saveMediaPost() {
     }
   }
 
-  // Сброс формы
   selectedMediaBase64 = null;
   document.getElementById('media-file-input').value = '';
   document.getElementById('media-file-name').innerText = 'Файл не выбран';
@@ -3396,11 +3390,10 @@ function editMediaPost(id) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+// 3. Удаление поста у всех пользователей
 async function deleteMediaPost(id) {
   if (confirm('Удалить эту публикацию у всех пользователей?')) {
-    const client = typeof supabase !== 'undefined' ? supabase : _supabase;
-
-    const { error } = await client
+    const { error } = await supabaseClient
       .from(MEDIA_TABLE)
       .delete()
       .eq('id', id);
