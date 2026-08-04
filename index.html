@@ -1757,7 +1757,7 @@
       if (isAdmin) renderAdminMatchesList();
     }
 
-    function renderMatchesList() {
+  function renderMatchesList() {
       const container = document.getElementById('matches-list');
       if (allMatches.length === 0) {
         container.innerHTML = '<p style="color:var(--hint);">Матчей пока нет.</p>';
@@ -1786,29 +1786,26 @@
           }
         }
 
-        /* В СПИСКЕ ВСЕХ МАТЧЕЙ ОСТАВЛЯЕМ ВСЕ КАК БЫЛО */
         let goalsRowHtml = '';
         if (!isUpcoming && m.goals_data) {
           try {
             const gList = typeof m.goals_data === 'string' ? JSON.parse(m.goals_data) : m.goals_data;
             if (Array.isArray(gList) && gList.length > 0) {
               let t1G = [], t2G = [];
-              let c1 = 0, c2 = 0;
               gList.forEach(g => {
                 if (g.author) {
+                  const name = cleanGoalName(g.author);
                   if (parseInt(g.team) === 1) {
-                    c1++;
-                    t1G.push(`${g.author} ${c1}:${c2}`);
+                    t1G.push(name);
                   } else {
-                    c2++;
-                    t2G.push(`${c1}:${c2} ${g.author}`);
+                    t2G.push(name);
                   }
                 }
               });
               goalsRowHtml = `
                 <div class="goals-row">
-                  <div class="goals-col">${t1G.join(', ')}</div>
-                  <div class="goals-col right">${t2G.join(', ')}</div>
+                  <div class="goals-col">${t1G.join('<br>')}</div>
+                  <div class="goals-col right">${t2G.join('<br>')}</div>
                 </div>
               `;
             }
@@ -1830,42 +1827,7 @@
       });
       container.innerHTML = html;
     }
-
-    function renderUpcomingWidget() {
-      const container = document.getElementById('upcoming-match-widget');
-      const upcoming = allMatches.find(m => m.status && m.status.startsWith('upcoming'));
-
-      if (!upcoming) {
-        container.innerHTML = `
-          <div class="upcoming-card">
-            <div style="text-align:center; color:var(--hint); font-size:14px; font-weight:600;">
-              Предстоящих матчей не запланировано
-            </div>
-          </div>
-        `;
-        return;
-      }
-
-      container.innerHTML = `
-        <div class="upcoming-card clickable-card" onclick="openMatchModal(${upcoming.id})">
-          <div class="upcoming-match-body">
-            <div class="upcoming-team">
-              <div class="upcoming-team-icon">⚽</div>
-              <div class="upcoming-team-name">${upcoming.team1 || 'ФК Яйц'}</div>
-            </div>
-            <div class="upcoming-center-info">
-              <div class="upcoming-status-title">VS</div>
-              <div class="upcoming-date-time">${upcoming.score || ''}<br>${upcoming.match_date || ''}</div>
-            </div>
-            <div class="upcoming-team">
-              <div class="upcoming-team-icon">⚽</div>
-              <div class="upcoming-team-name">${upcoming.team2 || 'Соперник'}</div>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
+    
     function renderTeamFormWidget() {
       const container = document.getElementById('team-form-widget');
       const finishedMatches = allMatches.filter(m => m.status === 'finished');
@@ -2094,7 +2056,6 @@
       document.getElementById('subtab-lineups').style.display = tab === 'lineups' ? 'block' : 'none';
     }
 
-    /* НОВОВВЕДЕНИЕ 1: В ДЕТАЛЯХ МАТЧА В PHOTO1 СЧЕТЧИК ГОЛОВ РЯДОМ С ФАМИЛИЯМИ НЕ ОТОБРАЖАЕТСЯ */
     function renderMatchGoalsTimeline(match) {
       const timelineContainer = document.getElementById('m-timeline-container');
       const h1 = document.getElementById('m-hero-goals1');
@@ -2124,10 +2085,9 @@
         else c2++;
 
         const currentScore = `${c1}:${c2}`;
-        const author = g.author || 'Гол';
-        const assist = g.assist ? ` (${g.assist})` : '';
+        const author = cleanGoalName(g.author) || 'Гол';
+        const assist = g.assist ? ` (${cleanGoalName(g.assist)})` : '';
 
-        // Здесь убираем текущий счет из списка рядом с фамилиями (Photo 1)
         if (teamNum === 1) t1Goals.push(`${author}${assist}`);
         else t2Goals.push(`${author}${assist}`);
 
@@ -2137,7 +2097,7 @@
           <div class="timeline-score-badge">${currentScore}</div>
           <div>
             <div style="font-weight:bold; font-size:14px;">${author}</div>
-            ${g.assist ? `<div style="font-size:11px; color:var(--hint);">Пас: ${g.assist}</div>` : ''}
+            ${g.assist ? `<div style="font-size:11px; color:var(--hint);">Пас: ${cleanGoalName(g.assist)}</div>` : ''}
           </div>
         `;
         timelineContainer.appendChild(card);
