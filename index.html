@@ -312,6 +312,25 @@
     </div>
   </div>
 
+      <!-- Экран Новостей -->
+<div id="tab-news" class="tab-content" style="display: none;">
+  <h2>Новости</h2>
+
+  <!-- Блок создания новости (скрыт по умолчанию, виден только админу) -->
+  <div id="admin-news-form" class="card admin-form" style="display: none;">
+    <h3>Опубликовать новость</h3>
+    <input type="text" id="news-title-input" placeholder="Заголовок (необязательно)" class="form-input">
+    <textarea id="news-content-input" placeholder="Текст новости..." rows="4" class="form-input"></textarea>
+    <input type="text" id="news-image-input" placeholder="Ссылка на фото / гифку" class="form-input">
+    <button onclick="publishNews()" class="btn-primary">Опубликовать</button>
+  </div>
+
+  <!-- Лента новостей -->
+  <div id="news-list" class="news-container">
+    <div class="empty-card-placeholder">Загрузка новостей...</div>
+  </div>
+</div>
+
   <!-- МОДАЛЬНОЕ ОКНО ПРОФИЛЯ ИГРОКА -->
   <div id="player-profile-modal" class="match-modal">
     <div class="pp-header">
@@ -571,25 +590,6 @@
     </div>
   </div>
 
-    <!-- Экран Новостей -->
-<div id="tab-news" class="tab-page" style="display: none;">
-  <h2>Новости</h2>
-
-  <!-- Блок создания новости (скрыт по умолчанию, виден только админу) -->
-  <div id="admin-news-form" class="card admin-form" style="display: none;">
-    <h3>Опубликовать новость</h3>
-    <input type="text" id="news-title-input" placeholder="Заголовок (необязательно)" class="form-input">
-    <textarea id="news-content-input" placeholder="Текст новости..." rows="4" class="form-input"></textarea>
-    <input type="text" id="news-image-input" placeholder="Ссылка на фото / гифку" class="form-input">
-    <button onclick="publishNews()" class="btn-primary">Опубликовать</button>
-  </div>
-
-  <!-- Лента новостей -->
-  <div id="news-list" class="news-container">
-    <div class="empty-card-placeholder">Загрузка новостей...</div>
-  </div>
-</div>
-
 <nav class="bottom-nav" id="bottom-nav">
     <button class="nav-item active" onclick="switchMainTab('details', this)">
       <span>⚽️</span>Команда
@@ -597,7 +597,7 @@
     <button class="nav-item" onclick="handleSubscriptionsTabClick(this)">
       <span>⭐</span>Подписки
     </button>
-    <button class="nav-item" onclick="switchTab('news')">
+    <button class="nav-item" onclick="switchMainTab('news', this)">
       <span>📰</span>Новости
     </button>
     <button id="admin-nav-btn" class="nav-item" onclick="switchMainTab('admin', this)" style="display:none;">
