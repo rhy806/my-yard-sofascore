@@ -2251,10 +2251,6 @@ window.switchMainTab = switchMainTab;
 window.switchTab = switchTab;
 window.checkAdminAccess = checkAdminAccess;
 
-// Переменная для хранения загруженного файла в Base64
-let selectedMediaData = null;
-let selectedMediaType = null; // 'image' или 'video'
-
 // Инициализация событий формы (подключение превью и выбора файлов)
 document.addEventListener('DOMContentLoaded', () => {
   const fileInput = document.getElementById('news-file');
