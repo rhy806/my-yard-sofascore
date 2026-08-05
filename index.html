@@ -72,6 +72,25 @@
   <div id="tab-admin" class="tab-content">
     <h3>⚙️ Панель администратора</h3>
 
+    <!-- Экран Новостей -->
+<div id="tab-news" class="tab-page" style="display: none;">
+  <h2>Новости</h2>
+
+  <!-- Блок создания новости (скрыт по умолчанию, виден только админу) -->
+  <div id="admin-news-form" class="card admin-form" style="display: none;">
+    <h3>Опубликовать новость</h3>
+    <input type="text" id="news-title-input" placeholder="Заголовок (необязательно)" class="form-input">
+    <textarea id="news-content-input" placeholder="Текст новости..." rows="4" class="form-input"></textarea>
+    <input type="text" id="news-image-input" placeholder="Ссылка на фото / гифку" class="form-input">
+    <button onclick="publishNews()" class="btn-primary">Опубликовать</button>
+  </div>
+
+  <!-- Лента новостей -->
+  <div id="news-list" class="news-container">
+    <div class="empty-card-placeholder">Загрузка новостей...</div>
+  </div>
+</div>
+
     <!-- 1. СВОРАЧИВАЕМЫЙ РЕДАКТОР МАТЧА -->
     <div class="card" id="card-match-form">
       <div class="card-accordion-header" onclick="toggleAccordion('card-match-form')">
@@ -580,6 +599,9 @@
     </button>
     <button id="admin-nav-btn" class="nav-item" onclick="switchMainTab('admin', this)" style="display:none;">
       <span>⚙️</span>Админка
+    </button>
+    <button class="nav-item" onclick="switchTab('news')">
+      <span>📰</span>Новости
     </button>
   </nav>
 
