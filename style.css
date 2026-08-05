@@ -758,3 +758,11 @@
 .tab-content.active {
   display: block !important;
 }
+
+/* Стили формы медиа */
+#media-admin-form {
+  background: var(--card-bg, #1c1c1e);
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 15px;
+}
