@@ -317,31 +317,26 @@
     </div>
   </div>
 
- <!-- ВКЛАДКА МЕДИА / НОВОСТИ -->
-<div id="tab-media" class="tab-content">
-  <h3>📰 Медиа и Новости</h3>
+<!-- ВКЛАДКА НОВОСТИ -->
+<div id="tab-news" class="tab-content">
+  <h3>📰 Новости</h3>
 
-  <!-- Форма публикаций для администратора -->
-  <div class="card" id="media-admin-form" style="display: none; flex-direction: column; gap: 10px;">
-    <h4 style="margin-top: 0;">✍️ Создать публикацию</h4>
+  <!-- Форма админа -->
+  <div id="news-admin-form" style="display: none; flex-direction: column; gap: 10px;">
+    <textarea id="news-caption-input" rows="3" placeholder="Введите текст новости..." style="width: 100%; box-sizing: border-box; resize: vertical; padding: 10px; border-radius: 8px;"></textarea>
+
+    <input type="file" id="news-file-input" accept="image/*,video/*" style="display: none;" onchange="handleNewsFileSelect(event)">
     
-    <label style="font-size:12px; color:var(--hint);">Текст публикации / подпись (необязательно)</label>
-    <textarea id="media-caption-input" rows="3" placeholder="Введите текст подписи или новости..." style="width: 100%; background: var(--card-inner); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 8px; padding: 10px; box-sizing: border-box; resize: vertical;"></textarea>
+    <button type="button" class="form-btn" onclick="document.getElementById('news-file-input').click()">📁 Выбрать файл</button>
+    <span id="news-file-name" style="font-size: 12px; opacity: 0.7;">Файл не выбран</span>
 
-    <label style="font-size:12px; color:var(--hint);">Прикрепить медиа (фото или видео)</label>
-    <input type="file" id="media-file-input" accept="image/*,video/*" style="display:none;" onchange="handleFileSelect(event)">
-    <button type="button" class="form-btn" style="background:var(--card-inner); border:1px solid rgba(255,255,255,0.2); color:#fff; font-size:13px;" onclick="document.getElementById('media-file-input').click()">
-      📁 Выбрать файл
-    </button>
-    <span id="media-file-name" style="font-size:12px; color:var(--hint);">Файл не выбран</span>
-
-    <button class="form-btn" id="media-save-btn" onclick="saveMediaPost()" style="margin-top:10px;">Опубликовать</button>
+    <button type="button" class="form-btn" onclick="saveNewsPost()" style="margin-top: 10px; background: #2ea6ff; color: #fff;">Опубликовать</button>
   </div>
 
-  <!-- Лента выложенных постов -->
-  <div id="media-feed" style="margin-top: 15px;"></div>
+  <!-- Лента постов -->
+  <div id="news-feed"></div>
 </div>
-
+  
   <!-- МОДАЛЬНОЕ ОКНО ПРОФИЛЯ ИГРОКА -->
   <div id="player-profile-modal" class="match-modal">
     <div class="pp-header">
