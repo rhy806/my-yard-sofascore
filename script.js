@@ -2151,35 +2151,40 @@ loadMediaPosts();
 
 loadMediaPosts();
 
-// Функция проверки прав администратора
 function checkAdminAccess() {
-  const currentUserId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
-  
-  // Берем ID из вашей существующей константы ADMIN_TELEGRAM_ID или из window
+  // Инициализируем Telegram WebApp
+  const tg = window.Telegram?.WebApp;
+  if (tg) {
+    tg.ready();
+    tg.expand(); // Раскрываем Mini App на весь экран
+  }
+
+  // Получаем ID из Telegram
+  let currentUserId = tg?.initDataUnsafe?.user?.id;
+
+  // ТЕСТОВЫЙ РЕЖИМ: Если тестируете в обычном браузере (не внутри ТГ),
+  // раскомментируйте строчку ниже и подставьте свой ID:
+  // if (!currentUserId) currentUserId = 1435007314; 
+
   const targetAdminId = typeof ADMIN_TELEGRAM_ID !== 'undefined' ? ADMIN_TELEGRAM_ID : window.ADMIN_TELEGRAM_ID;
 
-  // Сравниваем ID, приводя к строке
+  // Сравниваем ID
   const isUserAdmin = Boolean(
-    (currentUserId && targetAdminId && String(currentUserId) === String(targetAdminId)) || 
-    (typeof isAdmin !== 'undefined' && isAdmin)
+    currentUserId && targetAdminId && String(currentUserId) === String(targetAdminId)
   );
 
-  console.log(`[checkAdminAccess] Ваш ID: ${currentUserId} | Админ: ${isUserAdmin}`);
+  console.log(`[checkAdminAccess] Ваш ID: ${currentUserId} | Админ-ID: ${targetAdminId} | Статус: ${isUserAdmin}`);
 
-  // Ищем форму
+  // Показываем/скрываем форму
   const adminForm = document.getElementById('media-admin-form') || 
                     document.getElementById('news-admin-form') || 
                     document.querySelector('.admin-post-form');
 
   if (adminForm) {
     adminForm.style.display = isUserAdmin ? 'flex' : 'none';
+  } else {
+    console.warn("[checkAdminAccess] Форма не найдена в HTML!");
   }
-
-  // Управляем кнопками в ленте
-  const adminActions = document.querySelectorAll('.media-admin-actions, .news-admin-actions');
-  adminActions.forEach(el => {
-    el.style.display = isUserAdmin ? 'flex' : 'none';
-  });
 
   return isUserAdmin;
 }
