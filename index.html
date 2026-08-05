@@ -319,21 +319,21 @@
 
 <!-- ВКЛАДКА НОВОСТИ -->
 <div id="tab-news" class="tab-content">
-  <h3>📰 Новости</h3>
+  <h3 style="margin-bottom: 15px;">📰 Новости</h3>
 
-  <!-- Форма админа -->
-  <div id="news-admin-form" style="display: none; flex-direction: column; gap: 10px;">
-    <textarea id="news-caption-input" rows="3" placeholder="Введите текст новости..." style="width: 100%; box-sizing: border-box; resize: vertical; padding: 10px; border-radius: 8px;"></textarea>
+  <!-- Форма для админа (скрыта по умолчанию) -->
+  <div id="news-admin-form" style="display: none; flex-direction: column; gap: 10px; margin-bottom: 15px; background: rgba(255,255,255,0.05); padding: 12px; border-radius: 10px;">
+    <textarea id="news-caption-input" rows="3" placeholder="Введите текст новости..." style="width: 100%; box-sizing: border-box; background: #1c1c1e; color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 10px; border-radius: 8px; resize: vertical;"></textarea>
 
     <input type="file" id="news-file-input" accept="image/*,video/*" style="display: none;" onchange="handleNewsFileSelect(event)">
     
-    <button type="button" class="form-btn" onclick="document.getElementById('news-file-input').click()">📁 Выбрать файл</button>
+    <button type="button" class="form-btn" onclick="document.getElementById('news-file-input').click()" style="background: rgba(255,255,255,0.1); color: #fff; border: none; padding: 8px; border-radius: 6px;">📁 Выбрать файл</button>
     <span id="news-file-name" style="font-size: 12px; opacity: 0.7;">Файл не выбран</span>
 
-    <button type="button" class="form-btn" onclick="saveNewsPost()" style="margin-top: 10px; background: #2ea6ff; color: #fff;">Опубликовать</button>
+    <button type="button" class="form-btn" onclick="saveNewsPost()" style="margin-top: 5px; background: #2ea6ff; color: #fff; border: none; padding: 10px; border-radius: 6px; font-weight: bold;">Опубликовать</button>
   </div>
 
-  <!-- Лента постов -->
+  <!-- Лента новостей -->
   <div id="news-feed"></div>
 </div>
   
