@@ -2151,10 +2151,32 @@ loadMediaPosts();
 
 loadMediaPosts();
 
+// Функция проверки прав администратора и управления отображением админ-элементов
+function checkAdminAccess() {
+  const currentUserId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
+  
+  // Проверяем Telegram ID (сверяем с константой ADMIN_TELEGRAM_ID или глобальной переменной isAdmin)
+  const isUserAdmin = (currentUserId === ADMIN_TELEGRAM_ID) || (typeof isAdmin !== 'undefined' && isAdmin);
+
+  // Находим форму создания/редактирования новостей (поддерживает оба варианта ID)
+  const adminForm = document.getElementById('media-admin-form') || document.getElementById('news-admin-form');
+  if (adminForm) {
+    adminForm.style.display = isUserAdmin ? 'flex' : 'none';
+  }
+
+  // Управляем кнопками редактирования/удаления в ленте
+  const adminActions = document.querySelectorAll('.media-admin-actions, .news-admin-actions');
+  adminActions.forEach(el => {
+    el.style.display = isUserAdmin ? 'flex' : 'none';
+  });
+
+  return isUserAdmin;
+}
+
+// Главная функция переключения вкладок
 function switchTab(tabName) {
   // 1. Скрываем все страницы вкладок
-  // (Убедитесь, что у всех ваших вкладок в HTML есть класс tab-page)
-  const allTabs = document.querySelectorAll('.tab-page');
+  const allTabs = document.querySelectorAll('.tab-page, .tab-content');
   allTabs.forEach(tab => {
     tab.style.display = 'none';
   });
@@ -2181,35 +2203,16 @@ function switchTab(tabName) {
     currentBtn.classList.add('active');
   }
 
-  // 5. Запускаем рендер/загрузку данных для выбранной вкладки
-  if (tabName === 'news') {
-    loadNews();
+  // 5. Выполняем действия при переходе на вкладку "новости" или "медиа"
+  if (tabName === 'news' || tabName === 'media') {
+    if (typeof loadMediaPosts === 'function') loadMediaPosts();
+    if (typeof loadNews === 'function') loadNews();
+    
+    // Запускаем проверку прав админа
     checkAdminAccess();
   }
 }
 
-window.switchTab = function(tabName) {
-  // Скрываем все вкладки
-  const allTabs = document.querySelectorAll('.tab-page');
-  allTabs.forEach(tab => {
-    tab.style.display = 'none';
-  });
-
-  // Убираем подсветку со всех кнопок
-  const allNavBtns = document.querySelectorAll('.nav-item');
-  allNavBtns.forEach(btn => {
-    btn.classList.remove('active');
-  });
-
-  // Показываем нужную вкладку
-  const targetTab = document.getElementById(`tab-${tabName}`);
-  if (targetTab) {
-    targetTab.style.display = 'block';
-  }
-
-  // Загружаем данные для вкладки новостей
-  if (tabName === 'news') {
-    if (typeof loadNews === 'function') loadNews();
-    if (typeof checkAdminAccess === 'function') checkAdminAccess();
-  }
-};
+// Делаем функцию доступной глобально
+window.switchTab = switchTab;
+window.checkAdminAccess = checkAdminAccess;
