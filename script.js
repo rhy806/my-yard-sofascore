@@ -1,6 +1,7 @@
   const SUPABASE_URL = 'https://ssriiiiuljdeftigdiyl.supabase.co';
   const SUPABASE_ANON_KEY = 'sb_publishable_jWUTsulzCMEQV6O26zac-g_04tBxiy4';
-  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const supabaseClient = _supabase;
   const ADMIN_TELEGRAM_ID = 1435007314;
     const tg = window.Telegram.WebApp;
     tg.ready();
