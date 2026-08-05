@@ -2151,102 +2151,39 @@ loadMediaPosts();
 
 loadMediaPosts();
 
-function checkAdminAccess() {
-  const tg = window.Telegram?.WebApp;
-  
-  if (tg) {
-    tg.ready();
-    tg.expand();
-  }
-
-  // 1. Пробуем получить ID из Telegram
-  let currentUserId = tg?.initDataUnsafe?.user?.id;
-
-  // 2. Если запустили не через официальную кнопку бота — подставляем ID вручную
-  if (!currentUserId) {
-    const urlParams = new URLSearchParams(window.location.search);
-    // Берет ?user_id=1435007314 из URL или использует константу админа
-    currentUserId = urlParams.get('user_id') || (typeof ADMIN_TELEGRAM_ID !== 'undefined' ? ADMIN_TELEGRAM_ID : 1435007314);
-    console.warn(`[checkAdminAccess] Telegram не передал user.id (запуск по прямой ссылке). Использован ID: ${currentUserId}`);
-  }
-
-  const targetAdminId = typeof ADMIN_TELEGRAM_ID !== 'undefined' ? ADMIN_TELEGRAM_ID : window.ADMIN_TELEGRAM_ID;
-
-  // Сравнение
-  const isUserAdmin = Boolean(
-    currentUserId && targetAdminId && String(currentUserId) === String(targetAdminId)
-  );
-
-  console.log(`[checkAdminAccess] Ваш ID: ${currentUserId} | Админ-ID: ${targetAdminId} | Статус: ${isUserAdmin}`);
-
-  // Показываем/скрываем форму
-  const adminForm = document.getElementById('media-admin-form') || 
-                    document.getElementById('news-admin-form') || 
-                    document.querySelector('.admin-post-form');
-
-  if (adminForm) {
-    adminForm.style.display = isUserAdmin ? 'flex' : 'none';
-  }
-
-  return isUserAdmin;
-}
-
-// Главная функция переключения вкладок
-async function switchTab(tabName) {
-  console.log(`[switchTab] Переключение на вкладку: "${tabName}"`);
-
-  // 1. Скрываем все страницы
-  document.querySelectorAll('.tab-page, .tab-content').forEach(tab => {
+function switchTab(tabName) {
+  // 1. Скрываем все страницы вкладок
+  // (Убедитесь, что у всех ваших вкладок в HTML есть класс tab-page)
+  const allTabs = document.querySelectorAll('.tab-page');
+  allTabs.forEach(tab => {
     tab.style.display = 'none';
   });
 
-  // 2. Ищем целевую вкладку
-  const targetTab = document.getElementById(`tab-${tabName}`) || document.getElementById(tabName);
-  if (!targetTab) {
-    console.error(`[switchTab] Не найден HTML-элемент: id="tab-${tabName}" или id="${tabName}"`);
-    return;
-  }
-  targetTab.style.display = 'block';
-
-  // 3. Обновляем активную кнопку
-  document.querySelectorAll('.nav-item').forEach(btn => {
+  // 2. Убираем активный класс у всех кнопок меню
+  const allNavBtns = document.querySelectorAll('.nav-item');
+  allNavBtns.forEach(btn => {
     btn.classList.remove('active');
-    const onClickAttr = btn.getAttribute('onclick') || '';
-    const dataTabAttr = btn.getAttribute('data-tab') || '';
-    if (onClickAttr.includes(tabName) || dataTabAttr === tabName) {
-      btn.classList.add('active');
-    }
   });
 
-  // 4. Загрузка данных для news / media
-  if (tabName === 'news' || tabName === 'media') {
-    // Показываем форму админа СРАЗУ
-    checkAdminAccess();
+  // 3. Находим и показываем нужную вкладку
+  const targetTab = document.getElementById(`tab-${tabName}`);
+  if (targetTab) {
+    targetTab.style.display = 'block';
+  } else {
+    console.error(`Не найдена вкладка с id="tab-${tabName}"`);
+  }
 
-    try {
-      if (typeof loadMediaPosts === 'function') await loadMediaPosts();
-      if (typeof loadNews === 'function') await loadNews();
-    } catch (err) {
-      console.error("[switchTab] Ошибка при загрузке постов:", err);
-    }
-    
+  // 4. Подсвечиваем нажатую кнопку в меню
+  const currentBtn = Array.from(allNavBtns).find(btn => 
+    btn.getAttribute('onclick')?.includes(`'${tabName}'`)
+  );
+  if (currentBtn) {
+    currentBtn.classList.add('active');
+  }
+
+  // 5. Запускаем рендер/загрузку данных для выбранной вкладки
+  if (tabName === 'news') {
+    loadNews();
     checkAdminAccess();
   }
 }
-
-// Функция-кликер для onclick="switchMainTab('news', this)"
-function switchMainTab(tabName, element) {
-  switchTab(tabName);
-  if (element) {
-    document.querySelectorAll('.bottom-nav .nav-item').forEach(btn => btn.classList.remove('active'));
-    element.classList.add('active');
-  }
-}
-
-// Регистрируем глобально (используя вашу уже созданную константу)
-if (typeof ADMIN_TELEGRAM_ID !== 'undefined') {
-  window.ADMIN_TELEGRAM_ID = ADMIN_TELEGRAM_ID;
-}
-window.switchMainTab = switchMainTab;
-window.switchTab = switchTab;
-window.checkAdminAccess = checkAdminAccess;
