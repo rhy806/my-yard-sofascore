@@ -2253,19 +2253,19 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// 3. Функция загрузки и отрисовки новостей
-async function loadNews() {
+// Функция загрузки и отрисовки новостей
+function loadNews() {
   const container = document.getElementById('news-list');
   if (!container) return;
 
-  // Пример структуры (если пока нет бэкенда, выведет заглушку)
-  // Можешь заменить этот массив на реальный запрос из Supabase
+  // Массив постов (пока пустой)
   const posts = []; 
 
   if (posts.length === 0) {
     container.innerHTML = `
-      <div class="card" style="text-align: center; padding: 20px; color: var(--hint, #888);">
-        Пока нет ни одной новости
+      <div class="card" style="text-align: center; padding: 25px 16px; color: var(--hint, #888); background: #1e1e1e; border-radius: 10px;">
+        <div style="font-size: 28px; margin-bottom: 8px;">📰</div>
+        <div style="font-size: 14px; font-weight: 600;">Новостей пока нет</div>
       </div>
     `;
     return;
@@ -2274,8 +2274,8 @@ async function loadNews() {
   let html = '';
   posts.forEach(post => {
     html += `
-      <div class="card" style="margin-bottom: 15px;">
-        <div style="font-size: 14px; margin-bottom: 8px;">${post.text || ''}</div>
+      <div class="card" style="margin-bottom: 15px; background: #1e1e1e; padding: 15px; border-radius: 10px;">
+        <div style="font-size: 14px; margin-bottom: 8px; color: #fff;">${post.text || ''}</div>
         ${post.media_url ? `<img src="${post.media_url}" style="width: 100%; border-radius: 8px; margin-top: 8px;">` : ''}
       </div>
     `;
@@ -2283,3 +2283,8 @@ async function loadNews() {
 
   container.innerHTML = html;
 }
+
+// Принудительно вызываем при загрузке страницы, чтобы надпись сразу появилась
+document.addEventListener('DOMContentLoaded', () => {
+  loadNews();
+});
