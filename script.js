@@ -2151,20 +2151,23 @@ loadMediaPosts();
 
 loadMediaPosts();
 
-// Функция проверки прав администратора и управления отображением админ-элементов
+// Функция проверки прав администратора
 function checkAdminAccess() {
   const currentUserId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
   
-  // Проверяем Telegram ID (сверяем с константой ADMIN_TELEGRAM_ID или глобальной переменной isAdmin)
-  const isUserAdmin = (currentUserId === ADMIN_TELEGRAM_ID) || (typeof isAdmin !== 'undefined' && isAdmin);
+  // Приводим ID к строке во избежание ошибок типов (число vs строка)
+  const isUserAdmin = Boolean(
+    (currentUserId && String(currentUserId) === String(window.ADMIN_TELEGRAM_ID)) || 
+    (typeof isAdmin !== 'undefined' && isAdmin)
+  );
 
-  // Находим форму создания/редактирования новостей (поддерживает оба варианта ID)
+  // Ищем форму
   const adminForm = document.getElementById('media-admin-form') || document.getElementById('news-admin-form');
   if (adminForm) {
-    adminForm.style.display = isUserAdmin ? 'flex' : 'none';
+    adminForm.style.display = isUserAdmin ? 'block' : 'none';
   }
 
-  // Управляем кнопками редактирования/удаления в ленте
+  // Управляем кнопками в ленте
   const adminActions = document.querySelectorAll('.media-admin-actions, .news-admin-actions');
   adminActions.forEach(el => {
     el.style.display = isUserAdmin ? 'flex' : 'none';
@@ -2174,45 +2177,55 @@ function checkAdminAccess() {
 }
 
 // Главная функция переключения вкладок
-function switchTab(tabName) {
-  // 1. Скрываем все страницы вкладок
+async function switchTab(tabName) {
+  console.log(`[switchTab] Переключение на вкладку: "${tabName}"`);
+
+  // 1. Скрываем все вкладки
   const allTabs = document.querySelectorAll('.tab-page, .tab-content');
   allTabs.forEach(tab => {
     tab.style.display = 'none';
   });
 
-  // 2. Убираем активный класс у всех кнопок меню
+  // 2. Ищем целевую вкладку (проверяем варианты с id="tab-news" и id="news")
+  const targetTab = document.getElementById(`tab-${tabName}`) || document.getElementById(tabName);
+  
+  if (!targetTab) {
+    console.error(`[switchTab] Ошибка: Не найден HTML-элемент с id="tab-${tabName}" или id="${tabName}"!`);
+    return;
+  }
+
+  // Показываем вкладку (убираем inline display, чтобы вступил в силу CSS, либо ставим block)
+  targetTab.style.display = 'block';
+
+  // 3. Обновляем активную кнопку навигации
   const allNavBtns = document.querySelectorAll('.nav-item');
   allNavBtns.forEach(btn => {
     btn.classList.remove('active');
+    
+    // Безопасная проверка: ищем tabName в onclick или в data-tab атрибуте
+    const onClickAttr = btn.getAttribute('onclick') || '';
+    const dataTabAttr = btn.getAttribute('data-tab') || '';
+    
+    if (onClickAttr.includes(tabName) || dataTabAttr === tabName) {
+      btn.classList.add('active');
+    }
   });
 
-  // 3. Находим и показываем нужную вкладку
-  const targetTab = document.getElementById(`tab-${tabName}`);
-  if (targetTab) {
-    targetTab.style.display = 'block';
-  } else {
-    console.error(`Не найдена вкладка с id="tab-${tabName}"`);
-  }
-
-  // 4. Подсвечиваем нажатую кнопку в меню
-  const currentBtn = Array.from(allNavBtns).find(btn => 
-    btn.getAttribute('onclick')?.includes(`'${tabName}'`)
-  );
-  if (currentBtn) {
-    currentBtn.classList.add('active');
-  }
-
-  // 5. Выполняем действия при переходе на вкладку "новости" или "медиа"
+  // 4. Загрузка данных для вкладок news / media
   if (tabName === 'news' || tabName === 'media') {
-    if (typeof loadMediaPosts === 'function') loadMediaPosts();
-    if (typeof loadNews === 'function') loadNews();
+    try {
+      // Ждем завершения загрузки постов, если функция асинхронная
+      if (typeof loadMediaPosts === 'function') await loadMediaPosts();
+      if (typeof loadNews === 'function') await loadNews();
+    } catch (err) {
+      console.error("[switchTab] Ошибка при загрузке постов:", err);
+    }
     
-    // Запускаем проверку прав админа
+    // Запускаем проверку админа ПОСЛЕ того, как посты отрендерились в DOM
     checkAdminAccess();
   }
 }
 
-// Делаем функцию доступной глобально
+// Делаем функции доступными глобально
 window.switchTab = switchTab;
 window.checkAdminAccess = checkAdminAccess;
