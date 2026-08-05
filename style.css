@@ -750,3 +750,11 @@
   cursor: pointer;
   font-size: 1.1em;
 }
+
+.tab-content {
+  display: none !important;
+}
+
+.tab-content.active {
+  display: block !important;
+}
