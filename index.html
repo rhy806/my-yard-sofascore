@@ -312,34 +312,21 @@
     </div>
   </div>
 
-    <div id="tab-news" class="tab-page" style="display: none;">
+      <!-- Экран Новостей -->
+<div id="tab-news" class="tab-page" style="display: none;">
   <h2>Новости</h2>
 
-  <!-- Форма создания новости -->
-  <form id="news-admin-form" style="display: none; flex-direction: column; gap: 12px; margin-bottom: 20px; background: #1e1e1e; padding: 15px; border-radius: 12px;">
-    <h3>Создать запись</h3>
-    
-    <!-- Текст (опционально) -->
-    <textarea id="news-text" placeholder="Напишите что-нибудь..." rows="3" style="padding: 10px; background: #2a2a2a; color: #fff; border: 1px solid #333; border-radius: 8px; resize: vertical;"></textarea>
-
-    <!-- Выбор фото / видео (опционально) -->
-    <div style="display: flex; align-items: center; gap: 10px;">
-      <label for="news-file" style="padding: 8px 14px; background: #333; color: #fff; border-radius: 6px; cursor: pointer; font-size: 14px;">
-        📁 Прикрепить фото/видео
-      </label>
-      <input type="file" id="news-file" accept="image/*,video/*" style="display: none;">
-      <span id="file-name" style="color: #888; font-size: 12px;">Файл не выбран</span>
-    </div>
-
-    <!-- Превью выбранного медиа -->
-    <div id="media-preview-container" style="display: none; margin-top: 5px;"></div>
-
-    <button type="submit" style="padding: 10px; background: #007bff; color: #fff; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">Опубликовать</button>
+  <!-- 1. ФОРМА СОЗДАНИЯ ПОСТА (лежит отдельно, чтобы JS её не стирал) -->
+  <form id="news-admin-form" style="display: none; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+    <h3>Создать новость</h3>
+    <input type="text" id="post-title" placeholder="Заголовок новости" required>
+    <textarea id="post-text" placeholder="Текст новости" rows="4" required></textarea>
+    <button type="submit">Опубликовать</button>
   </form>
 
-  <!-- Список новостей -->
+  <!-- 2. КОНТЕЙНЕР ДЛЯ СПИСКА ПОСТОВ -->
   <div id="news-list">
-    <p style="color: #888;">Новостей пока нет</p>
+    <div class="loading">Новостей пока нет</div>
   </div>
 </div>
 
