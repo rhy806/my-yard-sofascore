@@ -2152,23 +2152,27 @@ loadMediaPosts();
 loadMediaPosts();
 
 function checkAdminAccess() {
-  // Инициализируем Telegram WebApp
   const tg = window.Telegram?.WebApp;
+  
   if (tg) {
     tg.ready();
-    tg.expand(); // Раскрываем Mini App на весь экран
+    tg.expand();
   }
 
-  // Получаем ID из Telegram
+  // 1. Пробуем получить ID из Telegram
   let currentUserId = tg?.initDataUnsafe?.user?.id;
 
-  // ТЕСТОВЫЙ РЕЖИМ: Если тестируете в обычном браузере (не внутри ТГ),
-  // раскомментируйте строчку ниже и подставьте свой ID:
-  // if (!currentUserId) currentUserId = 1435007314; 
+  // 2. Если запустили не через официальную кнопку бота — подставляем ID вручную
+  if (!currentUserId) {
+    const urlParams = new URLSearchParams(window.location.search);
+    // Берет ?user_id=1435007314 из URL или использует константу админа
+    currentUserId = urlParams.get('user_id') || (typeof ADMIN_TELEGRAM_ID !== 'undefined' ? ADMIN_TELEGRAM_ID : 1435007314);
+    console.warn(`[checkAdminAccess] Telegram не передал user.id (запуск по прямой ссылке). Использован ID: ${currentUserId}`);
+  }
 
   const targetAdminId = typeof ADMIN_TELEGRAM_ID !== 'undefined' ? ADMIN_TELEGRAM_ID : window.ADMIN_TELEGRAM_ID;
 
-  // Сравниваем ID
+  // Сравнение
   const isUserAdmin = Boolean(
     currentUserId && targetAdminId && String(currentUserId) === String(targetAdminId)
   );
@@ -2182,8 +2186,6 @@ function checkAdminAccess() {
 
   if (adminForm) {
     adminForm.style.display = isUserAdmin ? 'flex' : 'none';
-  } else {
-    console.warn("[checkAdminAccess] Форма не найдена в HTML!");
   }
 
   return isUserAdmin;
