@@ -2196,3 +2196,90 @@ function switchTab(tabName) {
     checkAdminAccess();
   }
 }
+
+// --- ЛОГИКА НОВОСТЕЙ ---
+
+// 1. Отслеживание выбранного файла для превью в форме
+document.addEventListener('DOMContentLoaded', () => {
+  const fileInput = document.getElementById('news-file-input');
+  if (fileInput) {
+    fileInput.addEventListener('change', (e) => {
+      const fileNameSpan = document.getElementById('news-file-name');
+      const previewDiv = document.getElementById('news-media-preview');
+      
+      if (e.target.files.length > 0) {
+        const file = e.target.files[0];
+        if (fileNameSpan) fileNameSpan.textContent = file.name;
+        
+        if (previewDiv) {
+          previewDiv.style.display = 'block';
+          const fileURL = URL.createObjectURL(file);
+          if (file.type.startsWith('video/')) {
+            previewDiv.innerHTML = `<video src="${fileURL}" style="max-height: 100px; border-radius: 6px;" controls></video>`;
+          } else {
+            previewDiv.innerHTML = `<img src="${fileURL}" style="max-height: 100px; border-radius: 6px;">`;
+          }
+        }
+      } else {
+        if (fileNameSpan) fileNameSpan.textContent = 'Файл не выбран';
+        if (previewDiv) {
+          previewDiv.style.display = 'none';
+          previewDiv.innerHTML = '';
+        }
+      }
+    });
+  }
+
+  // 2. Обработка отправки формы новости
+  const newsForm = document.getElementById('news-admin-form');
+  if (newsForm) {
+    newsForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const text = document.getElementById('news-text').value;
+      const fileInput = document.getElementById('news-file-input');
+      const file = fileInput && fileInput.files[0] ? fileInput.files[0] : null;
+
+      // Здесь код отправки в Supabase (если используется) или сохранения
+      alert('Пост готов к публикации! (Подключи сохранение в базу данных при необходимости)');
+      
+      newsForm.reset();
+      const previewDiv = document.getElementById('news-media-preview');
+      if (previewDiv) { previewDiv.style.display = 'none'; previewDiv.innerHTML = ''; }
+      const fileNameSpan = document.getElementById('news-file-name');
+      if (fileNameSpan) fileNameSpan.textContent = 'Файл не выбран';
+      
+      loadNews();
+    });
+  }
+});
+
+// 3. Функция загрузки и отрисовки новостей
+async function loadNews() {
+  const container = document.getElementById('news-list');
+  if (!container) return;
+
+  // Пример структуры (если пока нет бэкенда, выведет заглушку)
+  // Можешь заменить этот массив на реальный запрос из Supabase
+  const posts = []; 
+
+  if (posts.length === 0) {
+    container.innerHTML = `
+      <div class="card" style="text-align: center; padding: 20px; color: var(--hint, #888);">
+        Пока нет ни одной новости
+      </div>
+    `;
+    return;
+  }
+
+  let html = '';
+  posts.forEach(post => {
+    html += `
+      <div class="card" style="margin-bottom: 15px;">
+        <div style="font-size: 14px; margin-bottom: 8px;">${post.text || ''}</div>
+        ${post.media_url ? `<img src="${post.media_url}" style="width: 100%; border-radius: 8px; margin-top: 8px;">` : ''}
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
