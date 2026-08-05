@@ -307,85 +307,94 @@
       renderAdminAbsences();
     }
 
-    /* НАВИГАЦИЯ ПО ПОДПИСКАМ И ТАБАМ */
-    function switchMainTab(tabId, btn) {
-      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-      document.querySelectorAll('.team-header .top-tab-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.bottom-nav .nav-item').forEach(b => b.classList.remove('active'));
+/* НАВИГАЦИЯ ПО ПОДПИСКАМ И ТАБАМ */
+  function switchMainTab(tabId, btn) {
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.team-header .top-tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.bottom-nav .nav-item').forEach(b => b.classList.remove('active'));
 
-      const targetTab = document.getElementById('tab-' + tabId);
-      if (targetTab) targetTab.classList.add('active');
+    // --- УПРАВЛЕНИЕ ШАПКОЙ КОМАНДЫ ---
+    const teamHeader = document.querySelector('.team-header');
+    if (teamHeader) {
+      const isTeamTab = ['details', 'matches', 'squad', 'top'].includes(tabId);
+      teamHeader.style.display = isTeamTab ? 'block' : 'none';
+    }
+    // ---------------------------------
 
-      if (btn) {
-        btn.classList.add('active');
-      }
+    const targetTab = document.getElementById('tab-' + tabId);
+    if (targetTab) targetTab.classList.add('active');
 
-      if (btn && btn.classList.contains('top-tab-btn')) {
-        const navBtns = document.querySelectorAll('.bottom-nav .nav-item');
-        if (navBtns[0]) navBtns[0].classList.add('active');
-      } else {
-        const topBtns = document.querySelectorAll('.team-header .top-tab-btn');
-        if (tabId === 'details') topBtns[0]?.classList.add('active');
-        if (tabId === 'matches') topBtns[1]?.classList.add('active');
-        if (tabId === 'squad') topBtns[2]?.classList.add('active');
-        if (tabId === 'top') topBtns[3]?.classList.add('active');
-      }
-
-      if(tabId === 'top') renderTopPlayers();
-      if(tabId === 'details') renderTeamStats();
-      if(tabId === 'subscriptions') renderSubscriptionsList();
+    if (btn) {
+      btn.classList.add('active');
     }
 
-    function handleSubscriptionsTabClick(btn) {
-      const subscribed = allSquad.filter(p => starredPlayers.includes(p.id) || starredPlayers.includes(String(p.id)));
-
-      if (subscribed.length === 1) {
-        openPlayerProfile(subscribed[0]);
-      } else {
-        switchMainTab('subscriptions', btn);
-      }
+    if (btn && btn.classList.contains('top-tab-btn')) {
+      const navBtns = document.querySelectorAll('.bottom-nav .nav-item');
+      if (navBtns[0]) navBtns[0].classList.add('active');
+    } else {
+      const topBtns = document.querySelectorAll('.team-header .top-tab-btn');
+      if (tabId === 'details') topBtns[0]?.classList.add('active');
+      if (tabId === 'matches') topBtns[1]?.classList.add('active');
+      if (tabId === 'squad') topBtns[2]?.classList.add('active');
+      if (tabId === 'top') topBtns[3]?.classList.add('active');
     }
 
-    function renderSubscriptionsList() {
-      const container = document.getElementById('subscriptions-list-container');
-      if (!container) return;
+    if(tabId === 'top') renderTopPlayers();
+    if(tabId === 'details') renderTeamStats();
+    if(tabId === 'subscriptions') renderSubscriptionsList();
+    if(tabId === 'news' && typeof loadNews === 'function') loadNews();
+  }
 
-      const subscribed = allSquad.filter(p => starredPlayers.includes(p.id) || starredPlayers.includes(String(p.id)));
+  function handleSubscriptionsTabClick(btn) {
+    const subscribed = allSquad.filter(p => starredPlayers.includes(p.id) || starredPlayers.includes(String(p.id)));
 
-      if (subscribed.length === 0) {
-        container.innerHTML = `
-          <div class="card" style="text-align:center; padding:30px 16px;">
-            <div style="font-size:32px; margin-bottom:10px;">⭐</div>
-            <div style="font-weight:700; font-size:16px; margin-bottom:6px;">У вас пока нет подписок</div>
-            <div style="color:var(--hint); font-size:13px;">Откройте профиль игрока и нажмите звёздочку справа вверху, чтобы подписаться.</div>
-          </div>
-        `;
-        return;
-      }
+    if (subscribed.length === 1) {
+      openPlayerProfile(subscribed[0]);
+    } else {
+      switchMainTab('subscriptions', btn);
+    }
+  }
 
-      let html = '<div class="section-title">Ваши подписки (' + subscribed.length + ')</div>';
-      subscribed.forEach(p => {
-        const posText = getPlayerPositionsString(p);
-        const safeName = p.name.replace(/'/g, "\\'");
-        const avatarStyle = p.photo_url ? `background-image: url('${p.photo_url}'); color: transparent;` : '';
+  function renderSubscriptionsList() {
+    const container = document.getElementById('subscriptions-list-container');
+    if (!container) return;
 
-        html += `
-          <div class="player-row-card clickable-card" onclick="openPlayerProfileByName('${safeName}')">
-            <div class="player-left">
-              <div class="player-avatar" style="${avatarStyle}">${p.number || '•'}</div>
-              <div>
-                <div class="player-info-name">${p.name}</div>
-                <div class="player-info-meta">${p.number ? '#' + p.number + '&nbsp;&nbsp;' : ''}${posText}</div>
-                ${p.status ? `<div class="player-status-badge">${p.status}</div>` : ''}
-              </div>
+    const subscribed = allSquad.filter(p => starredPlayers.includes(p.id) || starredPlayers.includes(String(p.id)));
+
+    if (subscribed.length === 0) {
+      container.innerHTML = `
+        <div class="card" style="text-align:center; padding:30px 16px;">
+          <div style="font-size:32px; margin-bottom:10px;">⭐</div>
+          <div style="font-weight:700; font-size:16px; margin-bottom:6px;">У вас пока нет подписок</div>
+          <div style="color:var(--hint); font-size:13px;">Откройте профиль игрока и нажмите звёздочку справа вверху, чтобы подписаться.</div>
+        </div>
+      `;
+      return;
+    }
+
+    let html = '<div class="section-title">Ваши подписки (' + subscribed.length + ')</div>';
+    subscribed.forEach(p => {
+      const posText = getPlayerPositionsString(p);
+      const safeName = p.name.replace(/'/g, "\\'");
+      const avatarStyle = p.photo_url ? `background-image: url('${p.photo_url}'); color: transparent;` : '';
+
+      html += `
+        <div class="player-row-card clickable-card" onclick="openPlayerProfileByName('${safeName}')">
+          <div class="player-left">
+            <div class="player-avatar" style="${avatarStyle}">${p.number || '•'}</div>
+            <div>
+              <div class="player-info-name">${p.name}</div>
+              <div class="player-info-meta">${p.number ? '#' + p.number + '&nbsp;&nbsp;' : ''}${posText}</div>
+              ${p.status ? `<div class="player-status-badge">${p.status}</div>` : ''}
             </div>
-            <div style="color:var(--gold); font-size:18px;">★</div>
           </div>
-        `;
-      });
+          <div style="color:var(--gold); font-size:18px;">★</div>
+        </div>
+      `;
+    });
 
-      container.innerHTML = html;
-    }
+    container.innerHTML = html;
+  }
 
     function renderSecondaryPosPills() {
       const container = document.getElementById('secondary-pos-pills');
