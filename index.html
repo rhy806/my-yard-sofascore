@@ -590,20 +590,29 @@
     </div>
   </div>
 
-  <nav class="bottom-nav" id="bottom-nav">
-    <button class="nav-item active" onclick="switchMainTab('details', this)">
-      <span>⚽️</span>Команда
-    </button>
-    <button class="nav-item" onclick="handleSubscriptionsTabClick(this)">
-      <span>⭐</span>Подписки
-    </button>
-    <button id="admin-nav-btn" class="nav-item" onclick="switchMainTab('admin', this)" style="display:none;">
-      <span>⚙️</span>Админка
-    </button>
-    <button class="nav-item" onclick="switchTab('news')">
-      <span>📰</span>Новости
-    </button>
-  </nav>
+ <nav class="bottom-nav">
+  <button class="nav-item" onclick="switchTab('squad')">
+    <span>⚽</span>
+    <span>Команда</span>
+  </button>
+
+  <button class="nav-item" onclick="switchTab('subscriptions')">
+    <span>⭐</span>
+    <span>Подписки</span>
+  </button>
+
+  <!-- Новости теперь идут перед Админкой -->
+  <button class="nav-item" onclick="switchTab('news')">
+    <span>📰</span>
+    <span>Новости</span>
+  </button>
+
+  <!-- Админка теперь последняя -->
+  <button class="nav-item" onclick="switchTab('admin')">
+    <span>⚙️</span>
+    <span>Админка</span>
+  </button>
+</nav>
 
   <script>
   </script>
