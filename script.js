@@ -307,87 +307,94 @@
       renderAdminAbsences();
     }
 
-let selectedNewsFile = null;
-if (!window.newsPosts) window.newsPosts = [];
+/* НАВИГАЦИЯ ПО ПОДПИСКАМ И ТАБАМ */
+  function switchMainTab(tabId, btn) {
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.team-header .top-tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.bottom-nav .nav-item').forEach(b => b.classList.remove('active'));
 
-// 1. Переключение вкладок (подвязано под твоё имя 'news')
-function switchMainTab(tabName, element) {
-  document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
+    // --- УПРАВЛЕНИЕ ШАПКОЙ КОМАНДЫ ---
+    const teamHeader = document.querySelector('.team-header');
+    if (teamHeader) {
+      const isTeamTab = ['details', 'matches', 'squad', 'top'].includes(tabId);
+      teamHeader.style.display = isTeamTab ? 'block' : 'none';
+    }
+    // ---------------------------------
 
-  const targetTab = document.getElementById('tab-' + tabName);
-  if (targetTab) {
-    targetTab.classList.add('active');
-  }
-  if (element) {
-    element.classList.add('active');
-  }
+    const targetTab = document.getElementById('tab-' + tabId);
+    if (targetTab) targetTab.classList.add('active');
 
-  // Если нажали на кнопку 'news'
-  if (tabName === 'news') {
-    renderNewsFeed();
-  }
-}
+    if (btn) {
+      btn.classList.add('active');
+    }
 
-// 2. Выбор файла
-function handleNewsFileSelect(event) {
-  const file = event.target.files[0];
-  if (file) {
-    selectedNewsFile = file;
-    document.getElementById('news-file-name').textContent = file.name;
-  }
-}
+    if (btn && btn.classList.contains('top-tab-btn')) {
+      const navBtns = document.querySelectorAll('.bottom-nav .nav-item');
+      if (navBtns[0]) navBtns[0].classList.add('active');
+    } else {
+      const topBtns = document.querySelectorAll('.team-header .top-tab-btn');
+      if (tabId === 'details') topBtns[0]?.classList.add('active');
+      if (tabId === 'matches') topBtns[1]?.classList.add('active');
+      if (tabId === 'squad') topBtns[2]?.classList.add('active');
+      if (tabId === 'top') topBtns[3]?.classList.add('active');
+    }
 
-// 3. Отображение формы админа и ленты
-function renderNewsFeed() {
-  const adminForm = document.getElementById('news-admin-form');
-  if (adminForm) {
-    adminForm.style.display = (typeof isAdmin !== 'undefined' && isAdmin) ? 'flex' : 'none';
-  }
-
-  const feed = document.getElementById('news-feed');
-  if (!feed) return;
-
-  if (window.newsPosts.length === 0) {
-    feed.innerHTML = '<p style="text-align:center; opacity:0.5; padding:20px;">Новостей пока нет</p>';
-    return;
+    if(tabId === 'top') renderTopPlayers();
+    if(tabId === 'details') renderTeamStats();
+    if(tabId === 'subscriptions') renderSubscriptionsList();
+    if(tabId === 'news' && typeof loadNews === 'function') loadNews();
   }
 
-  feed.innerHTML = window.newsPosts.map(post => `
-    <div class="card" style="margin-bottom:12px; padding:12px; background:var(--card-bg, #1c1c1e); border-radius:10px;">
-      ${post.mediaUrl ? `<img src="${post.mediaUrl}" style="width:100%; border-radius:8px; margin-bottom:8px; display:block;">` : ''}
-      ${post.caption ? `<p style="margin:0; font-size:14px; line-height:1.4;">${post.caption}</p>` : ''}
-      <span style="font-size:10px; opacity:0.5; display:block; margin-top:6px;">${post.date || ''}</span>
-    </div>
-  `).join('');
-}
+  function handleSubscriptionsTabClick(btn) {
+    const subscribed = allSquad.filter(p => starredPlayers.includes(p.id) || starredPlayers.includes(String(p.id)));
 
-// 4. Сохранение новости
-function saveNewsPost() {
-  const captionInput = document.getElementById('news-caption-input');
-  const caption = captionInput ? captionInput.value.trim() : '';
-
-  if (!caption && !selectedNewsFile) {
-    alert('Добавьте текст или выберите файл');
-    return;
+    if (subscribed.length === 1) {
+      openPlayerProfile(subscribed[0]);
+    } else {
+      switchMainTab('subscriptions', btn);
+    }
   }
 
-  const newPost = {
-    id: Date.now(),
-    caption: caption,
-    mediaUrl: selectedNewsFile ? URL.createObjectURL(selectedNewsFile) : null,
-    date: new Date().toLocaleString('ru-RU', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' })
-  };
+  function renderSubscriptionsList() {
+    const container = document.getElementById('subscriptions-list-container');
+    if (!container) return;
 
-  window.newsPosts.unshift(newPost);
+    const subscribed = allSquad.filter(p => starredPlayers.includes(p.id) || starredPlayers.includes(String(p.id)));
 
-  if (captionInput) captionInput.value = '';
-  selectedNewsFile = null;
-  document.getElementById('news-file-name').textContent = 'Файл не выбран';
-  document.getElementById('news-file-input').value = '';
+    if (subscribed.length === 0) {
+      container.innerHTML = `
+        <div class="card" style="text-align:center; padding:30px 16px;">
+          <div style="font-size:32px; margin-bottom:10px;">⭐</div>
+          <div style="font-weight:700; font-size:16px; margin-bottom:6px;">У вас пока нет подписок</div>
+          <div style="color:var(--hint); font-size:13px;">Откройте профиль игрока и нажмите звёздочку справа вверху, чтобы подписаться.</div>
+        </div>
+      `;
+      return;
+    }
 
-  renderNewsFeed();
-}
+    let html = '<div class="section-title">Ваши подписки (' + subscribed.length + ')</div>';
+    subscribed.forEach(p => {
+      const posText = getPlayerPositionsString(p);
+      const safeName = p.name.replace(/'/g, "\\'");
+      const avatarStyle = p.photo_url ? `background-image: url('${p.photo_url}'); color: transparent;` : '';
+
+      html += `
+        <div class="player-row-card clickable-card" onclick="openPlayerProfileByName('${safeName}')">
+          <div class="player-left">
+            <div class="player-avatar" style="${avatarStyle}">${p.number || '•'}</div>
+            <div>
+              <div class="player-info-name">${p.name}</div>
+              <div class="player-info-meta">${p.number ? '#' + p.number + '&nbsp;&nbsp;' : ''}${posText}</div>
+              ${p.status ? `<div class="player-status-badge">${p.status}</div>` : ''}
+            </div>
+          </div>
+          <div style="color:var(--gold); font-size:18px;">★</div>
+        </div>
+      `;
+    });
+
+    container.innerHTML = html;
+  }
 
     function renderSecondaryPosPills() {
       const container = document.getElementById('secondary-pos-pills');
