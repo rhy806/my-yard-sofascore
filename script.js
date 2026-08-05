@@ -2226,6 +2226,22 @@ async function switchTab(tabName) {
   }
 }
 
+// Добавьте это в конец вашего JS-файла:
+function switchMainTab(tabName, element) {
+  // Вызываем нашу рабочую функцию переключения
+  switchTab(tabName);
+  
+  // Переключаем подсветку активной кнопки
+  if (element) {
+    document.querySelectorAll('.bottom-nav .nav-item').forEach(btn => btn.classList.remove('active'));
+    element.classList.add('active');
+  }
+}
+
+// Делаем доступными для HTML
+window.switchMainTab = switchMainTab;
+window.switchTab = switchTab;
+
 // Делаем функции доступными глобально
 window.switchTab = switchTab;
 window.checkAdminAccess = checkAdminAccess;
