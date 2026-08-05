@@ -317,35 +317,28 @@
     </div>
   </div>
 
-    <!-- Экран Новостей -->
+   <!-- Экран Новостей -->
   <div id="tab-news" class="tab-page" style="display: none;">
     <h2>Новости</h2>
 
-    <!-- Форма создания поста -->
-    <form id="news-admin-form" style="display: none; flex-direction: column; gap: 10px; margin-bottom: 20px; background: #1e1e1e; padding: 15px; border-radius: 10px;">
-      <h3>Создать новость</h3>
+    <!-- Форма создания поста в стиле твоей админки медиа -->
+    <form id="news-admin-form" class="media-admin-panel" style="display: none; flex-direction: column; gap: 8px; margin-bottom: 20px;">
+      <div style="font-weight: bold; font-size: 14px; color: var(--accent, #34c759); margin-bottom: 4px;">➕ Добавить новость</div>
       
-      <!-- Текст (опционально) -->
-      <textarea id="news-text" placeholder="Напишите что-нибудь..." rows="3" style="padding: 10px; background: #2a2a2a; color: #fff; border: 1px solid #333; border-radius: 6px; resize: vertical;"></textarea>
+      <label class="media-file-label">
+        📁 Выбрать фото или видео из медиатеки
+        <input type="file" id="news-file-input" accept="image/*,video/*" style="display:none;" onchange="document.getElementById('news-file-name').textContent = this.files[0] ? this.files[0].name : 'Файл не выбран'">
+      </label>
+      <div id="news-file-name" style="font-size: 12px; color: var(--hint, #8e8e93);">Файл не выбран</div>
 
-      <!-- Выбор файла (опционально) -->
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <label for="news-file-input" style="padding: 8px 12px; background: #333; color: #fff; border-radius: 6px; cursor: pointer; font-size: 13px;">
-          📁 Прикрепить фото/видео
-        </label>
-        <input type="file" id="news-file-input" accept="image/*,video/*" style="display: none;">
-        <span id="news-file-name" style="color: #888; font-size: 12px;">Файл не выбран</span>
-      </div>
-
-      <!-- Превью медиа -->
-      <div id="news-media-preview" style="display: none; margin-top: 5px;"></div>
-
-      <button type="submit" style="padding: 10px; background: #007bff; color: #fff; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">Опубликовать</button>
+      <input type="text" id="news-text" placeholder="Введите текст или подпись...">
+      
+      <button type="submit" class="form-btn" style="padding: 10px; margin-top: 4px;">Опубликовать</button>
     </form>
 
     <!-- Контейнер для списка постов -->
-    <div id="news-list">
-      <div class="loading" style="color: #888;">Новостей пока нет</div>
+    <div id="news-list" style="background: #1e1e1e; padding: 20px; border-radius: 10px; text-align: center; color: #888;">
+      📰 Новостей пока нет
     </div>
   </div>
 
