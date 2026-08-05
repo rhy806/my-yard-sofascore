@@ -306,49 +306,63 @@
       adminAbsences.splice(index, 1);
       renderAdminAbsences();
     }
-if (!window.newsPosts) window.newsPosts = [];
+
 let selectedNewsFile = null;
+if (!window.newsPosts) window.newsPosts = [];
 
-// 1. Отрисовка ленты и формы
-function renderNewsFeed() {
-  const feed = document.getElementById('news-feed');
-  const adminForm = document.getElementById('news-admin-form');
+// 1. Переключение вкладок (подвязано под твоё имя 'news')
+function switchMainTab(tabName, element) {
+  document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
 
-  // Показываем форму публикации только админу
-  if (adminForm) {
-    const checkAdmin = (typeof isAdmin !== 'undefined' && isAdmin === true);
-    adminForm.style.display = checkAdmin ? 'flex' : 'none';
+  const targetTab = document.getElementById('tab-' + tabName);
+  if (targetTab) {
+    targetTab.classList.add('active');
+  }
+  if (element) {
+    element.classList.add('active');
   }
 
-  if (!feed) return;
-
-  // Если новостей нет — выводим заглушку вместо пустоты
-  if (!window.newsPosts || window.newsPosts.length === 0) {
-    feed.innerHTML = '<div style="text-align:center; color: #8e8e93; padding: 40px 0; font-size: 14px;">Новостей пока нет</div>';
-    return;
+  // Если нажали на кнопку 'news'
+  if (tabName === 'news') {
+    renderNewsFeed();
   }
-
-  // Заполнение ленты постов
-  feed.innerHTML = window.newsPosts.map(post => `
-    <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 12px; margin-bottom: 12px;">
-      ${post.mediaUrl ? `<img src="${post.mediaUrl}" style="width: 100%; border-radius: 8px; margin-bottom: 8px; display: block;">` : ''}
-      ${post.caption ? `<p style="margin: 0; font-size: 14px; line-height: 1.4; color: #fff;">${post.caption}</p>` : ''}
-      <span style="font-size: 11px; color: #8e8e93; display: block; margin-top: 6px;">${post.date || ''}</span>
-    </div>
-  `).join('');
 }
 
 // 2. Выбор файла
 function handleNewsFileSelect(event) {
-  const file = event.target.files && event.target.files[0];
+  const file = event.target.files[0];
   if (file) {
     selectedNewsFile = file;
-    const fileNameEl = document.getElementById('news-file-name');
-    if (fileNameEl) fileNameEl.textContent = file.name;
+    document.getElementById('news-file-name').textContent = file.name;
   }
 }
 
-// 3. Сохранение новости
+// 3. Отображение формы админа и ленты
+function renderNewsFeed() {
+  const adminForm = document.getElementById('news-admin-form');
+  if (adminForm) {
+    adminForm.style.display = (typeof isAdmin !== 'undefined' && isAdmin) ? 'flex' : 'none';
+  }
+
+  const feed = document.getElementById('news-feed');
+  if (!feed) return;
+
+  if (window.newsPosts.length === 0) {
+    feed.innerHTML = '<p style="text-align:center; opacity:0.5; padding:20px;">Новостей пока нет</p>';
+    return;
+  }
+
+  feed.innerHTML = window.newsPosts.map(post => `
+    <div class="card" style="margin-bottom:12px; padding:12px; background:var(--card-bg, #1c1c1e); border-radius:10px;">
+      ${post.mediaUrl ? `<img src="${post.mediaUrl}" style="width:100%; border-radius:8px; margin-bottom:8px; display:block;">` : ''}
+      ${post.caption ? `<p style="margin:0; font-size:14px; line-height:1.4;">${post.caption}</p>` : ''}
+      <span style="font-size:10px; opacity:0.5; display:block; margin-top:6px;">${post.date || ''}</span>
+    </div>
+  `).join('');
+}
+
+// 4. Сохранение новости
 function saveNewsPost() {
   const captionInput = document.getElementById('news-caption-input');
   const caption = captionInput ? captionInput.value.trim() : '';
@@ -369,15 +383,9 @@ function saveNewsPost() {
 
   if (captionInput) captionInput.value = '';
   selectedNewsFile = null;
-  const fileNameEl = document.getElementById('news-file-name');
-  if (fileNameEl) fileNameEl.textContent = 'Файл не выбран';
+  document.getElementById('news-file-name').textContent = 'Файл не выбран';
+  document.getElementById('news-file-input').value = '';
 
-  renderNewsFeed();
-}
-
-// 4. Автоматический запуск при загрузке страницы
-document.addEventListener('DOMContentLoaded', renderNewsFeed);
-if (document.readyState === 'complete' || document.readyState === 'interactive') {
   renderNewsFeed();
 }
 
