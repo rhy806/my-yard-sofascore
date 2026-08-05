@@ -2187,3 +2187,29 @@ function switchTab(tabName) {
     checkAdminAccess();
   }
 }
+
+window.switchTab = function(tabName) {
+  // Скрываем все вкладки
+  const allTabs = document.querySelectorAll('.tab-page');
+  allTabs.forEach(tab => {
+    tab.style.display = 'none';
+  });
+
+  // Убираем подсветку со всех кнопок
+  const allNavBtns = document.querySelectorAll('.nav-item');
+  allNavBtns.forEach(btn => {
+    btn.classList.remove('active');
+  });
+
+  // Показываем нужную вкладку
+  const targetTab = document.getElementById(`tab-${tabName}`);
+  if (targetTab) {
+    targetTab.style.display = 'block';
+  }
+
+  // Загружаем данные для вкладки новостей
+  if (tabName === 'news') {
+    if (typeof loadNews === 'function') loadNews();
+    if (typeof checkAdminAccess === 'function') checkAdminAccess();
+  }
+};
