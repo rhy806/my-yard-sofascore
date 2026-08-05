@@ -2151,119 +2151,39 @@ loadMediaPosts();
 
 loadMediaPosts();
 
-// ==========================================
-// ЛОГИКА ВКЛАДКИ «НОВОСТИ»
-// ==========================================
+function switchTab(tabName) {
+  // 1. Скрываем все страницы вкладок
+  // (Убедитесь, что у всех ваших вкладок в HTML есть класс tab-page)
+  const allTabs = document.querySelectorAll('.tab-page');
+  allTabs.forEach(tab => {
+    tab.style.display = 'none';
+  });
 
-// Проверка: является ли текущий пользователь админом
-function checkAdminAccess() {
-  const currentUserId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
-  const adminForm = document.getElementById('admin-news-form');
-  
-  if (adminForm && (currentUserId == ADMIN_TELEGRAM_ID || !currentUserId)) {
-    // Покажет форму админу (или при локальном тестировании без Telegram)
-    adminForm.style.display = 'block';
-  }
-}
+  // 2. Убираем активный класс у всех кнопок меню
+  const allNavBtns = document.querySelectorAll('.nav-item');
+  allNavBtns.forEach(btn => {
+    btn.classList.remove('active');
+  });
 
-// Загрузка новостей из Supabase
-async function loadNews() {
-  const container = document.getElementById('news-list');
-  if (!container) return;
-
-  try {
-    const { data: news, error } = await _supabase
-      .from('news')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-
-    if (!news || news.length === 0) {
-      container.innerHTML = '<div class="empty-card-placeholder">Новостей пока нет</div>';
-      return;
-    }
-
-    const currentUserId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
-    const isAdmin = (currentUserId == ADMIN_TELEGRAM_ID || !currentUserId);
-
-    let html = '';
-    news.forEach(item => {
-      const date = new Date(item.created_at).toLocaleDateString('ru-RU', {
-        day: 'numeric',
-        month: 'long',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-
-      html += `
-        <div class="card news-card">
-          <div class="news-header">
-            <span class="news-date">${date}</span>
-            ${isAdmin ? `<button class="delete-btn" onclick="deleteNews(${item.id})">🗑️</button>` : ''}
-          </div>
-          ${item.title ? `<h3 class="news-title">${item.title}</h3>` : ''}
-          <div class="news-content">${item.content.replace(/\n/g, '<br>')}</div>
-          ${item.image_url ? `<img src="${item.image_url}" class="news-image" alt="Media">` : ''}
-        </div>
-      `;
-    });
-
-    container.innerHTML = html;
-  } catch (err) {
-    console.error('Ошибка загрузки новостей:', err);
-    container.innerHTML = '<div class="empty-card-placeholder">Ошибка при загрузке новостей</div>';
-  }
-}
-
-// Публикация новой новости
-async function publishNews() {
-  const titleInput = document.getElementById('news-title-input');
-  const contentInput = document.getElementById('news-content-input');
-  const imageInput = document.getElementById('news-image-input');
-
-  const title = titleInput.value.trim();
-  const content = contentInput.value.trim();
-  const image_url = imageInput.value.trim();
-
-  if (!content) {
-    alert('Введите текст новости!');
-    return;
+  // 3. Находим и показываем нужную вкладку
+  const targetTab = document.getElementById(`tab-${tabName}`);
+  if (targetTab) {
+    targetTab.style.display = 'block';
+  } else {
+    console.error(`Не найдена вкладка с id="tab-${tabName}"`);
   }
 
-  try {
-    const { error } = await _supabase
-      .from('news')
-      .insert([{ title, content, image_url }]);
+  // 4. Подсвечиваем нажатую кнопку в меню
+  const currentBtn = Array.from(allNavBtns).find(btn => 
+    btn.getAttribute('onclick')?.includes(`'${tabName}'`)
+  );
+  if (currentBtn) {
+    currentBtn.classList.add('active');
+  }
 
-    if (error) throw error;
-
-    // Очищаем поля
-    titleInput.value = '';
-    contentInput.value = '';
-    imageInput.value = '';
-
-    // Перезагружаем ленту
+  // 5. Запускаем рендер/загрузку данных для выбранной вкладки
+  if (tabName === 'news') {
     loadNews();
-  } catch (err) {
-    console.error('Ошибка публикации:', err);
-    alert('Не удалось опубликовать новость');
-  }
-}
-
-// Удаление новости
-async function deleteNews(postId) {
-  if (!confirm('Удалить эту новость?')) return;
-
-  try {
-    const { error } = await _supabase
-      .from('news')
-      .delete()
-      .eq('id', postId);
-
-    if (error) throw error;
-    loadNews();
-  } catch (err) {
-    console.error('Ошибка удаления:', err);
+    checkAdminAccess();
   }
 }
