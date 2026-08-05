@@ -2155,16 +2155,24 @@ loadMediaPosts();
 function checkAdminAccess() {
   const currentUserId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
   
-  // Приводим ID к строке во избежание ошибок типов (число vs строка)
+  // Берем ID из вашей существующей константы ADMIN_TELEGRAM_ID или из window
+  const targetAdminId = typeof ADMIN_TELEGRAM_ID !== 'undefined' ? ADMIN_TELEGRAM_ID : window.ADMIN_TELEGRAM_ID;
+
+  // Сравниваем ID, приводя к строке
   const isUserAdmin = Boolean(
-    (currentUserId && String(currentUserId) === String(window.ADMIN_TELEGRAM_ID)) || 
+    (currentUserId && targetAdminId && String(currentUserId) === String(targetAdminId)) || 
     (typeof isAdmin !== 'undefined' && isAdmin)
   );
 
+  console.log(`[checkAdminAccess] Ваш ID: ${currentUserId} | Админ: ${isUserAdmin}`);
+
   // Ищем форму
-  const adminForm = document.getElementById('media-admin-form') || document.getElementById('news-admin-form');
+  const adminForm = document.getElementById('media-admin-form') || 
+                    document.getElementById('news-admin-form') || 
+                    document.querySelector('.admin-post-form');
+
   if (adminForm) {
-    adminForm.style.display = isUserAdmin ? 'block' : 'none';
+    adminForm.style.display = isUserAdmin ? 'flex' : 'none';
   }
 
   // Управляем кнопками в ленте
@@ -2180,68 +2188,58 @@ function checkAdminAccess() {
 async function switchTab(tabName) {
   console.log(`[switchTab] Переключение на вкладку: "${tabName}"`);
 
-  // 1. Скрываем все вкладки
-  const allTabs = document.querySelectorAll('.tab-page, .tab-content');
-  allTabs.forEach(tab => {
+  // 1. Скрываем все страницы
+  document.querySelectorAll('.tab-page, .tab-content').forEach(tab => {
     tab.style.display = 'none';
   });
 
-  // 2. Ищем целевую вкладку (проверяем варианты с id="tab-news" и id="news")
+  // 2. Ищем целевую вкладку
   const targetTab = document.getElementById(`tab-${tabName}`) || document.getElementById(tabName);
-  
   if (!targetTab) {
-    console.error(`[switchTab] Ошибка: Не найден HTML-элемент с id="tab-${tabName}" или id="${tabName}"!`);
+    console.error(`[switchTab] Не найден HTML-элемент: id="tab-${tabName}" или id="${tabName}"`);
     return;
   }
-
-  // Показываем вкладку (убираем inline display, чтобы вступил в силу CSS, либо ставим block)
   targetTab.style.display = 'block';
 
-  // 3. Обновляем активную кнопку навигации
-  const allNavBtns = document.querySelectorAll('.nav-item');
-  allNavBtns.forEach(btn => {
+  // 3. Обновляем активную кнопку
+  document.querySelectorAll('.nav-item').forEach(btn => {
     btn.classList.remove('active');
-    
-    // Безопасная проверка: ищем tabName в onclick или в data-tab атрибуте
     const onClickAttr = btn.getAttribute('onclick') || '';
     const dataTabAttr = btn.getAttribute('data-tab') || '';
-    
     if (onClickAttr.includes(tabName) || dataTabAttr === tabName) {
       btn.classList.add('active');
     }
   });
 
-  // 4. Загрузка данных для вкладок news / media
+  // 4. Загрузка данных для news / media
   if (tabName === 'news' || tabName === 'media') {
+    // Показываем форму админа СРАЗУ
+    checkAdminAccess();
+
     try {
-      // Ждем завершения загрузки постов, если функция асинхронная
       if (typeof loadMediaPosts === 'function') await loadMediaPosts();
       if (typeof loadNews === 'function') await loadNews();
     } catch (err) {
       console.error("[switchTab] Ошибка при загрузке постов:", err);
     }
     
-    // Запускаем проверку админа ПОСЛЕ того, как посты отрендерились в DOM
     checkAdminAccess();
   }
 }
 
-// Добавьте это в конец вашего JS-файла:
+// Функция-кликер для onclick="switchMainTab('news', this)"
 function switchMainTab(tabName, element) {
-  // Вызываем нашу рабочую функцию переключения
   switchTab(tabName);
-  
-  // Переключаем подсветку активной кнопки
   if (element) {
     document.querySelectorAll('.bottom-nav .nav-item').forEach(btn => btn.classList.remove('active'));
     element.classList.add('active');
   }
 }
 
-// Делаем доступными для HTML
+// Регистрируем глобально (используя вашу уже созданную константу)
+if (typeof ADMIN_TELEGRAM_ID !== 'undefined') {
+  window.ADMIN_TELEGRAM_ID = ADMIN_TELEGRAM_ID;
+}
 window.switchMainTab = switchMainTab;
-window.switchTab = switchTab;
-
-// Делаем функции доступными глобально
 window.switchTab = switchTab;
 window.checkAdminAccess = checkAdminAccess;
