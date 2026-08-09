@@ -3,8 +3,6 @@
   const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   const supabaseClient = _supabase;
   const ADMIN_TELEGRAM_ID = 1435007314;
-  const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
-  const userId = tgUser ? Number(tgUser.id) : null;
     const tg = window.Telegram.WebApp;
     tg.ready();
     tg.expand();
@@ -2352,10 +2350,3 @@ window.editNewsPost = function(id) {
 // Автоматический вызов при старте
 document.addEventListener('DOMContentLoaded', window.renderNewsFeed);
 setTimeout(window.renderNewsFeed, 100);
-
-document.addEventListener('DOMContentLoaded', () => {
-  if (window.Telegram?.WebApp) {
-    window.Telegram.WebApp.ready();
-  }
-  window.renderNewsFeed();
-});
