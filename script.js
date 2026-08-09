@@ -2197,40 +2197,67 @@ function switchTab(tabName) {
   }
 }
 
-if (!window.newsPosts) window.newsPosts = [];
-let selectedNewsFile = null;
+// 1. Инициализация и безопасная загрузка постов
+if (!window.newsPosts) {
+  try {
+    window.newsPosts = JSON.parse(localStorage.getItem('newsPosts')) || [];
+  } catch (e) {
+    window.newsPosts = [];
+  }
+}
 
-// 1. Обновленная функция отрисовки ленты (выводит кнопки только для админа)
+// 2. Улучшенная проверка прав админа
+function checkIsAdmin() {
+  if (typeof window.isAdmin !== 'undefined' && window.isAdmin !== null) {
+    return Boolean(window.isAdmin);
+  }
+}
+
+// 3. Безопасная функция отрисовки
 window.renderNewsFeed = function() {
   const feed = document.getElementById('news-feed');
   const adminForm = document.getElementById('news-admin-form');
+  const isAdminActive = checkIsAdmin();
 
+  // Показываем/скрываем форму админа
   if (adminForm) {
-    adminForm.style.display = (window.isAdmin === true) ? 'flex' : 'none';
+    adminForm.style.display = isAdminActive ? 'flex' : 'none';
   }
 
   if (!feed) return;
 
-  let posts = [];
-  try {
-    posts = JSON.parse(localStorage.getItem('newsPosts')) || [];
-  } catch (e) {
-    posts = [];
+  // Если массив пуст — пробуем перечитать из памяти
+  if (!window.newsPosts || window.newsPosts.length === 0) {
+    try {
+      window.newsPosts = JSON.parse(localStorage.getItem('newsPosts')) || [];
+    } catch(e) {
+      window.newsPosts = [];
+    }
   }
 
-  if (posts.length === 0) {
+  // Если постов нет — выводим карточку заглушки
+  if (!window.newsPosts || window.newsPosts.length === 0) {
     feed.innerHTML = '<div class="news-empty-card">Посты отсутствуют</div>';
     return;
   }
 
-  feed.innerHTML = posts.map(post => {
-    // Рендерим кнопки только если пользователь — админ
-    const adminButtonsHtml = window.isAdmin ? `
+  // Отрисовка постов
+  feed.innerHTML = window.newsPosts.map(post => {
+    const adminButtonsHtml = isAdminActive ? `
       <div class="post-admin-actions">
         <button class="btn-action btn-edit" onclick="editNewsPost(${post.id})" title="Редактировать">✏️</button>
         <button class="btn-action btn-delete" onclick="deleteNewsPost(${post.id})" title="Удалить">🗑️</button>
       </div>
     ` : '';
+
+    let mediaHtml = '';
+    if (post.mediaUrl) {
+      if (post.mediaType && post.mediaType.startsWith('video')) {
+        mediaHtml = `<video src="${post.mediaUrl}" controls class="news-post-media"></video>`;
+      } else {
+        mediaHtml = `<img src="${post.mediaUrl}" class="news-post-media" alt="Медиа">`;
+      }
+    }
 
     return `
       <div class="news-post-card">
@@ -2238,34 +2265,91 @@ window.renderNewsFeed = function() {
           <div class="news-post-date">${post.date || ''}</div>
           ${adminButtonsHtml}
         </div>
-        ${post.mediaUrl ? `<img src="${post.mediaUrl}" class="news-post-media">` : ''}
+        ${mediaHtml}
         ${post.caption ? `<div class="news-post-caption">${post.caption}</div>` : ''}
       </div>
     `;
   }).join('');
 };
 
-// 2. Функция удаления поста
+// 4. Публикация с контролем размера файла
+window.saveNewsPost = function() {
+  const captionInput = document.getElementById('news-caption-input');
+  const fileInput = document.getElementById('news-file-input');
+  const caption = captionInput ? captionInput.value.trim() : '';
+  const file = fileInput && fileInput.files[0];
+
+  if (!caption && !file) {
+    alert('Добавьте текст или выберите файл');
+    return;
+  }
+
+  // Проверка размера файла (не более 2.5 МБ для предотвращения сбоев localStorage)
+  if (file && file.size > 2.5 * 1024 * 1024) {
+    alert('Файл слишком большой! Для теста выберите фото/видео размером до 2.5 МБ.');
+    return;
+  }
+
+  const createAndSave = (mediaUrl = null, mediaType = null) => {
+    const now = new Date();
+    const formattedDate = `${String(now.getDate()).padStart(2, '0')}.${String(now.getMonth() + 1).padStart(2, '0')}.${now.getFullYear()}, ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+    const newPost = {
+      id: Date.now(),
+      caption: caption,
+      mediaUrl: mediaUrl,
+      mediaType: mediaType,
+      date: formattedDate
+    };
+
+    window.newsPosts.unshift(newPost);
+
+    try {
+      localStorage.setItem('newsPosts', JSON.stringify(window.newsPosts));
+    } catch (err) {
+      alert('Ошибка сохранения: память браузера переполнена.');
+      window.newsPosts.shift(); // Откатываем добавление
+      return;
+    }
+
+    // Очистка формы
+    if (captionInput) captionInput.value = '';
+    if (fileInput) fileInput.value = '';
+    const fileNameEl = document.getElementById('news-file-name');
+    if (fileNameEl) fileNameEl.textContent = 'Файл не выбран';
+
+    window.renderNewsFeed();
+  };
+
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = (e) => createAndSave(e.target.result, file.type);
+    reader.readAsDataURL(file);
+  } else {
+    createAndSave(null, null);
+  }
+};
+
+// 5. Удаление и редактирование
 window.deleteNewsPost = function(id) {
-  if (!confirm('Вы уверены, что хотите удалить эту новость?')) return;
-
-  let posts = JSON.parse(localStorage.getItem('newsPosts')) || [];
-  posts = posts.filter(post => post.id !== id);
-  localStorage.setItem('newsPosts', JSON.stringify(posts));
-
+  if (!confirm('Удалить эту новость?')) return;
+  window.newsPosts = window.newsPosts.filter(p => p.id !== id);
+  localStorage.setItem('newsPosts', JSON.stringify(window.newsPosts));
   window.renderNewsFeed();
 };
 
-// 3. Функция редактирования текста поста
 window.editNewsPost = function(id) {
-  let posts = JSON.parse(localStorage.getItem('newsPosts')) || [];
-  const post = posts.find(p => p.id === id);
+  const post = window.newsPosts.find(p => p.id === id);
   if (!post) return;
 
   const newCaption = prompt('Измените текст новости:', post.caption || '');
   if (newCaption !== null) {
     post.caption = newCaption.trim();
-    localStorage.setItem('newsPosts', JSON.stringify(posts));
+    localStorage.setItem('newsPosts', JSON.stringify(window.newsPosts));
     window.renderNewsFeed();
   }
 };
+
+// Автоматический вызов при старте
+document.addEventListener('DOMContentLoaded', window.renderNewsFeed);
+setTimeout(window.renderNewsFeed, 100);
