@@ -2160,9 +2160,19 @@ loadMediaPosts();
 
 loadMediaPosts();
 
+// Вспомогательная функция для форматирования даты из БД (created_at) в привычный вид
+function formatSupabaseDate(dateString) {
+  if (!dateString) return '';
+  const d = new Date(dateString);
+  if (isNaN(d.getTime())) return dateString; 
+  return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+
+// ==========================================
+// 2. ВАШИ СТАРЫЕ ФУНКЦИИ УПРАВЛЕНИЯ ВКЛАДКАМИ
+// ==========================================
 function switchTab(tabName) {
   // 1. Скрываем все страницы вкладок
-  // (Убедитесь, что у всех ваших вкладок в HTML есть класс tab-page)
   const allTabs = document.querySelectorAll('.tab-page');
   allTabs.forEach(tab => {
     tab.style.display = 'none';
@@ -2192,12 +2202,13 @@ function switchTab(tabName) {
 
   // 5. Запускаем рендер/загрузку данных для выбранной вкладки
   if (tabName === 'news') {
-    loadNews();
-    checkAdminAccess();
+    // Вызываем обновленную функцию загрузки
+    window.fetchNewsPosts();
+    if (typeof checkAdminAccess === 'function') checkAdminAccess(); // Если она у вас есть
   }
 }
 
-// 1. Инициализация и безопасная загрузка постов
+// Инициализация и безопасная загрузка постов (оставлено как кэш)
 if (!window.newsPosts) {
   try {
     window.newsPosts = JSON.parse(localStorage.getItem('newsPosts')) || [];
@@ -2206,38 +2217,68 @@ if (!window.newsPosts) {
   }
 }
 
-// 2. Улучшенная проверка прав админа
 function checkIsAdmin() {
   if (typeof window.isAdmin !== 'undefined' && window.isAdmin !== null) {
     return Boolean(window.isAdmin);
   }
 }
 
-// 3. Безопасная функция отрисовки
+// ==========================================
+// 3. НОВОВВЕДЕНИЕ: ИНТЕГРАЦИЯ С БАЗОЙ ДАННЫХ
+// ==========================================
+window.fetchNewsPosts = async function() {
+  try {
+    // Скачиваем из базы, сортируя по автоматическому времени создания
+    const { data, error } = await supabaseClient
+      .from('news')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    if (data) {
+      window.newsPosts = data;
+      // Старая логика сохранения в память — теперь работает как кэш
+      localStorage.setItem('newsPosts', JSON.stringify(window.newsPosts));
+    }
+  } catch (err) {
+    console.error("Ошибка сети, загружаем локальный кэш:", err);
+    try {
+      window.newsPosts = JSON.parse(localStorage.getItem('newsPosts')) || [];
+    } catch(e) {
+      window.newsPosts = [];
+    }
+  }
+  
+  window.renderNewsFeed();
+};
+
+// ==========================================
+// 4. ОТРИСОВКА И УПРАВЛЕНИЕ ПОСТАМИ
+// ==========================================
 window.renderNewsFeed = function() {
   const feed = document.getElementById('news-feed');
   const adminForm = document.getElementById('news-admin-form');
 
-  // Безопасная проверка админа прямо внутри функции
   const currentUserId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id 
     ? Number(window.Telegram.WebApp.initDataUnsafe.user.id) 
     : null;
     
   const isAdmin = (currentUserId === ADMIN_TELEGRAM_ID);
 
-  // Отображение формы админа
   if (adminForm) {
     adminForm.style.display = isAdmin ? 'flex' : 'none';
   }
 
   if (!feed) return;
 
-  // Загрузка постов из localStorage
-  let posts = [];
-  try {
-    posts = JSON.parse(localStorage.getItem('newsPosts')) || [];
-  } catch(e) {
-    posts = [];
+  let posts = window.newsPosts || [];
+  if (posts.length === 0) {
+    try {
+      posts = JSON.parse(localStorage.getItem('newsPosts')) || [];
+    } catch(e) {
+      posts = [];
+    }
   }
 
   if (posts.length === 0) {
@@ -2245,7 +2286,6 @@ window.renderNewsFeed = function() {
     return;
   }
 
-  // Отрисовка
   feed.innerHTML = posts.map(post => {
     const adminButtonsHtml = isAdmin ? `
       <div class="post-admin-actions-inline">
@@ -2263,20 +2303,22 @@ window.renderNewsFeed = function() {
       }
     }
 
+    // Используем дату сервера (created_at) или локальную (date), если сервер недоступен
+    const displayDate = post.created_at ? formatSupabaseDate(post.created_at) : (post.date || '');
+
     return `
       <div class="news-post-card">
         ${mediaHtml}
         ${post.caption ? `<div class="news-post-caption">${post.caption}</div>` : ''}
         <div class="post-footer">
           ${adminButtonsHtml}
-          <div class="news-post-date-right">${post.date || ''}</div>
+          <div class="news-post-date-right">${displayDate}</div>
         </div>
       </div>
     `;
   }).join('');
 };
 
-// 4. Публикация с контролем размера файла
 window.saveNewsPost = function() {
   const captionInput = document.getElementById('news-caption-input');
   const fileInput = document.getElementById('news-file-input');
@@ -2288,41 +2330,50 @@ window.saveNewsPost = function() {
     return;
   }
 
-  // Проверка размера файла (не более 2.5 МБ для предотвращения сбоев localStorage)
   if (file && file.size > 2.5 * 1024 * 1024) {
     alert('Файл слишком большой! Для теста выберите фото/видео размером до 2.5 МБ.');
     return;
   }
 
-  const createAndSave = (mediaUrl = null, mediaType = null) => {
-    const now = new Date();
-    const formattedDate = `${String(now.getDate()).padStart(2, '0')}.${String(now.getMonth() + 1).padStart(2, '0')}.${now.getFullYear()}, ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-
+  const createAndSave = async (mediaUrl = null, mediaType = null) => {
+    // В объект больше не передаём date, Supabase создаст created_at самостоятельно
     const newPost = {
       id: Date.now(),
       caption: caption,
       mediaUrl: mediaUrl,
-      mediaType: mediaType,
-      date: formattedDate
+      mediaType: mediaType
     };
 
-    window.newsPosts.unshift(newPost);
-
     try {
-      localStorage.setItem('newsPosts', JSON.stringify(window.newsPosts));
-    } catch (err) {
-      alert('Ошибка сохранения: память браузера переполнена.');
-      window.newsPosts.shift(); // Откатываем добавление
-      return;
+      // Пытаемся сохранить на сервер
+      const { error } = await supabaseClient.from('news').insert([newPost]);
+      if (error) throw error;
+      
+      // Скачиваем заново, чтобы получить точный created_at
+      await window.fetchNewsPosts();
+
+    } catch (serverError) {
+      console.error(serverError);
+      alert('Нет связи с сервером. Пост сохранен локально!');
+      
+      // Если сервер не отвечает, откатываемся на вашу СТАРУЮ логику локального хранения
+      const now = new Date();
+      newPost.date = `${String(now.getDate()).padStart(2, '0')}.${String(now.getMonth() + 1).padStart(2, '0')}.${now.getFullYear()}, ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      
+      window.newsPosts.unshift(newPost);
+      try {
+        localStorage.setItem('newsPosts', JSON.stringify(window.newsPosts));
+      } catch (err) {
+        window.newsPosts.shift(); 
+        return;
+      }
+      window.renderNewsFeed();
     }
 
-    // Очистка формы
     if (captionInput) captionInput.value = '';
     if (fileInput) fileInput.value = '';
     const fileNameEl = document.getElementById('news-file-name');
     if (fileNameEl) fileNameEl.textContent = 'Файл не выбран';
-
-    window.renderNewsFeed();
   };
 
   if (file) {
@@ -2334,26 +2385,51 @@ window.saveNewsPost = function() {
   }
 };
 
-// 5. Удаление и редактирование
-window.deleteNewsPost = function(id) {
+window.deleteNewsPost = async function(id) {
   if (!confirm('Удалить эту новость?')) return;
+  
+  try {
+    const { error } = await supabaseClient.from('news').delete().eq('id', id);
+    if (error) throw error;
+  } catch (err) {
+    console.warn("Удаление на сервере не удалось. Удаляем локально.", err);
+  }
+
+  // Старая логика обновления интерфейса
   window.newsPosts = window.newsPosts.filter(p => p.id !== id);
   localStorage.setItem('newsPosts', JSON.stringify(window.newsPosts));
   window.renderNewsFeed();
 };
 
-window.editNewsPost = function(id) {
+window.editNewsPost = async function(id) {
   const post = window.newsPosts.find(p => p.id === id);
   if (!post) return;
 
   const newCaption = prompt('Измените текст новости:', post.caption || '');
   if (newCaption !== null) {
-    post.caption = newCaption.trim();
+    const updatedCaption = newCaption.trim();
+    
+    try {
+      const { error } = await supabaseClient.from('news').update({ caption: updatedCaption }).eq('id', id);
+      if (error) throw error;
+    } catch (err) {
+      console.warn("Обновление на сервере не удалось. Обновляем локально.", err);
+    }
+
+    // Старая логика обновления интерфейса
+    post.caption = updatedCaption;
     localStorage.setItem('newsPosts', JSON.stringify(window.newsPosts));
     window.renderNewsFeed();
   }
 };
 
-// Автоматический вызов при старте
-document.addEventListener('DOMContentLoaded', window.renderNewsFeed);
-setTimeout(window.renderNewsFeed, 100);
+// ==========================================
+// 5. АВТОЗАПУСК
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
+  if (window.Telegram?.WebApp) {
+    window.Telegram.WebApp.ready();
+  }
+  // Теперь при старте мы скачиваем посты с сервера
+  window.fetchNewsPosts(); 
+});
