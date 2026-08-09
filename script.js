@@ -2200,96 +2200,104 @@ function switchTab(tabName) {
 if (!window.newsPosts) window.newsPosts = [];
 let selectedNewsFile = null;
 
-// Отрисовка ленты и формы админа
-function renderNewsFeed() {
+// 1. Включаем режим админа для проверки (поставь false для обычного юзера)
+window.isAdmin = true;
+
+// 2. Безопасная функция отрисовки
+window.renderNewsFeed = function() {
+  console.log("Отрисовка ленты новостей...");
+  
   const feed = document.getElementById('news-feed');
   const adminForm = document.getElementById('news-admin-form');
 
-  // Отображаем форму публикации только для администратора
-  if (adminForm) {
-    const checkAdmin = (typeof isAdmin !== 'undefined' && isAdmin === true);
-    adminForm.style.display = checkAdmin ? 'flex' : 'none';
+  if (!feed) {
+    console.error("Ошибка: элемент #news-feed не найден в HTML!");
+    return;
   }
 
-  if (!feed) return;
+  // Показываем форму админу
+  if (adminForm) {
+    adminForm.style.display = (window.isAdmin === true) ? 'flex' : 'none';
+  }
 
-  // Отрисовка пустого состояния (как на Фото 2)
-  if (!window.newsPosts || window.newsPosts.length === 0) {
+  // Читаем посты
+  let posts = [];
+  try {
+    posts = JSON.parse(localStorage.getItem('newsPosts')) || [];
+  } catch (e) {
+    posts = [];
+  }
+
+  // Если постов нет — оставляем или вставляем карточку заглушки
+  if (posts.length === 0) {
     feed.innerHTML = '<div class="news-empty-card">Посты отсутствуют</div>';
     return;
   }
 
-  // Отрисовка ленты постов (как на Фото 3)
-  feed.innerHTML = window.newsPosts.map(post => {
-    let mediaMarkup = '';
-    if (post.mediaUrl) {
-      if (post.mediaType && post.mediaType.startsWith('video')) {
-        mediaMarkup = `<video src="${post.mediaUrl}" controls class="news-post-media"></video>`;
-      } else {
-        mediaMarkup = `<img src="${post.mediaUrl}" class="news-post-media" alt="Media">`;
-      }
-    }
+  // Если посты есть — выводим их
+  feed.innerHTML = posts.map(post => `
+    <div class="news-post-card">
+      ${post.mediaUrl ? `<img src="${post.mediaUrl}" class="news-post-media">` : ''}
+      ${post.caption ? `<div class="news-post-caption">${post.caption}</div>` : ''}
+      <div class="news-post-date">${post.date || ''}</div>
+    </div>
+  `).join('');
+};
 
-    return `
-      <div class="news-post-card">
-        ${mediaMarkup}
-        ${post.caption ? `<div class="news-post-caption">${post.caption}</div>` : ''}
-        <div class="news-post-date">${post.date || ''}</div>
-      </div>
-    `;
-  }).join('');
-}
-
-// Обработка выбора файла
-function handleNewsFileSelect(event) {
+// 3. Выбор файла
+window.handleNewsFileSelect = function(event) {
   const file = event.target.files && event.target.files[0];
-  if (file) {
-    selectedNewsFile = file;
-    const fileNameEl = document.getElementById('news-file-name');
-    if (fileNameEl) fileNameEl.textContent = `Выбран файл: ${file.name}`;
+  const fileNameEl = document.getElementById('news-file-name');
+  if (file && fileNameEl) {
+    fileNameEl.textContent = `Выбран файл: ${file.name}`;
   }
-}
+};
 
-// Сохранение нового поста
-function saveNewsPost() {
+// 4. Сохранение поста
+window.saveNewsPost = function() {
   const captionInput = document.getElementById('news-caption-input');
+  const fileInput = document.getElementById('news-file-input');
   const caption = captionInput ? captionInput.value.trim() : '';
+  const file = fileInput && fileInput.files[0];
 
-  if (!caption && !selectedNewsFile) {
+  if (!caption && !file) {
     alert('Добавьте текст или выберите файл');
     return;
   }
 
-  const now = new Date();
-  const day = String(now.getDate()).padStart(2, '0');
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const year = now.getFullYear();
-  const hours = String(now.getHours()).padStart(2, '0');
-  const minutes = String(now.getMinutes()).padStart(2, '0');
-  const formattedDate = `${day}.${month}.${year}, ${hours}:${minutes}`;
+  const saveAndRender = (mediaUrl = null) => {
+    const now = new Date();
+    const formattedDate = `${String(now.getDate()).padStart(2, '0')}.${String(now.getMonth() + 1).padStart(2, '0')}.${now.getFullYear()}, ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
-  const newPost = {
-    id: Date.now(),
-    caption: caption,
-    mediaUrl: selectedNewsFile ? URL.createObjectURL(selectedNewsFile) : null,
-    mediaType: selectedNewsFile ? selectedNewsFile.type : null,
-    date: formattedDate
+    const newPost = {
+      id: Date.now(),
+      caption: caption,
+      mediaUrl: mediaUrl,
+      date: formattedDate
+    };
+
+    let posts = JSON.parse(localStorage.getItem('newsPosts')) || [];
+    posts.unshift(newPost);
+    localStorage.setItem('newsPosts', JSON.stringify(posts));
+
+    if (captionInput) captionInput.value = '';
+    if (fileInput) fileInput.value = '';
+    const fileNameEl = document.getElementById('news-file-name');
+    if (fileNameEl) fileNameEl.textContent = 'Файл не выбран';
+
+    window.renderNewsFeed();
   };
 
-  window.newsPosts.unshift(newPost);
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = (e) => saveAndRender(e.target.result);
+    reader.readAsDataURL(file);
+  } else {
+    saveAndRender(null);
+  }
+};
 
-  // Сброс полей
-  if (captionInput) captionInput.value = '';
-  selectedNewsFile = null;
-  const fileNameEl = document.getElementById('news-file-name');
-  if (fileNameEl) fileNameEl.textContent = 'Файл не выбран';
-  document.getElementById('news-file-input').value = '';
-
-  renderNewsFeed();
-}
-
-// Автоматический запуск отрисовки
-document.addEventListener('DOMContentLoaded', renderNewsFeed);
-if (document.readyState === 'complete' || document.readyState === 'interactive') {
-  renderNewsFeed();
-}
+// 5. Принудительный вызов при старте
+setTimeout(function() {
+  window.renderNewsFeed();
+}, 200);
