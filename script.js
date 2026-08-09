@@ -2217,33 +2217,40 @@ function checkIsAdmin() {
 window.renderNewsFeed = function() {
   const feed = document.getElementById('news-feed');
   const adminForm = document.getElementById('news-admin-form');
-  const isAdminActive = checkIsAdmin();
 
+  // Безопасная проверка админа прямо внутри функции
+  const currentUserId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id 
+    ? Number(window.Telegram.WebApp.initDataUnsafe.user.id) 
+    : null;
+    
+  const isAdmin = (currentUserId === ADMIN_TELEGRAM_ID);
+
+  // Отображение формы админа
   if (adminForm) {
-    adminForm.style.display = isAdminActive ? 'flex' : 'none';
+    adminForm.style.display = isAdmin ? 'flex' : 'none';
   }
 
   if (!feed) return;
 
-  if (!window.newsPosts || window.newsPosts.length === 0) {
-    try {
-      window.newsPosts = JSON.parse(localStorage.getItem('newsPosts')) || [];
-    } catch(e) {
-      window.newsPosts = [];
-    }
+  // Загрузка постов из localStorage
+  let posts = [];
+  try {
+    posts = JSON.parse(localStorage.getItem('newsPosts')) || [];
+  } catch(e) {
+    posts = [];
   }
 
-  if (!window.newsPosts || window.newsPosts.length === 0) {
+  if (posts.length === 0) {
     feed.innerHTML = '<div class="news-empty-card">Посты отсутствуют</div>';
     return;
   }
 
-  feed.innerHTML = window.newsPosts.map(post => {
-    // Кнопки отображаются только для админа
-    const adminButtonsHtml = isAdminActive ? `
+  // Отрисовка
+  feed.innerHTML = posts.map(post => {
+    const adminButtonsHtml = isAdmin ? `
       <div class="post-admin-actions-inline">
-        <button class="btn-small btn-small-edit" onclick="editNewsPost(${post.id})">Изм.</button>
-        <button class="btn-small btn-small-delete" onclick="deleteNewsPost(${post.id})">Уд.</button>
+        <button type="button" class="btn-small btn-small-edit" onclick="editNewsPost(${post.id})">Изм.</button>
+        <button type="button" class="btn-small btn-small-delete" onclick="deleteNewsPost(${post.id})">Уд.</button>
       </div>
     ` : '<div></div>';
 
