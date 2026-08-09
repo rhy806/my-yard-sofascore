@@ -792,3 +792,51 @@
   color: #8e8e93;
   text-align: right;
 }
+
+/* Шапка поста с датой и кнопками админа */
+.post-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+/* Контейнер кнопок */
+.post-admin-actions {
+  display: flex;
+  gap: 6px;
+}
+
+/* Общие стили для квадратных кнопок */
+.btn-action {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+/* Кнопка редактирования (синяя) */
+.btn-edit {
+  background: rgba(46, 166, 255, 0.15);
+  border: 1px solid #2ea6ff;
+  color: #2ea6ff;
+}
+.btn-edit:hover {
+  background: rgba(46, 166, 255, 0.3);
+}
+
+/* Кнопка удаления (красная) */
+.btn-delete {
+  background: rgba(255, 59, 48, 0.15);
+  border: 1px solid #ff3b30;
+  color: #ff3b30;
+}
+.btn-delete:hover {
+  background: rgba(255, 59, 48, 0.3);
+}
