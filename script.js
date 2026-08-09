@@ -2197,94 +2197,99 @@ function switchTab(tabName) {
   }
 }
 
-// --- ЛОГИКА НОВОСТЕЙ ---
+if (!window.newsPosts) window.newsPosts = [];
+let selectedNewsFile = null;
 
-// 1. Отслеживание выбранного файла для превью в форме
-document.addEventListener('DOMContentLoaded', () => {
-  const fileInput = document.getElementById('news-file-input');
-  if (fileInput) {
-    fileInput.addEventListener('change', (e) => {
-      const fileNameSpan = document.getElementById('news-file-name');
-      const previewDiv = document.getElementById('news-media-preview');
-      
-      if (e.target.files.length > 0) {
-        const file = e.target.files[0];
-        if (fileNameSpan) fileNameSpan.textContent = file.name;
-        
-        if (previewDiv) {
-          previewDiv.style.display = 'block';
-          const fileURL = URL.createObjectURL(file);
-          if (file.type.startsWith('video/')) {
-            previewDiv.innerHTML = `<video src="${fileURL}" style="max-height: 100px; border-radius: 6px;" controls></video>`;
-          } else {
-            previewDiv.innerHTML = `<img src="${fileURL}" style="max-height: 100px; border-radius: 6px;">`;
-          }
-        }
-      } else {
-        if (fileNameSpan) fileNameSpan.textContent = 'Файл не выбран';
-        if (previewDiv) {
-          previewDiv.style.display = 'none';
-          previewDiv.innerHTML = '';
-        }
-      }
-    });
+// Отрисовка ленты и формы админа
+function renderNewsFeed() {
+  const feed = document.getElementById('news-feed');
+  const adminForm = document.getElementById('news-admin-form');
+
+  // Отображаем форму публикации только для администратора
+  if (adminForm) {
+    const checkAdmin = (typeof isAdmin !== 'undefined' && isAdmin === true);
+    adminForm.style.display = checkAdmin ? 'flex' : 'none';
   }
 
-  // 2. Обработка отправки формы новости
-  const newsForm = document.getElementById('news-admin-form');
-  if (newsForm) {
-    newsForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const text = document.getElementById('news-text').value;
-      const fileInput = document.getElementById('news-file-input');
-      const file = fileInput && fileInput.files[0] ? fileInput.files[0] : null;
+  if (!feed) return;
 
-      // Здесь код отправки в Supabase (если используется) или сохранения
-      alert('Пост готов к публикации! (Подключи сохранение в базу данных при необходимости)');
-      
-      newsForm.reset();
-      const previewDiv = document.getElementById('news-media-preview');
-      if (previewDiv) { previewDiv.style.display = 'none'; previewDiv.innerHTML = ''; }
-      const fileNameSpan = document.getElementById('news-file-name');
-      if (fileNameSpan) fileNameSpan.textContent = 'Файл не выбран';
-      
-      loadNews();
-    });
-  }
-});
-
-// Функция загрузки и отрисовки новостей
-function loadNews() {
-  const container = document.getElementById('news-list');
-  if (!container) return;
-
-  // Массив постов (пока пустой)
-  const posts = []; 
-
-  if (posts.length === 0) {
-    container.innerHTML = `
-      <div class="card" style="text-align: center; padding: 25px 16px; color: var(--hint, #888); background: #1e1e1e; border-radius: 10px;">
-        <div style="font-size: 28px; margin-bottom: 8px;">📰</div>
-        <div style="font-size: 14px; font-weight: 600;">Новостей пока нет</div>
-      </div>
-    `;
+  // Отрисовка пустого состояния (как на Фото 2)
+  if (!window.newsPosts || window.newsPosts.length === 0) {
+    feed.innerHTML = '<div class="news-empty-card">Посты отсутствуют</div>';
     return;
   }
 
-  let html = '';
-  posts.forEach(post => {
-    html += `
-      <div class="card" style="margin-bottom: 15px; background: #1e1e1e; padding: 15px; border-radius: 10px;">
-        <div style="font-size: 14px; margin-bottom: 8px; color: #fff;">${post.text || ''}</div>
-        ${post.media_url ? `<img src="${post.media_url}" style="width: 100%; border-radius: 8px; margin-top: 8px;">` : ''}
+  // Отрисовка ленты постов (как на Фото 3)
+  feed.innerHTML = window.newsPosts.map(post => {
+    let mediaMarkup = '';
+    if (post.mediaUrl) {
+      if (post.mediaType && post.mediaType.startsWith('video')) {
+        mediaMarkup = `<video src="${post.mediaUrl}" controls class="news-post-media"></video>`;
+      } else {
+        mediaMarkup = `<img src="${post.mediaUrl}" class="news-post-media" alt="Media">`;
+      }
+    }
+
+    return `
+      <div class="news-post-card">
+        ${mediaMarkup}
+        ${post.caption ? `<div class="news-post-caption">${post.caption}</div>` : ''}
+        <div class="news-post-date">${post.date || ''}</div>
       </div>
     `;
-  });
-
-  container.innerHTML = html;
+  }).join('');
 }
 
-// Принудительно вызываем при загрузке страницы, чтобы надпись сразу появилась
-document.addEventListener('DOMContentLoaded', () => {
-  loadNews();
-});
+// Обработка выбора файла
+function handleNewsFileSelect(event) {
+  const file = event.target.files && event.target.files[0];
+  if (file) {
+    selectedNewsFile = file;
+    const fileNameEl = document.getElementById('news-file-name');
+    if (fileNameEl) fileNameEl.textContent = `Выбран файл: ${file.name}`;
+  }
+}
+
+// Сохранение нового поста
+function saveNewsPost() {
+  const captionInput = document.getElementById('news-caption-input');
+  const caption = captionInput ? captionInput.value.trim() : '';
+
+  if (!caption && !selectedNewsFile) {
+    alert('Добавьте текст или выберите файл');
+    return;
+  }
+
+  const now = new Date();
+  const day = String(now.getDate()).padStart(2, '0');
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const year = now.getFullYear();
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const formattedDate = `${day}.${month}.${year}, ${hours}:${minutes}`;
+
+  const newPost = {
+    id: Date.now(),
+    caption: caption,
+    mediaUrl: selectedNewsFile ? URL.createObjectURL(selectedNewsFile) : null,
+    mediaType: selectedNewsFile ? selectedNewsFile.type : null,
+    date: formattedDate
+  };
+
+  window.newsPosts.unshift(newPost);
+
+  // Сброс полей
+  if (captionInput) captionInput.value = '';
+  selectedNewsFile = null;
+  const fileNameEl = document.getElementById('news-file-name');
+  if (fileNameEl) fileNameEl.textContent = 'Файл не выбран';
+  document.getElementById('news-file-input').value = '';
+
+  renderNewsFeed();
+}
+
+// Автоматический запуск отрисовки
+document.addEventListener('DOMContentLoaded', renderNewsFeed);
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+  renderNewsFeed();
+}
