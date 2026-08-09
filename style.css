@@ -793,50 +793,43 @@
   text-align: right;
 }
 
-/* Шапка поста с датой и кнопками админа */
-.post-header {
+/* Нижняя панель поста (Кнопки слева, дата справа) */
+.post-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
+  margin-top: 10px;
 }
 
-/* Контейнер кнопок */
-.post-admin-actions {
+.post-admin-actions-inline {
   display: flex;
-  gap: 6px;
+  gap: 8px;
 }
 
-/* Общие стили для квадратных кнопок */
-.btn-action {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* Компактные кнопки «Изм.» и «Уд.» */
+.btn-small {
+  border: none;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
   cursor: pointer;
-  font-size: 14px;
-  outline: none;
-  transition: all 0.2s ease;
+  line-height: 1.2;
 }
 
-/* Кнопка редактирования (синяя) */
-.btn-edit {
-  background: rgba(46, 166, 255, 0.15);
-  border: 1px solid #2ea6ff;
-  color: #2ea6ff;
-}
-.btn-edit:hover {
-  background: rgba(46, 166, 255, 0.3);
+/* Кнопка «Изм.» (Серая с белым текстом) */
+.btn-small-edit {
+  background: #3a3a3c;
+  color: #ffffff;
 }
 
-/* Кнопка удаления (красная) */
-.btn-delete {
-  background: rgba(255, 59, 48, 0.15);
-  border: 1px solid #ff3b30;
-  color: #ff3b30;
+/* Кнопка «Уд.» (Тёмно-красная с красным текстом) */
+.btn-small-delete {
+  background: rgba(255, 59, 48, 0.25);
+  color: #ff453a;
 }
-.btn-delete:hover {
-  background: rgba(255, 59, 48, 0.3);
+
+.news-post-date-right {
+  font-size: 12px;
+  color: #8e8e93;
 }
