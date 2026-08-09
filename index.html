@@ -319,18 +319,26 @@
 
 <!-- ВКЛАДКА НОВОСТИ -->
 <div id="tab-news" class="tab-content">
-  <h3 style="margin-bottom: 15px;">📰 Новости</h3>
+  <h3 style="color: #fff; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+    <span>📰</span> Новости
+  </h3>
 
-  <!-- Форма для админа (скрыта по умолчанию) -->
-  <div id="news-admin-form" style="display: none; flex-direction: column; gap: 10px; margin-bottom: 15px; background: rgba(255,255,255,0.05); padding: 12px; border-radius: 10px;">
-    <textarea id="news-caption-input" rows="3" placeholder="Введите текст новости..." style="width: 100%; box-sizing: border-box; background: #1c1c1e; color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 10px; border-radius: 8px; resize: vertical;"></textarea>
+  <!-- Форма создания поста (только для админа) -->
+  <div id="news-admin-form" class="news-admin-card" style="display: none;">
+    <div class="news-admin-title">
+      <span>➕</span> Добавить медиа
+    </div>
 
     <input type="file" id="news-file-input" accept="image/*,video/*" style="display: none;" onchange="handleNewsFileSelect(event)">
     
-    <button type="button" class="form-btn" onclick="document.getElementById('news-file-input').click()" style="background: rgba(255,255,255,0.1); color: #fff; border: none; padding: 8px; border-radius: 6px;">📁 Выбрать файл</button>
-    <span id="news-file-name" style="font-size: 12px; opacity: 0.7;">Файл не выбран</span>
+    <button type="button" class="file-select-btn" onclick="document.getElementById('news-file-input').click()">
+      📂 Выбрать фото или видео из медиатеки
+    </button>
+    <div id="news-file-name" class="file-name-hint">Файл не выбран</div>
 
-    <button type="button" class="form-btn" onclick="saveNewsPost()" style="margin-top: 5px; background: #2ea6ff; color: #fff; border: none; padding: 10px; border-radius: 6px; font-weight: bold;">Опубликовать</button>
+    <textarea id="news-caption-input" class="news-input" rows="2" placeholder="Введите подпись..."></textarea>
+
+    <button type="button" class="publish-btn" onclick="saveNewsPost()">Опубликовать</button>
   </div>
 
   <!-- Лента новостей -->
