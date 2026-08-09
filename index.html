@@ -323,12 +323,10 @@
     <span>📰</span> Новости
   </h3>
 
-  <!-- Форма создания поста (только для админа) -->
+  <!-- Форма создания поста (скрыта) -->
   <div id="news-admin-form" class="news-admin-card" style="display: none;">
-    <div class="news-admin-title">
-      <span>➕</span> Добавить медиа
-    </div>
-
+    <div class="news-admin-title">➕ Добавить медиа</div>
+    
     <input type="file" id="news-file-input" accept="image/*,video/*" style="display: none;" onchange="handleNewsFileSelect(event)">
     
     <button type="button" class="file-select-btn" onclick="document.getElementById('news-file-input').click()">
@@ -341,8 +339,10 @@
     <button type="button" class="publish-btn" onclick="saveNewsPost()">Опубликовать</button>
   </div>
 
-  <!-- Лента новостей -->
-  <div id="news-feed"></div>
+  <!-- Лента новостей (заглушка прописана сразу в HTML) -->
+  <div id="news-feed">
+    <div class="news-empty-card">Посты отсутствуют</div>
+  </div>
 </div>
   
   <!-- МОДАЛЬНОЕ ОКНО ПРОФИЛЯ ИГРОКА -->
