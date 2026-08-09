@@ -2219,14 +2219,12 @@ window.renderNewsFeed = function() {
   const adminForm = document.getElementById('news-admin-form');
   const isAdminActive = checkIsAdmin();
 
-  // Показываем/скрываем форму админа
   if (adminForm) {
     adminForm.style.display = isAdminActive ? 'flex' : 'none';
   }
 
   if (!feed) return;
 
-  // Если массив пуст — пробуем перечитать из памяти
   if (!window.newsPosts || window.newsPosts.length === 0) {
     try {
       window.newsPosts = JSON.parse(localStorage.getItem('newsPosts')) || [];
@@ -2235,20 +2233,19 @@ window.renderNewsFeed = function() {
     }
   }
 
-  // Если постов нет — выводим карточку заглушки
   if (!window.newsPosts || window.newsPosts.length === 0) {
     feed.innerHTML = '<div class="news-empty-card">Посты отсутствуют</div>';
     return;
   }
 
-  // Отрисовка постов
   feed.innerHTML = window.newsPosts.map(post => {
+    // Кнопки отображаются только для админа
     const adminButtonsHtml = isAdminActive ? `
-      <div class="post-admin-actions">
-        <button class="btn-action btn-edit" onclick="editNewsPost(${post.id})" title="Редактировать">✏️</button>
-        <button class="btn-action btn-delete" onclick="deleteNewsPost(${post.id})" title="Удалить">🗑️</button>
+      <div class="post-admin-actions-inline">
+        <button class="btn-small btn-small-edit" onclick="editNewsPost(${post.id})">Изм.</button>
+        <button class="btn-small btn-small-delete" onclick="deleteNewsPost(${post.id})">Уд.</button>
       </div>
-    ` : '';
+    ` : '<div></div>';
 
     let mediaHtml = '';
     if (post.mediaUrl) {
@@ -2261,12 +2258,12 @@ window.renderNewsFeed = function() {
 
     return `
       <div class="news-post-card">
-        <div class="post-header">
-          <div class="news-post-date">${post.date || ''}</div>
-          ${adminButtonsHtml}
-        </div>
         ${mediaHtml}
         ${post.caption ? `<div class="news-post-caption">${post.caption}</div>` : ''}
+        <div class="post-footer">
+          ${adminButtonsHtml}
+          <div class="news-post-date-right">${post.date || ''}</div>
+        </div>
       </div>
     `;
   }).join('');
