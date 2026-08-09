@@ -2200,27 +2200,17 @@ function switchTab(tabName) {
 if (!window.newsPosts) window.newsPosts = [];
 let selectedNewsFile = null;
 
-// 1. Включаем режим админа для проверки (поставь false для обычного юзера)
-window.isAdmin = true;
-
-// 2. Безопасная функция отрисовки
+// 1. Обновленная функция отрисовки ленты (выводит кнопки только для админа)
 window.renderNewsFeed = function() {
-  console.log("Отрисовка ленты новостей...");
-  
   const feed = document.getElementById('news-feed');
   const adminForm = document.getElementById('news-admin-form');
 
-  if (!feed) {
-    console.error("Ошибка: элемент #news-feed не найден в HTML!");
-    return;
-  }
-
-  // Показываем форму админу
   if (adminForm) {
     adminForm.style.display = (window.isAdmin === true) ? 'flex' : 'none';
   }
 
-  // Читаем посты
+  if (!feed) return;
+
   let posts = [];
   try {
     posts = JSON.parse(localStorage.getItem('newsPosts')) || [];
@@ -2228,76 +2218,54 @@ window.renderNewsFeed = function() {
     posts = [];
   }
 
-  // Если постов нет — оставляем или вставляем карточку заглушки
   if (posts.length === 0) {
     feed.innerHTML = '<div class="news-empty-card">Посты отсутствуют</div>';
     return;
   }
 
-  // Если посты есть — выводим их
-  feed.innerHTML = posts.map(post => `
-    <div class="news-post-card">
-      ${post.mediaUrl ? `<img src="${post.mediaUrl}" class="news-post-media">` : ''}
-      ${post.caption ? `<div class="news-post-caption">${post.caption}</div>` : ''}
-      <div class="news-post-date">${post.date || ''}</div>
-    </div>
-  `).join('');
+  feed.innerHTML = posts.map(post => {
+    // Рендерим кнопки только если пользователь — админ
+    const adminButtonsHtml = window.isAdmin ? `
+      <div class="post-admin-actions">
+        <button class="btn-action btn-edit" onclick="editNewsPost(${post.id})" title="Редактировать">✏️</button>
+        <button class="btn-action btn-delete" onclick="deleteNewsPost(${post.id})" title="Удалить">🗑️</button>
+      </div>
+    ` : '';
+
+    return `
+      <div class="news-post-card">
+        <div class="post-header">
+          <div class="news-post-date">${post.date || ''}</div>
+          ${adminButtonsHtml}
+        </div>
+        ${post.mediaUrl ? `<img src="${post.mediaUrl}" class="news-post-media">` : ''}
+        ${post.caption ? `<div class="news-post-caption">${post.caption}</div>` : ''}
+      </div>
+    `;
+  }).join('');
 };
 
-// 3. Выбор файла
-window.handleNewsFileSelect = function(event) {
-  const file = event.target.files && event.target.files[0];
-  const fileNameEl = document.getElementById('news-file-name');
-  if (file && fileNameEl) {
-    fileNameEl.textContent = `Выбран файл: ${file.name}`;
-  }
-};
+// 2. Функция удаления поста
+window.deleteNewsPost = function(id) {
+  if (!confirm('Вы уверены, что хотите удалить эту новость?')) return;
 
-// 4. Сохранение поста
-window.saveNewsPost = function() {
-  const captionInput = document.getElementById('news-caption-input');
-  const fileInput = document.getElementById('news-file-input');
-  const caption = captionInput ? captionInput.value.trim() : '';
-  const file = fileInput && fileInput.files[0];
+  let posts = JSON.parse(localStorage.getItem('newsPosts')) || [];
+  posts = posts.filter(post => post.id !== id);
+  localStorage.setItem('newsPosts', JSON.stringify(posts));
 
-  if (!caption && !file) {
-    alert('Добавьте текст или выберите файл');
-    return;
-  }
-
-  const saveAndRender = (mediaUrl = null) => {
-    const now = new Date();
-    const formattedDate = `${String(now.getDate()).padStart(2, '0')}.${String(now.getMonth() + 1).padStart(2, '0')}.${now.getFullYear()}, ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-
-    const newPost = {
-      id: Date.now(),
-      caption: caption,
-      mediaUrl: mediaUrl,
-      date: formattedDate
-    };
-
-    let posts = JSON.parse(localStorage.getItem('newsPosts')) || [];
-    posts.unshift(newPost);
-    localStorage.setItem('newsPosts', JSON.stringify(posts));
-
-    if (captionInput) captionInput.value = '';
-    if (fileInput) fileInput.value = '';
-    const fileNameEl = document.getElementById('news-file-name');
-    if (fileNameEl) fileNameEl.textContent = 'Файл не выбран';
-
-    window.renderNewsFeed();
-  };
-
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = (e) => saveAndRender(e.target.result);
-    reader.readAsDataURL(file);
-  } else {
-    saveAndRender(null);
-  }
-};
-
-// 5. Принудительный вызов при старте
-setTimeout(function() {
   window.renderNewsFeed();
-}, 200);
+};
+
+// 3. Функция редактирования текста поста
+window.editNewsPost = function(id) {
+  let posts = JSON.parse(localStorage.getItem('newsPosts')) || [];
+  const post = posts.find(p => p.id === id);
+  if (!post) return;
+
+  const newCaption = prompt('Измените текст новости:', post.caption || '');
+  if (newCaption !== null) {
+    post.caption = newCaption.trim();
+    localStorage.setItem('newsPosts', JSON.stringify(posts));
+    window.renderNewsFeed();
+  }
+};
