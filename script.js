@@ -1579,7 +1579,88 @@
       }
 
       renderPlayerCareer(player);
-      renderPlayerMatchesHistory(player);
+      
+      // Отрисовка списка матчей из массива
+window.renderPlayerMatches = function(matchesList = []) {
+  const container = document.getElementById('player-matches-list');
+  if (!container) return;
+
+  // Сохраняем матчи в глобальную переменную
+  window.allMatches = matchesList;
+
+  if (matchesList.length === 0) {
+    container.innerHTML = '<div style="text-align: center; color: #888; padding: 20px;">Нет доступных матчей</div>';
+    return;
+  }
+
+  container.innerHTML = matchesList.map(match => `
+    <div class="player-match-card" onclick="openMatchDetails('${match.id}')">
+      <div class="match-date">${match.date}</div>
+      <div class="match-teams">
+        <span class="team-name">${match.home_team || match.homeTeam}</span>
+        <span class="match-time">${match.score || match.time}</span>
+        <span class="team-name">${match.away_team || match.awayTeam}</span>
+      </div>
+    </div>
+  `).join('');
+};
+
+// Открытие модального окна деталей
+window.openMatchDetails = function(matchId) {
+  let modal = document.getElementById('match-details-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'match-details-modal';
+    modal.className = 'match-modal-overlay';
+    document.body.appendChild(modal);
+  }
+
+  // Ищем матч в сохраненном массиве
+  const match = (window.allMatches || []).find(m => m.id == matchId);
+
+  // Если матч не найден — выводим сообщение об ошибке в окне
+  if (!match) {
+    modal.innerHTML = `
+      <div class="match-modal-content" style="text-align: center;">
+        <button class="match-modal-close" onclick="closeMatchDetails()">✕</button>
+        <div style="font-size: 16px; font-weight: bold; margin: 15px 0; color: #ff5555;">
+          Не удалось открыть детали матча
+        </div>
+      </div>
+    `;
+    modal.style.display = 'flex';
+    return;
+  }
+
+  // Если матч найден — выводим полную информацию
+  modal.innerHTML = `
+    <div class="match-modal-content">
+      <button class="match-modal-close" onclick="closeMatchDetails()">✕</button>
+      <div style="text-align: center; color: #888; font-size: 13px;">${match.date || ''}</div>
+      
+      <div class="match-modal-header">
+        <div style="flex: 1; text-align: right;">${match.home_team || match.homeTeam}</div>
+        <div class="match-modal-score" style="margin: 0 15px;">${match.score || match.time || 'VS'}</div>
+        <div style="flex: 1; text-align: left;">${match.away_team || match.awayTeam}</div>
+      </div>
+
+      <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 12px; margin-top: 15px; font-size: 14px; color: #ccc;">
+        <p style="margin: 6px 0;">📌 <strong>Статус:</strong> ${match.status || 'Запланирован'}</p>
+        <p style="margin: 6px 0;">📍 <strong>Стадион:</strong> ${match.stadium || match.location || 'Не указан'}</p>
+      </div>
+    </div>
+  `;
+
+  modal.style.display = 'flex';
+};
+
+// Закрытие модального окна
+window.closeMatchDetails = function() {
+  const modal = document.getElementById('match-details-modal');
+  if (modal) {
+    modal.style.display = 'none';
+  }
+};
 
       document.getElementById('player-profile-modal').classList.add('active');
     }
