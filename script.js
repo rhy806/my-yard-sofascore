@@ -2319,70 +2319,193 @@ window.renderNewsFeed = function() {
   }).join('');
 };
 
-window.saveNewsPost = function() {
+// ==========================================
+// ПОЛНОЭКРАННЫЙ ПРОСМОТР И ТОЧКИ
+// ==========================================
+window.openLightbox = function(src, isVideo) {
+  let modal = document.getElementById('fullscreen-lightbox');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'fullscreen-lightbox';
+    modal.onclick = () => modal.style.display = 'none';
+    document.body.appendChild(modal);
+  }
+  modal.innerHTML = isVideo 
+    ? `<video src="${src}" controls autoplay></video>`
+    : `<img src="${src}">`;
+  modal.style.display = 'flex';
+};
+
+window.updateCarouselDots = function(container, postId) {
+  const scrollLeft = container.scrollLeft;
+  const width = container.clientWidth;
+  const currentIndex = Math.round(scrollLeft / width);
+  
+  const dots = document.querySelectorAll(`#dots-${postId} .dot`);
+  dots.forEach((dot, index) => {
+    if (index === currentIndex) {
+      dot.classList.add('active');
+    } else {
+      dot.classList.remove('active');
+    }
+  });
+};
+
+// ==========================================
+// ОТРИСОВКА ЛЕНТЫ С ПОДДЕРЖКОЙ СЛАЙДЕРА
+// ==========================================
+window.renderNewsFeed = function() {
+  const feed = document.getElementById('news-feed');
+  const adminForm = document.getElementById('news-admin-form');
+
+  const currentUserId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id 
+    ? Number(window.Telegram.WebApp.initDataUnsafe.user.id) 
+    : null;
+    
+  const isAdmin = (currentUserId === ADMIN_TELEGRAM_ID);
+
+  if (adminForm) {
+    adminForm.style.display = isAdmin ? 'flex' : 'none';
+  }
+
+  if (!feed) return;
+
+  let posts = window.newsPosts || [];
+  if (posts.length === 0) {
+    try {
+      posts = JSON.parse(localStorage.getItem('newsPosts')) || [];
+    } catch(e) {
+      posts = [];
+    }
+  }
+
+  if (posts.length === 0) {
+    feed.innerHTML = '<div class="news-empty-card">Посты отсутствуют</div>';
+    return;
+  }
+
+  feed.innerHTML = posts.map(post => {
+    const adminButtonsHtml = isAdmin ? `
+      <div class="post-admin-actions-inline">
+        <button type="button" class="btn-small btn-small-edit" onclick="editNewsPost(${post.id})">Изм.</button>
+        <button type="button" class="btn-small btn-small-delete" onclick="deleteNewsPost(${post.id})">Уд.</button>
+      </div>
+    ` : '<div></div>';
+
+    // Формируем массив медиафайлов (совместимо со старыми постами)
+    let mediaList = [];
+    if (post.mediaFiles && post.mediaFiles.length > 0) {
+      mediaList = post.mediaFiles;
+    } else if (post.mediaUrl) {
+      mediaList = [{ url: post.mediaUrl, type: post.mediaType || 'image' }];
+    }
+
+    // Генерация HTML слайдера
+    let mediaHtml = '';
+    if (mediaList.length > 0) {
+      const itemsHtml = mediaList.map(item => {
+        const isVideo = item.type && item.type.startsWith('video');
+        if (isVideo) {
+          return `
+            <div class="news-carousel-item">
+              <video src="${item.url}" controls onclick="event.stopPropagation(); window.openLightbox('${item.url}', true)"></video>
+            </div>`;
+        } else {
+          return `
+            <div class="news-carousel-item">
+              <img src="${item.url}" onclick="window.openLightbox('${item.url}', false)">
+            </div>`;
+        }
+      }).join('');
+
+      // Точки генерируются только если файлов больше одного
+      const dotsHtml = mediaList.length > 1 ? `
+        <div class="carousel-dots" id="dots-${post.id}">
+          ${mediaList.map((_, idx) => `<div class="dot ${idx === 0 ? 'active' : ''}"></div>`).join('')}
+        </div>
+      ` : '';
+
+      mediaHtml = `
+        <div class="news-carousel-wrapper">
+          <div class="news-carousel" onscroll="window.updateCarouselDots(this, ${post.id})">
+            ${itemsHtml}
+          </div>
+          ${dotsHtml}
+        </div>
+      `;
+    }
+
+    const displayDate = post.created_at ? formatSupabaseDate(post.created_at) : (post.date || '');
+
+    return `
+      <div class="news-post-card">
+        ${mediaHtml}
+        ${post.caption ? `<div class="news-post-caption" style="white-space: pre-wrap; word-break: break-word;">${post.caption}</div>` : ''}
+        <div class="post-footer">
+          ${adminButtonsHtml}
+          <div class="news-post-date-right">${displayDate}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+};
+
+// ==========================================
+// ПУБЛИКАЦИЯ С НЕСКОЛЬКИМИ ФАЙЛАМИ
+// ==========================================
+window.saveNewsPost = async function() {
   const captionInput = document.getElementById('news-caption-input');
   const fileInput = document.getElementById('news-file-input');
   const caption = captionInput ? captionInput.value.trim() : '';
-  const file = fileInput && fileInput.files[0];
+  const files = fileInput && fileInput.files ? Array.from(fileInput.files) : [];
 
-  if (!caption && !file) {
+  if (!caption && files.length === 0) {
     alert('Добавьте текст или выберите файл');
     return;
   }
 
-  if (file && file.size > 2.5 * 1024 * 1024) {
-    alert('Файл слишком большой! Для теста выберите фото/видео размером до 2.5 МБ.');
-    return;
-  }
+  // Считываем все файлы
+  const readFilesPromises = files.map(file => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve({ url: e.target.result, type: file.type });
+      reader.readAsDataURL(file);
+    });
+  });
 
-  const createAndSave = async (mediaUrl = null, mediaType = null) => {
-    // В объект больше не передаём date, Supabase создаст created_at самостоятельно
-    const newPost = {
-      id: Date.now(),
-      caption: caption,
-      mediaUrl: mediaUrl,
-      mediaType: mediaType
-    };
+  const mediaFiles = await Promise.all(readFilesPromises);
 
-    try {
-      // Пытаемся сохранить на сервер
-      const { error } = await supabaseClient.from('news').insert([newPost]);
-      if (error) throw error;
-      
-      // Скачиваем заново, чтобы получить точный created_at
-      await window.fetchNewsPosts();
-
-    } catch (serverError) {
-      console.error(serverError);
-      alert('Нет связи с сервером. Пост сохранен локально!');
-      
-      // Если сервер не отвечает, откатываемся на вашу СТАРУЮ логику локального хранения
-      const now = new Date();
-      newPost.date = `${String(now.getDate()).padStart(2, '0')}.${String(now.getMonth() + 1).padStart(2, '0')}.${now.getFullYear()}, ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-      
-      window.newsPosts.unshift(newPost);
-      try {
-        localStorage.setItem('newsPosts', JSON.stringify(window.newsPosts));
-      } catch (err) {
-        window.newsPosts.shift(); 
-        return;
-      }
-      window.renderNewsFeed();
-    }
-
-    if (captionInput) captionInput.value = '';
-    if (fileInput) fileInput.value = '';
-    const fileNameEl = document.getElementById('news-file-name');
-    if (fileNameEl) fileNameEl.textContent = 'Файл не выбран';
+  const newPost = {
+    id: Date.now(),
+    caption: caption,
+    mediaFiles: mediaFiles
   };
 
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = (e) => createAndSave(e.target.result, file.type);
-    reader.readAsDataURL(file);
-  } else {
-    createAndSave(null, null);
+  try {
+    const { error } = await supabaseClient.from('news').insert([newPost]);
+    if (error) throw error;
+    await window.fetchNewsPosts();
+  } catch (serverError) {
+    console.error(serverError);
+    alert('Нет связи с сервером. Пост сохранен локально!');
+    
+    const now = new Date();
+    newPost.date = `${String(now.getDate()).padStart(2, '0')}.${String(now.getMonth() + 1).padStart(2, '0')}.${now.getFullYear()}, ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    
+    window.newsPosts.unshift(newPost);
+    try {
+      localStorage.setItem('newsPosts', JSON.stringify(window.newsPosts));
+    } catch (err) {
+      window.newsPosts.shift();
+      return;
+    }
+    window.renderNewsFeed();
   }
+
+  if (captionInput) captionInput.value = '';
+  if (fileInput) fileInput.value = '';
+  const fileNameEl = document.getElementById('news-file-name');
+  if (fileNameEl) fileNameEl.textContent = 'Файл не выбран';
 };
 
 window.deleteNewsPost = async function(id) {
