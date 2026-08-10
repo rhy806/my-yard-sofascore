@@ -1770,11 +1770,6 @@ window.closeMatchDetails = function() {
   `).join('');
 }
 
-      if (playerMatches.length === 0) {
-        container.innerHTML = '<div class="empty-card-placeholder">Игрок еще не принимал участия в зафиксированных матчах</div>';
-        return;
-      }
-
       let html = '';
       playerMatches.forEach(m => {
         html += `
