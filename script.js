@@ -1710,29 +1710,72 @@ window.closeMatchDetails = function() {
       if (editBtn) editBtn.style.display = isAdmin ? 'block' : 'none';
     }
 
-    function renderPlayerMatchesHistory(player) {
-      const container = document.getElementById('pp-matches-list');
-      if (!container) return;
+  function renderPlayerMatchesHistory(player) {
+  // 1. Ищем контейнер в модалке профиля
+  const container = document.getElementById('pp-matches-list') || document.getElementById('player-matches-list');
+  if (!container) return;
 
-      const playerMatches = allMatches.filter(m => {
-        let inGoals = false, inLineup = false;
-        if (m.goals_data) {
-          try {
-            const g = typeof m.goals_data === 'string' ? JSON.parse(m.goals_data) : m.goals_data;
-            if (Array.isArray(g)) {
-              inGoals = g.some(item => (item.author && item.author.toLowerCase() === player.name.toLowerCase()) || (item.assist && item.assist.toLowerCase() === player.name.toLowerCase()));
-            }
-          } catch(e){}
+  if (!player || !player.name) {
+    container.innerHTML = '<div class="empty-card-placeholder">Информация об игроке недоступна</div>';
+    return;
+  }
+
+  const targetName = player.name.trim().toLowerCase();
+
+  // Безопасная функция поиска имени (работает и со строками, и с объектами)
+  const isPlayerInList = (list) => {
+    if (!Array.isArray(list)) return false;
+    return list.some(item => {
+      if (!item) return false;
+      const itemName = (typeof item === 'string' ? item : (item.name || item.author || item.assist || '')).trim().toLowerCase();
+      return itemName === targetName;
+    });
+  };
+
+  // 2. Фильтруем все матчи
+  const playerMatches = (window.allMatches || allMatches || []).filter(m => {
+    let inGoals = false, inLineup = false;
+
+    // Проверка голов и ассистов
+    if (m.goals_data) {
+      try {
+        const g = typeof m.goals_data === 'string' ? JSON.parse(m.goals_data) : m.goals_data;
+        inGoals = isPlayerInList(g);
+      } catch(e){}
+    }
+
+    // Проверка составов ОБЕИХ команд (lineup1 и lineup2)
+    [m.lineup1, m.lineup2].forEach(lineupData => {
+      if (!lineupData) return;
+      try {
+        const l = typeof lineupData === 'string' ? JSON.parse(lineupData) : lineupData;
+        if (isPlayerInList(l.startingXI) || isPlayerInList(l.roster) || isPlayerInList(l.bench)) {
+          inLineup = true;
         }
-        if (m.lineup1) {
-          try {
-            const l1 = typeof m.lineup1 === 'string' ? JSON.parse(m.lineup1) : m.lineup1;
-            if (l1.startingXI && l1.startingXI.some(p => p.name.toLowerCase() === player.name.toLowerCase())) inLineup = true;
-            if (l1.roster && l1.roster.some(rName => rName.toLowerCase() === player.name.toLowerCase())) inLineup = true;
-          } catch(e){}
-        }
-        return inGoals || inLineup;
-      });
+      } catch(e){}
+    });
+
+    return inGoals || inLineup;
+  });
+
+  // 3. Если ничего не найдено — выводим плашку
+  if (playerMatches.length === 0) {
+    container.innerHTML = '<div class="empty-card-placeholder">Игрок еще не принимал участия в зафиксированных матчах</div>';
+    return;
+  }
+
+  // 4. Отрисовываем кликабельные карточки матчей
+  container.innerHTML = playerMatches.map(match => `
+    <div class="player-match-card" onclick="openMatchDetails('${match.id}')" style="cursor: pointer;">
+      <div class="match-date">${match.date || ''}</div>
+      <div class="match-teams">
+        <span class="team-name">${match.home_team || match.homeTeam || 'Команда 1'}</span>
+        <span class="match-time">${match.score || match.time || 'VS'}</span>
+        <span class="team-name">${match.away_team || match.awayTeam || 'Команда 2'}</span>
+      </div>
+    </div>
+  `).join('');
+}
 
       if (playerMatches.length === 0) {
         container.innerHTML = '<div class="empty-card-placeholder">Игрок еще не принимал участия в зафиксированных матчах</div>';
