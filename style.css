@@ -830,3 +830,8 @@
   font-size: 12px;
   color: #8e8e93;
 }
+
+.news-post-caption {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
