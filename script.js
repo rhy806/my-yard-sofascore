@@ -1710,8 +1710,7 @@ window.closeMatchDetails = function() {
       if (editBtn) editBtn.style.display = isAdmin ? 'block' : 'none';
     }
 
-  function renderPlayerMatchesHistory(player) {
-  // 1. Ищем контейнер в модалке профиля
+ function renderPlayerMatchesHistory(player) {
   const container = document.getElementById('pp-matches-list') || document.getElementById('player-matches-list');
   if (!container) return;
 
@@ -1722,7 +1721,6 @@ window.closeMatchDetails = function() {
 
   const targetName = player.name.trim().toLowerCase();
 
-  // Безопасная функция поиска имени (работает и со строками, и с объектами)
   const isPlayerInList = (list) => {
     if (!Array.isArray(list)) return false;
     return list.some(item => {
@@ -1732,11 +1730,9 @@ window.closeMatchDetails = function() {
     });
   };
 
-  // 2. Фильтруем все матчи
   const playerMatches = (window.allMatches || allMatches || []).filter(m => {
     let inGoals = false, inLineup = false;
 
-    // Проверка голов и ассистов
     if (m.goals_data) {
       try {
         const g = typeof m.goals_data === 'string' ? JSON.parse(m.goals_data) : m.goals_data;
@@ -1744,7 +1740,6 @@ window.closeMatchDetails = function() {
       } catch(e){}
     }
 
-    // Проверка составов ОБЕИХ команд (lineup1 и lineup2)
     [m.lineup1, m.lineup2].forEach(lineupData => {
       if (!lineupData) return;
       try {
@@ -1758,13 +1753,11 @@ window.closeMatchDetails = function() {
     return inGoals || inLineup;
   });
 
-  // 3. Если ничего не найдено — выводим плашку
   if (playerMatches.length === 0) {
     container.innerHTML = '<div class="empty-card-placeholder">Игрок еще не принимал участия в зафиксированных матчах</div>';
     return;
   }
 
-  // 4. Отрисовываем кликабельные карточки матчей
   container.innerHTML = playerMatches.map(match => `
     <div class="player-match-card" onclick="openMatchDetails('${match.id}')" style="cursor: pointer;">
       <div class="match-date">${match.date || ''}</div>
