@@ -36,15 +36,12 @@
     }
 
     .team-badge-icon {
-      width: 44px;
-      height: 44px;
-      background: var(--card-inner);
-      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 22px;
-      border: 1px solid rgba(255,255,255,0.1);
+      background: transparent;
+      border-radius: 0;
+      border: none;
     }
 
     .team-name {
