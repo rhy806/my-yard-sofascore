@@ -1770,22 +1770,6 @@ window.closeMatchDetails = function() {
   `).join('');
 }
 
-      let html = '';
-      playerMatches.forEach(m => {
-        html += `
-          <div class="card clickable-card" onclick="openMatchModal(${m.id})">
-            <div class="match-header">${m.match_date || ''}</div>
-            <div class="match-row">
-              <span>${m.team1 || ''}</span>
-              <span style="color:var(--accent);">${m.score || 'vs'}</span>
-              <span>${m.team2 || ''}</span>
-            </div>
-          </div>
-        `;
-      });
-      container.innerHTML = html;
-    }
-
     function openPlayerEditModal() {
       if (!currentPlayerViewing) return;
       document.getElementById('edit-profile-id').value = currentPlayerViewing.id;
