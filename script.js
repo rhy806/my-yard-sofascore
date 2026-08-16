@@ -1606,6 +1606,13 @@
   }
 }
 
+ // ==========================================
+// ОТРИСОВКА СПИСКА МАТЧЕЙ ИГРОКА
+// ==========================================
+window.renderPlayerMatches = function(matchesList = []) {
+  const container = document.getElementById('player-matches-list');
+  if (!container) return; // Теперь return находится строго внутри функции
+
   // Сохраняем матчи в глобальную переменную
   window.allMatches = matchesList;
 
