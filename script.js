@@ -1754,8 +1754,8 @@ window.closeMatchDetails = function() {
 };
 
 // Загружаем посты текущего игрока с безопасным фоллбэком
-const activePlayer = typeof player !== 'undefined' ? player : currentPlayerViewing;
-const targetId = activePlayer ? (activePlayer.id || activePlayer.player_id) : currentPlayerId;
+const activePlayer = (typeof player !== 'undefined' && player) ? player : window.currentPlayerViewing;
+const targetId = activePlayer ? (activePlayer.id || activePlayer.player_id) : window.currentPlayerId;
 
 if (typeof loadMediaPosts === 'function' && targetId) {
   loadMediaPosts(targetId);
