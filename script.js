@@ -2254,15 +2254,12 @@ function formatDate(isoString) {
 }
 
 // 1. Загрузка постов из Supabase для конкретного игрока
-async function loadMediaPosts(playerId = currentPlayerId) {
-  if (playerId !== undefined) {
-    currentPlayerId = playerId;
-  }
+async function loadMediaPosts(playerId) {
+  // Берем переданный ID, а если его нет — берем сохраненный глобальный
+  const idToLoad = playerId || currentPlayerId || currentPlayerViewing?.id;
 
-  if (!currentPlayerId) {
-    console.warn('loadMediaPosts: не указан player_id');
-    return;
-  }
+  // Если ID так и не нашли (например, окно только открывается), просто тихо выходим
+  if (!idToLoad) return;
 
   try {
     const { data, error } = await supabaseClient
