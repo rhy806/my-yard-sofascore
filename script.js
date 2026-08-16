@@ -1606,89 +1606,83 @@
   }
 }
 
- // ==========================================
-// ОТРИСОВКА СПИСКА МАТЧЕЙ ИГРОКА
-// ==========================================
-window.renderPlayerMatches = function(matchesList = []) {
-  const container = document.getElementById('player-matches-list');
-  if (!container) return; // Теперь return находится строго внутри функции
+// Отрисовка списка матчей игрока во вкладке "Матчи"
+function renderPlayerMatchesHistory(player) {
+  const container = document.getElementById('player-matches-list') || document.getElementById('pp-matches-list');
+  if (!container) return;
 
-  // Сохраняем матчи в глобальную переменную
-  window.allMatches = matchesList;
-
-  if (matchesList.length === 0) {
-    container.innerHTML = '<div style="text-align: center; color: #888; padding: 20px;">Нет доступных матчей</div>';
+  if (!player) {
+    container.innerHTML = '<div class="empty-matches-placeholder">Информация об игроке недоступна</div>';
     return;
   }
 
-  container.innerHTML = matchesList.map(match => `
+  const targetId = String(player.id || player.player_id || '');
+  const targetName = (player.name || '').trim().toLowerCase();
+
+  // Функция проверки присутствия игрока в списке (составы / голы)
+  const isPlayerInList = (list) => {
+    if (!Array.isArray(list)) return false;
+    return list.some(item => {
+      if (!item) return false;
+      if (typeof item === 'object') {
+        const itemId = String(item.id || item.player_id || '');
+        const itemName = (item.name || item.author || item.assist || '').trim().toLowerCase();
+        return (targetId && itemId === targetId) || (targetName && itemName === targetName);
+      }
+      if (typeof item === 'string') {
+        return (targetId && item === targetId) || (targetName && item.trim().toLowerCase() === targetName);
+      }
+      return false;
+    });
+  };
+
+  const matchesArray = window.allMatches || (typeof allMatches !== 'undefined' ? allMatches : []);
+
+  // Находим все матчи, где игрок был в старте, запасе или забивал
+  const playerMatches = matchesArray.filter(m => {
+    let participated = false;
+
+    // 1. Проверяем составы команд (lineup1 и lineup2)
+    [m.lineup1, m.lineup2].forEach(lineupData => {
+      if (!lineupData) return;
+      try {
+        const l = typeof lineupData === 'string' ? JSON.parse(lineupData) : lineupData;
+        if (isPlayerInList(l.startingXI) || isPlayerInList(l.roster) || isPlayerInList(l.bench)) {
+          participated = true;
+        }
+      } catch(e){}
+    });
+
+    // 2. Проверяем протокол голов
+    if (!participated && m.goals_data) {
+      try {
+        const g = typeof m.goals_data === 'string' ? JSON.parse(m.goals_data) : m.goals_data;
+        if (isPlayerInList(g)) {
+          participated = true;
+        }
+      } catch(e){}
+    }
+
+    return participated;
+  });
+
+  if (playerMatches.length === 0) {
+    container.innerHTML = '<div class="empty-matches-placeholder">Игрок ещё не принимал участия в зафиксированных матчах</div>';
+    return;
+  }
+
+  // Рендерим найденные матчи
+  container.innerHTML = playerMatches.map(match => `
     <div class="player-match-card" onclick="openMatchDetails('${match.id}')">
-      <div class="match-date">${match.date}</div>
+      <div class="match-date">${match.date || 'Дата не указана'}</div>
       <div class="match-teams">
-        <span class="team-name">${match.home_team || match.homeTeam}</span>
-        <span class="match-time">${match.score || match.time}</span>
-        <span class="team-name">${match.away_team || match.awayTeam}</span>
+        <span class="team-name home">${match.home_team || match.homeTeam || 'Команда 1'}</span>
+        <span class="match-time">${match.score || match.time || 'VS'}</span>
+        <span class="team-name away">${match.away_team || match.awayTeam || 'Команда 2'}</span>
       </div>
     </div>
   `).join('');
-};
-
-// Открытие модального окна деталей
-window.openMatchDetails = function(matchId) {
-  let modal = document.getElementById('match-details-modal');
-  if (!modal) {
-    modal = document.createElement('div');
-    modal.id = 'match-details-modal';
-    modal.className = 'match-modal-overlay';
-    document.body.appendChild(modal);
-  }
-
-  // Ищем матч в сохраненном массиве
-  const match = (window.allMatches || []).find(m => m.id == matchId);
-
-  // Если матч не найден — выводим сообщение об ошибке в окне
-  if (!match) {
-    modal.innerHTML = `
-      <div class="match-modal-content" style="text-align: center;">
-        <button class="match-modal-close" onclick="closeMatchDetails()">✕</button>
-        <div style="font-size: 16px; font-weight: bold; margin: 15px 0; color: #ff5555;">
-          Не удалось открыть детали матча
-        </div>
-      </div>
-    `;
-    modal.style.display = 'flex';
-    return;
-  }
-
-  // Если матч найден — выводим полную информацию
-  modal.innerHTML = `
-    <div class="match-modal-content">
-      <button class="match-modal-close" onclick="closeMatchDetails()">✕</button>
-      <div style="text-align: center; color: #888; font-size: 13px;">${match.date || ''}</div>
-      
-      <div class="match-modal-header">
-        <div style="flex: 1; text-align: right;">${match.home_team || match.homeTeam}</div>
-        <div class="match-modal-score" style="margin: 0 15px;">${match.score || match.time || 'VS'}</div>
-        <div style="flex: 1; text-align: left;">${match.away_team || match.awayTeam}</div>
-      </div>
-
-      <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 12px; margin-top: 15px; font-size: 14px; color: #ccc;">
-        <p style="margin: 6px 0;">📌 <strong>Статус:</strong> ${match.status || 'Запланирован'}</p>
-        <p style="margin: 6px 0;">📍 <strong>Стадион:</strong> ${match.stadium || match.location || 'Не указан'}</p>
-      </div>
-    </div>
-  `;
-
-  modal.style.display = 'flex';
-};
-
-// Закрытие модального окна деталей матча
-window.closeMatchDetails = function() {
-  const modal = document.getElementById('match-details-modal');
-  if (modal) {
-    modal.style.display = 'none';
-  }
-};
+}
 
 // ==========================================
 // 1. ОТКРЫТИЕ И ЗАКРЫТИЕ ПРОФИЛЯ ИГРОКА
@@ -1769,6 +1763,10 @@ function switchProfileTab(tab, btn) {
 
   if (tab === 'media' && currentPlayerId && typeof loadMediaPosts === 'function') {
     loadMediaPosts(currentPlayerId);
+  }
+
+  if (tab === 'matches' && currentPlayerViewing) {
+  renderPlayerMatchesHistory(currentPlayerViewing);
   }
 }
 
