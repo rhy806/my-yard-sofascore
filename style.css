@@ -407,6 +407,107 @@
       align-items: center;
     }
 
+.pitch-badge {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  z-index: 3;
+}
+
+/* 1. СТАТУС СЛЕВА (Замена / Травма) */
+.badge-status-left {
+  left: -4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  font-size: 11px;
+}
+
+/* 2. СТЕК ДЕЙСТВИЙ СПРАВА ВВЕРХУ (Голы, Ассисты, Автоголы) */
+.badge-action-stack {
+  position: absolute;
+  right: -6px;
+  top: -4px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  z-index: 4;
+}
+
+.badge-action-item {
+  position: relative;
+  width: 19px;
+  height: 19px;
+  font-size: 11px;
+}
+
+/* Счётчик дублей/хет-триков (белый кружок с чёрной цифрой) */
+.badge-count {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  background: #000000;
+  color: #ffffff;
+  border: 1px solid #ffffff;
+  font-size: 9px;
+  font-weight: 800;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+/* 3. ЗВЕЗДА MVP (Слево-снизу от оценки) */
+.badge-mvp {
+  left: -2px;
+  bottom: -2px;
+  width: 18px;
+  height: 18px;
+  background: #2563eb;
+  border: 1.5px solid #ffffff;
+  font-size: 10px;
+  z-index: 5;
+}
+
+/* 4. БЛОК ОЦЕНКИ ИГРОКА (Снизу по центру) */
+.pitch-rating {
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 1px 4px;
+  font-size: 10px;
+  font-weight: 800;
+  border-radius: 3px;
+  color: #ffffff;
+  z-index: 3;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+  line-height: 1.2;
+}
+
+/* Имя и номер под игроком */
+.pitch-player-name {
+  margin-top: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #ffffff;
+  text-align: center;
+  line-height: 1.1;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 70px;
+}
+
     /* ДИЗАЙН ГОЛОВ */
     .hero-goals-summary-row {
       display: flex;
