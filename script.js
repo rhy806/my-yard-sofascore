@@ -2819,3 +2819,83 @@ document.addEventListener('DOMContentLoaded', () => {
   // Теперь при старте мы скачиваем посты с сервера
   window.fetchNewsPosts(); 
 });
+
+function renderPitchPlayerHtml(player) {
+  // 1. Определение цвета фона оценки
+  let ratingBg = '#22c55e'; // Зеленый по умолчанию
+  const r = parseFloat(player.rating || 6.0);
+  if (r >= 9.0) ratingBg = '#2563eb';      // Синий (Выдающийся матч / MOTM)
+  else if (r >= 7.0) ratingBg = '#22c55e'; // Зеленый
+  else if (r >= 6.0) ratingBg = '#f59e0b'; // Оранжевый/Желтый
+  else ratingBg = '#ef4444';               // Красный
+
+  // 2. Левая иконка: Замена или Травма
+  let statusBadgeHtml = '';
+  if (player.isInjured) {
+    statusBadgeHtml = `<div class="pitch-badge badge-status-left" title="Травма">🩹</div>`;
+  } else if (player.isSubbed) {
+    statusBadgeHtml = `<div class="pitch-badge badge-status-left" title="Замена">🔄</div>`;
+  }
+
+  // 3. Правый стек действий: Голы, Ассисты, Автоголы
+  const actionBadges = [];
+
+  // Голы
+  if (player.goals > 0) {
+    const countPill = player.goals > 1 ? `<span class="badge-count">${player.goals}</span>` : '';
+    actionBadges.push(`
+      <div class="pitch-badge badge-action-item" title="Гол">
+        ⚽${countPill}
+      </div>
+    `);
+  }
+
+  // Ассисты
+  if (player.assists > 0) {
+    const countPill = player.assists > 1 ? `<span class="badge-count">${player.assists}</span>` : '';
+    actionBadges.push(`
+      <div class="pitch-badge badge-action-item" title="Голевая передача">
+        👟${countPill}
+      </div>
+    `);
+  }
+
+  // Автоголы
+  if (player.ownGoals > 0) {
+    const countPill = player.ownGoals > 1 ? `<span class="badge-count">${player.ownGoals}</span>` : '';
+    actionBadges.push(`
+      <div class="pitch-badge badge-action-item" style="border: 1px solid #ef4444;" title="Автогол">
+        🎯${countPill}
+      </div>
+    `);
+  }
+
+  const actionStackHtml = actionBadges.length > 0 
+    ? `<div class="badge-action-stack">${actionBadges.join('')}</div>` 
+    : '';
+
+  // 4. Иконка Игрока Матча (MVP)
+  const mvpBadgeHtml = player.isMvp 
+    ? `<div class="pitch-badge badge-mvp" title="Игрок матча">⭐</div>` 
+    : '';
+
+  // Итоговая сборка узла игрока
+  return `
+    <div class="pitch-player" style="left: ${player.x}%; top: ${player.y}%;">
+      <div class="pitch-avatar-wrapper">
+        <img class="pitch-avatar" src="${player.photo || 'https://via.placeholder.com/48'}" alt="${player.name}">
+        ${statusBadgeHtml}
+        ${actionStackHtml}
+        ${mvpBadgeHtml}
+        <div class="pitch-rating" style="background: ${ratingBg};">
+          ${player.rating || '6.0'}
+        </div>
+      </div>
+      <div class="pitch-player-name">
+        <span style="color: #9ca3af;">${player.number || ''}</span> 
+        ${player.isCaptain ? '(c)' : ''} 
+        ${player.name}
+      </div>
+    </div>
+  `;
+}
