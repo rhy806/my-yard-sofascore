@@ -1654,7 +1654,7 @@ window.openMatchDetails = function(matchId) {
   modal.style.display = 'flex';
 };
 
-// Закрытие модального окна
+// Закрытие модального окна деталей матча
 window.closeMatchDetails = function() {
   const modal = document.getElementById('match-details-modal');
   if (modal) {
@@ -1662,20 +1662,42 @@ window.closeMatchDetails = function() {
   }
 };
 
-      document.getElementById('player-profile-modal').classList.add('active');
-    }
+// Открытие модального окна профиля игрока
+function openPlayerProfile(player) {
+  // 1. Фиксируем ID открываемого игрока (работает и если передать ID, и если передать объект)
+  currentPlayerId = typeof player === 'object' ? player.id : player;
 
-    function closePlayerProfile() {
-      document.getElementById('player-profile-modal').classList.remove('active');
-    }
+  // 2. Показываем модальное окно
+  document.getElementById('player-profile-modal').classList.add('active');
 
-    function switchProfileTab(tab, btn) {
-      document.querySelectorAll('#player-profile-modal .top-tab-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
+  // 3. Сразу загружаем посты только для этого игрока
+  loadMediaPosts(currentPlayerId);
+}
 
-      document.querySelectorAll('.pp-tab-content').forEach(c => c.classList.remove('active'));
-      document.getElementById('pp-tab-' + tab).classList.add('active');
-    }
+// Закрытие профиля игрока
+function closePlayerProfile() {
+  document.getElementById('player-profile-modal').classList.remove('active');
+
+  // Сбрасываем ID и очищаем ленту, чтобы при открытии другого игрока не было "мигания" старых постов
+  currentPlayerId = null;
+  const container = document.getElementById('media-feed');
+  if (container) container.innerHTML = '';
+}
+
+// Переключение вкладок в профиле
+function switchProfileTab(tab, btn) {
+  document.querySelectorAll('#player-profile-modal .top-tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  document.querySelectorAll('.pp-tab-content').forEach(c => c.classList.remove('active'));
+  const targetTab = document.getElementById('pp-tab-' + tab);
+  if (targetTab) targetTab.classList.add('active');
+
+  // Перестраховка: если переключились на вкладку с медиа, подгружаем посты игрока
+  if (tab === 'media') {
+    loadMediaPosts(currentPlayerId);
+  }
+}
 
     function renderPlayerCareer(player) {
       const tbody = document.getElementById('pp-career-body');
@@ -2051,25 +2073,41 @@ renderMediaFeed();
 // ==========================================
 const MEDIA_TABLE = 'media_posts';
 
+let mediaPosts = [];
 let selectedMediaBase64 = null;
 let selectedMediaType = 'image';
 let editingPostId = null;
 
-// Форматирование даты
+// Глобальная переменная текущего открытого игрока
+// Установите её значение при открытии карточки/профиля игрока!
+let currentPlayerId = null; 
+
+// Вспомогательная функция для форматирования даты
 function formatDate(isoString) {
   if (!isoString) return '';
   const date = new Date(isoString);
+  if (isNaN(date.getTime())) return isoString;
   const day = date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
   const time = date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
   return `${day}, ${time}`;
 }
 
-// 1. Загрузка постов из Supabase
-async function loadMediaPosts() {
+// 1. Загрузка постов из Supabase для конкретного игрока
+async function loadMediaPosts(playerId = currentPlayerId) {
+  if (playerId !== undefined) {
+    currentPlayerId = playerId;
+  }
+
+  if (!currentPlayerId) {
+    console.warn('loadMediaPosts: не указан player_id');
+    return;
+  }
+
   try {
     const { data, error } = await supabaseClient
       .from(MEDIA_TABLE)
       .select('*')
+      .eq('player_id', currentPlayerId) // Фильтрация по игроку
       .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -2084,13 +2122,15 @@ async function loadMediaPosts() {
 // 2. Обработка выбора файла
 function handleFileSelect(event) {
   const file = event.target.files[0];
+  const fileNameElem = document.getElementById('media-file-name');
+
   if (!file) {
     selectedMediaBase64 = null;
-    document.getElementById('media-file-name').innerText = 'Файл не выбран';
+    if (fileNameElem) fileNameElem.innerText = 'Файл не выбран';
     return;
   }
 
-  document.getElementById('media-file-name').innerText = file.name;
+  if (fileNameElem) fileNameElem.innerText = file.name;
   selectedMediaType = file.type.startsWith('video') ? 'video' : 'image';
 
   const reader = new FileReader();
@@ -2100,17 +2140,15 @@ function handleFileSelect(event) {
   reader.readAsDataURL(file);
 }
 
-// 3. Отрисовка ленты (поддерживает текст, фото, видео)
+// 3. Отрисовка ленты медиа
 function renderMediaFeed() {
   const container = document.getElementById('media-feed');
   const adminPanel = document.getElementById('media-admin-form');
 
   if (!container) return;
 
-  if (typeof isAdmin !== 'undefined' && isAdmin) {
-    if (adminPanel) adminPanel.style.display = 'flex';
-  } else {
-    if (adminPanel) adminPanel.style.display = 'none';
+  if (adminPanel) {
+    adminPanel.style.display = (typeof isAdmin !== 'undefined' && isAdmin) ? 'flex' : 'none';
   }
 
   if (mediaPosts.length === 0) {
@@ -2120,7 +2158,6 @@ function renderMediaFeed() {
 
   let html = '';
   mediaPosts.forEach(post => {
-    // Вставляем медиа-файл, только если он есть в посте
     let mediaTag = '';
     if (post.src) {
       const isVideo = post.type === 'video';
@@ -2155,16 +2192,21 @@ function renderMediaFeed() {
 
 // 4. Публикация / Редактирование
 async function saveMediaPost() {
+  if (!currentPlayerId) {
+    alert('Не удалось определить игрока!');
+    return;
+  }
+
   const captionInput = document.getElementById('media-caption-input');
   const caption = captionInput ? captionInput.value.trim() : '';
 
-  // Проверка: должен быть хотя бы текст или файл
   if (!caption && !selectedMediaBase64) {
     alert('Напишите текст или выберите файл!');
     return;
   }
 
   if (editingPostId) {
+    // Обновление существующего поста
     const updateData = { caption: caption || null };
     if (selectedMediaBase64) {
       updateData.src = selectedMediaBase64;
@@ -2185,7 +2227,9 @@ async function saveMediaPost() {
     const btn = document.getElementById('media-save-btn');
     if (btn) btn.innerText = 'Опубликовать';
   } else {
+    // Создание нового поста с привязкой к player_id
     const newPost = {
+      player_id: currentPlayerId, // Сохраняем ID игрока
       type: selectedMediaBase64 ? selectedMediaType : 'text',
       src: selectedMediaBase64 || null,
       caption: caption || null
@@ -2230,7 +2274,7 @@ function editMediaPost(id) {
 
 // 6. Удаление
 async function deleteMediaPost(id) {
-  if (confirm('Удалить эту публикацию у всех пользователей?')) {
+  if (confirm('Удалить эту публикацию?')) {
     const { error } = await supabaseClient
       .from(MEDIA_TABLE)
       .delete()
@@ -2244,7 +2288,7 @@ async function deleteMediaPost(id) {
   }
 }
 
-// Подгрузка при клике на вкладку "Медиа"
+// Обработчик переключения на вкладку "Медиа"
 document.addEventListener('click', (e) => {
   if (e.target && e.target.textContent && e.target.textContent.trim().toLowerCase() === 'медиа') {
     loadMediaPosts();
