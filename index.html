@@ -527,7 +527,7 @@
         <label style="font-size:12px; color:var(--hint);">Сейвы (SV, для вратарей)</label>
         <input type="number" id="edit-career-saves">
 
-        <label style="font-size:12px; color:var(--hint);">Рейтинг Sofascore (ASR)</label>
+        <label style="font-size:12px; color:var(--hint);">Рейтинг TopBin (ASR)</label>
         <input type="text" id="edit-career-asr" placeholder="например, 6.82">
 
         <button class="form-btn" onclick="saveCareerStats()">Сохранить сезон</button>
@@ -574,19 +574,19 @@
             <input type="number" id="stat-assists" value="0" min="0" oninput="liveUpdateStatRating()">
           </div>
           <div>
-            <label style="font-size:11px; color:var(--hint); font-weight:600;">🧤 Сейв (+1.0)</label>
+            <label style="font-size:11px; color:var(--hint); font-weight:600;">🧤 Сейв (+0.5)</label>
             <input type="number" id="stat-saves" value="0" min="0" oninput="liveUpdateStatRating()">
           </div>
           <div>
-            <label style="font-size:11px; color:var(--hint); font-weight:600;">🛡️ Отбор (+0.5)</label>
+            <label style="font-size:11px; color:var(--hint); font-weight:600;">🛡️ Сухой матч (защита) (+1.0)</label>
             <input type="number" id="stat-tackles" value="0" min="0" oninput="liveUpdateStatRating()">
           </div>
           <div>
-            <label style="font-size:11px; color:var(--hint); font-weight:600;">❌ Промах (-0.5)</label>
+            <label style="font-size:11px; color:var(--hint); font-weight:600;">❌ Не забил с убойного момента (-1.0)</label>
             <input type="number" id="stat-misses" value="0" min="0" oninput="liveUpdateStatRating()">
           </div>
           <div>
-            <label style="font-size:11px; color:var(--hint); font-weight:600;">⚠️ Неточный пас (-0.3)</label>
+            <label style="font-size:11px; color:var(--hint); font-weight:600;">⚠️ Привоз (-1.5)</label>
             <input type="number" id="stat-bad-passes" value="0" min="0" oninput="liveUpdateStatRating()">
           </div>
           <div>
@@ -598,7 +598,7 @@
             <input type="number" id="stat-pen-fouls" value="0" min="0" oninput="liveUpdateStatRating()">
           </div>
           <div style="grid-column: span 2;">
-            <label style="font-size:11px; color:var(--hint); font-weight:600;">🥅 Пропущенный гол (вратарь) (-0.5)</label>
+            <label style="font-size:11px; color:var(--hint); font-weight:600;">🥅 Пропущенный гол (защита) (-0.5)</label>
             <input type="number" id="stat-conceded" value="0" min="0" oninput="liveUpdateStatRating()">
           </div>
         </div>
