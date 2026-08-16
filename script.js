@@ -1606,20 +1606,38 @@
   }
 }
 
-// Отрисовка списка матчей игрока во вкладке "Матчи"
+// Компактная системная ошибка (плашка как в ОС)
+function showSystemToast(message) {
+  let toast = document.getElementById('system-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'system-toast';
+    toast.className = 'system-toast';
+    document.body.appendChild(toast);
+  }
+  
+  toast.innerText = message;
+  toast.classList.add('show');
+
+  if (toast.timeoutId) clearTimeout(toast.timeoutId);
+  toast.timeoutId = setTimeout(() => {
+    toast.classList.remove('show');
+  }, 2200);
+}
+
+// Отрисовка списка матчей в профиле игрока
 function renderPlayerMatchesHistory(player) {
   const container = document.getElementById('player-matches-list') || document.getElementById('pp-matches-list');
   if (!container) return;
 
   if (!player) {
-    container.innerHTML = '<div class="empty-matches-placeholder">Информация об игроке недоступна</div>';
+    container.innerHTML = '<div style="text-align:center; color:#8e8e93; padding:20px;">Информация об игроке недоступна</div>';
     return;
   }
 
   const targetId = String(player.id || player.player_id || '');
   const targetName = (player.name || '').trim().toLowerCase();
 
-  // Функция проверки присутствия игрока в списке (составы / голы)
   const isPlayerInList = (list) => {
     if (!Array.isArray(list)) return false;
     return list.some(item => {
@@ -1638,11 +1656,9 @@ function renderPlayerMatchesHistory(player) {
 
   const matchesArray = window.allMatches || (typeof allMatches !== 'undefined' ? allMatches : []);
 
-  // Находим все матчи, где игрок был в старте, запасе или забивал
   const playerMatches = matchesArray.filter(m => {
     let participated = false;
 
-    // 1. Проверяем составы команд (lineup1 и lineup2)
     [m.lineup1, m.lineup2].forEach(lineupData => {
       if (!lineupData) return;
       try {
@@ -1653,7 +1669,6 @@ function renderPlayerMatchesHistory(player) {
       } catch(e){}
     });
 
-    // 2. Проверяем протокол голов
     if (!participated && m.goals_data) {
       try {
         const g = typeof m.goals_data === 'string' ? JSON.parse(m.goals_data) : m.goals_data;
@@ -1667,74 +1682,76 @@ function renderPlayerMatchesHistory(player) {
   });
 
   if (playerMatches.length === 0) {
-    container.innerHTML = '<div class="empty-matches-placeholder">Игрок ещё не принимал участия в зафиксированных матчах</div>';
+    container.innerHTML = '<div style="text-align:center; color:#8e8e93; padding:20px;">Нет зафиксированных матчей</div>';
     return;
   }
 
-  // Рендерим найденные матчи
-  container.innerHTML = playerMatches.map(match => `
-    <div class="player-match-card" onclick="openMatchDetails('${match.id}')">
-      <div class="match-date">${match.date || 'Дата не указана'}</div>
-      <div class="match-teams">
-        <span class="team-name home">${match.home_team || match.homeTeam || 'Команда 1'}</span>
-        <span class="match-time">${match.score || match.time || 'VS'}</span>
-        <span class="team-name away">${match.away_team || match.awayTeam || 'Команда 2'}</span>
+  // Форматирование карточек под нужный макет
+  container.innerHTML = playerMatches.map(match => {
+    const statusText = match.status || (match.score ? 'Завершён' : 'Предстоящий');
+    const dateFormatted = match.date ? `${match.date} • ${statusText}` : statusText;
+    const scoreOrTime = match.score || match.time || '18:30';
+
+    return `
+      <div class="player-match-card" onclick="openMatchDetails('${match.id}')">
+        <div class="match-header-info">${dateFormatted}</div>
+        <div class="match-teams-row">
+          <span class="team-name home">${match.home_team || match.homeTeam || 'Команда 1'}</span>
+          <span class="match-score-time">${scoreOrTime}</span>
+          <span class="team-name away">${match.away_team || match.awayTeam || 'Команда 2'}</span>
+        </div>
       </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 }
 
-// ==========================================
-// 1. ОТКРЫТИЕ И ЗАКРЫТИЕ ПРОФИЛЯ ИГРОКА
-// ==========================================
+// Открытие деталей матча
+window.openMatchDetails = function(matchId) {
+  const matchesArray = window.allMatches || (typeof allMatches !== 'undefined' ? allMatches : []);
+  // Приводим к строкам, чтобы избежать расхождения типов String и Number
+  const match = matchesArray.find(m => String(m.id) === String(matchId));
 
-function openPlayerProfile(player) {
-  if (!player) return;
-  currentPlayerViewing = player;
-  currentPlayerId = player.id; // Фиксируем ID игрока для медиа
-
-  // Аватар
-  const avatar = document.getElementById('pp-avatar');
-  if (avatar) {
-    if (player.photo_url) {
-      avatar.style.backgroundImage = `url('${player.photo_url}')`;
-      avatar.innerText = '';
-    } else {
-      avatar.style.backgroundImage = 'none';
-      avatar.innerText = player.number || '⚽';
-    }
+  // Если матч не найден, сразу показываем компактную всплывающую ошибку
+  if (!match) {
+    showSystemToast('Не удалось открыть детали матча');
+    return;
   }
 
-  // Текстовые данные
-  if (document.getElementById('pp-name')) document.getElementById('pp-name').innerText = player.name || '';
-  if (document.getElementById('pp-number')) document.getElementById('pp-number').innerText = player.number || 'Н/У';
-  if (document.getElementById('pp-position')) document.getElementById('pp-position').innerText = getPlayerPositionsString(player) || player.position || 'FW';
-  if (document.getElementById('pp-nationality')) document.getElementById('pp-nationality').innerText = player.nationality || '🇷🇺 RUS';
-  if (document.getElementById('pp-height')) document.getElementById('pp-height').innerText = player.height || '180 cm';
-  if (document.getElementById('pp-foot')) document.getElementById('pp-foot').innerText = player.foot || 'Правая';
-  
-  const ageStr = calculateAgeFormatted(player.dob);
-  if (document.getElementById('pp-age')) document.getElementById('pp-age').innerText = ageStr || 'Н/У';
-
-  // Звезда (избранное)
-  const starBtn = document.getElementById('pp-star-btn');
-  if (starBtn) {
-    if (typeof starredPlayers !== 'undefined' && (starredPlayers.includes(player.id) || starredPlayers.includes(String(player.id)))) {
-      starBtn.innerText = '★';
-      starBtn.classList.add('active');
-    } else {
-      starBtn.innerText = '☆';
-      starBtn.classList.remove('active');
-    }
+  let modal = document.getElementById('match-details-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'match-details-modal';
+    modal.className = 'match-modal-overlay';
+    document.body.appendChild(modal);
   }
 
-  // Отрисовка карьеры и матчей
-  renderPlayerCareer(player);
-  renderPlayerMatchesHistory(player);
+  modal.innerHTML = `
+    <div class="match-modal-content">
+      <button class="match-modal-close" onclick="closeMatchDetails()">✕</button>
+      <div style="text-align: center; color: #888; font-size: 13px;">${match.date || ''}</div>
+      
+      <div class="match-modal-header">
+        <div style="flex: 1; text-align: right;">${match.home_team || match.homeTeam}</div>
+        <div class="match-modal-score" style="margin: 0 15px;">${match.score || match.time || 'VS'}</div>
+        <div style="flex: 1; text-align: left;">${match.away_team || match.awayTeam}</div>
+      </div>
 
-  // Открытие модального окна
-  const modal = document.getElementById('player-profile-modal');
-  if (modal) modal.classList.add('active');
+      <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 12px; margin-top: 15px; font-size: 14px; color: #ccc;">
+        <p style="margin: 6px 0;">📌 <strong>Статус:</strong> ${match.status || 'Запланирован'}</p>
+        <p style="margin: 6px 0;">📍 <strong>Стадион:</strong> ${match.stadium || match.location || 'Не указан'}</p>
+      </div>
+    </div>
+  `;
+
+  modal.style.display = 'flex';
+};
+
+window.closeMatchDetails = function() {
+  const modal = document.getElementById('match-details-modal');
+  if (modal) {
+    modal.style.display = 'none';
+  }
+};
 
   // Загружаем посты текущего игрока
   if (typeof loadMediaPosts === 'function') {
