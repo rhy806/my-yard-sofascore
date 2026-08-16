@@ -1606,66 +1606,72 @@
   }
 }
 
- function openPlayerProfile(player) {
-      currentPlayerViewing = player;
+function openPlayerProfile(player) {
+  if (!player) return;
 
-      const avatar = document.getElementById('pp-avatar');
-      if (player.photo_url) {
-        avatar.style.backgroundImage = `url('${player.photo_url}')`;
-        avatar.innerText = '';
-      } else {
-        avatar.style.backgroundImage = 'none';
-        avatar.innerText = player.number || '⚽';
-      }
+  currentPlayerViewing = player;
 
-      document.getElementById('pp-name').innerText = player.name;
-      document.getElementById('pp-number').innerText = player.number || 'Н/У';
-      document.getElementById('pp-position').innerText = getPlayerPositionsString(player) || player.position || 'FW';
-      document.getElementById('pp-nationality').innerText = player.nationality || '🇷🇺 RUS';
-      document.getElementById('pp-height').innerText = player.height || '180 cm';
-      document.getElementById('pp-foot').innerText = player.foot || 'Правая';
-      
-      const ageStr = calculateAgeFormatted(player.dob);
-      document.getElementById('pp-age').innerText = ageStr || 'Н/У';
+  const avatar = document.getElementById('pp-avatar');
+  if (player.photo_url) {
+    avatar.style.backgroundImage = `url('${player.photo_url}')`;
+    avatar.innerText = '';
+  } else {
+    avatar.style.backgroundImage = 'none';
+    avatar.innerText = player.number || '⚽';
+  }
 
-      const starBtn = document.getElementById('pp-star-btn');
-      if (starredPlayers.includes(player.id) || starredPlayers.includes(String(player.id))) {
-        starBtn.innerText = '★';
-        starBtn.classList.add('active');
-      } else {
-        starBtn.innerText = '☆';
-        starBtn.classList.remove('active');
-      }
+  document.getElementById('pp-name').innerText = player.name || 'Без имени';
+  document.getElementById('pp-number').innerText = player.number || 'Н/У';
+  document.getElementById('pp-position').innerText = getPlayerPositionsString(player) || player.position || 'FW';
+  document.getElementById('pp-nationality').innerText = player.nationality || '🇷🇺 RUS';
+  document.getElementById('pp-height').innerText = player.height || '180 cm';
+  document.getElementById('pp-foot').innerText = player.foot || 'Правая';
 
-      renderPlayerCareer(player);
-      
-      // Отрисовка списка матчей из массива
-window.renderPlayerMatches = function(matchesList = []) {
-  const container = document.getElementById('player-matches-list');
-  if (!container) return;
+  const ageStr = calculateAgeFormatted(player.dob);
+  document.getElementById('pp-age').innerText = ageStr || 'Н/У';
 
-  // Сохраняем матчи в глобальную переменную
-  window.allMatches = matchesList;
+  const starBtn = document.getElementById('pp-star-btn');
+  if (starBtn) {
+    if (starredPlayers.includes(player.id) || starredPlayers.includes(String(player.id))) {
+      starBtn.innerText = '★';
+      starBtn.classList.add('active');
+    } else {
+      starBtn.innerText = '☆';
+      starBtn.classList.remove('active');
+    }
+  }
 
-  if (matchesList.length === 0) {
-    container.innerHTML = '<div style="text-align: center; color: #888; padding: 20px;">Нет доступных матчей</div>';
+  // Отрисовка карьеры и истории матчей
+  if (typeof renderPlayerCareer === 'function') {
+    renderPlayerCareer(player);
+  }
+  if (typeof renderPlayerMatchesHistory === 'function') {
+    renderPlayerMatchesHistory(player);
+  }
+
+  // ПОКАЗЫВАЕМ МОДАЛЬНОЕ ОКНО ПРОФИЛЯ
+  const profileModal = document.getElementById('player-profile-modal');
+  if (profileModal) {
+    profileModal.classList.add('active');
+  }
+} // <-- ФУНКЦИЯ ТЕПЕРЬ СТРОГО ЗАКРЫВАЕТСЯ ЗДЕСЬ!
+
+// ==========================================
+// ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ (ВЫНЕСЕНЫ НАРУЖУ)
+// ==========================================
+
+// Открытие модального окна деталей матча
+window.openMatchDetails = function(matchId) {
+  const matchesArray = window.allMatches || (typeof allMatches !== 'undefined' ? allMatches : []);
+  const match = matchesArray.find(m => String(m.id) === String(matchId));
+
+  if (!match) {
+    if (typeof showSystemToast === 'function') {
+      showSystemToast('Не удалось открыть детали матча');
+    }
     return;
   }
 
-  container.innerHTML = matchesList.map(match => `
-    <div class="player-match-card" onclick="openMatchDetails('${match.id}')">
-      <div class="match-date">${match.date}</div>
-      <div class="match-teams">
-        <span class="team-name">${match.home_team || match.homeTeam}</span>
-        <span class="match-time">${match.score || match.time}</span>
-        <span class="team-name">${match.away_team || match.awayTeam}</span>
-      </div>
-    </div>
-  `).join('');
-};
-
-// Открытие модального окна деталей
-window.openMatchDetails = function(matchId) {
   let modal = document.getElementById('match-details-modal');
   if (!modal) {
     modal = document.createElement('div');
@@ -1674,24 +1680,6 @@ window.openMatchDetails = function(matchId) {
     document.body.appendChild(modal);
   }
 
-  // Ищем матч в сохраненном массиве
-  const match = (window.allMatches || []).find(m => m.id == matchId);
-
-  // Если матч не найден — выводим сообщение об ошибке в окне
-  if (!match) {
-    modal.innerHTML = `
-      <div class="match-modal-content" style="text-align: center;">
-        <button class="match-modal-close" onclick="closeMatchDetails()">✕</button>
-        <div style="font-size: 16px; font-weight: bold; margin: 15px 0; color: #ff5555;">
-          Не удалось открыть детали матча
-        </div>
-      </div>
-    `;
-    modal.style.display = 'flex';
-    return;
-  }
-
-  // Если матч найден — выводим полную информацию
   modal.innerHTML = `
     <div class="match-modal-content">
       <button class="match-modal-close" onclick="closeMatchDetails()">✕</button>
@@ -1720,8 +1708,6 @@ window.closeMatchDetails = function() {
     modal.style.display = 'none';
   }
 };
-}
-
 
 function closePlayerProfile() {
   const modal = document.getElementById('player-profile-modal');
