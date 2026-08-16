@@ -1720,6 +1720,7 @@ window.closeMatchDetails = function() {
     modal.style.display = 'none';
   }
 };
+}
 
 
 function closePlayerProfile() {
