@@ -2821,13 +2821,22 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function renderPitchPlayerHtml(player) {
-  // 1. Определение цвета фона оценки
-  let ratingBg = '#22c55e'; // Зеленый по умолчанию
-  const r = parseFloat(player.rating || 6.0);
-  if (r >= 9.0) ratingBg = '#2563eb';      // Синий (Выдающийся матч / MOTM)
-  else if (r >= 7.0) ratingBg = '#22c55e'; // Зеленый
-  else if (r >= 6.0) ratingBg = '#f59e0b'; // Оранжевый/Желтый
-  else ratingBg = '#ef4444';               // Красный
+// 1. Определение цвета фона оценки
+let ratingBg = '#ED7E07'; // Цвет по умолчанию (оранжевы)
+const r = parseFloat(player.rating || 6.0);
+if (r >= 9.0) {
+  ratingBg = '#374DF5'; // 👈 Например, Фиолетовый для оценки 9.0+
+} else if (r >= 8.0) {
+  ratingBg = '#00ADC4'; // 👈 Голубой для оценки 8.0–8.9
+} else if (r >= 7.0) {
+  ratingBg = '#00C424'; // 👈 Зелёный для оценки 7.0–7.9
+} else if (r >= 6.5) {
+  ratingBg = '#D9AF00'; // 👈 Жёлтый для оценки 6.5-6.9
+} else if (r >= 6.0) {
+  ratingBg = '#ED7E07'; // 👈 Оранжевый для оценки 6.0-6.4
+} else {
+  ratingBg = '#DC0C00'; // 👈 Красный для оценки ниже 6.0
+}
 
   // 2. Левая иконка: Замена или Травма
   let statusBadgeHtml = '';
