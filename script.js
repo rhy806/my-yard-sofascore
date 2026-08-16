@@ -1753,8 +1753,9 @@ window.closeMatchDetails = function() {
 };
 
 // Загружаем посты текущего игрока с безопасным фоллбэком
-if (typeof loadMediaPosts === 'function' && targetId) {
-  loadMediaPosts(targetId);
+  if (typeof loadMediaPosts === 'function' && targetId) {
+    loadMediaPosts(targetId);
+  }
 }
 
 function closePlayerProfile() {
