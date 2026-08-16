@@ -1753,10 +1753,10 @@ window.closeMatchDetails = function() {
   }
 };
 
-  // Загружаем посты текущего игрока
-  if (typeof loadMediaPosts === 'function') {
-    loadMediaPosts(currentPlayerId);
-  }
+// Загружаем посты текущего игрока
+const targetId = player.id || player.player_id;
+if (typeof loadMediaPosts === 'function' && targetId) {
+  loadMediaPosts(targetId);
 }
 
 function closePlayerProfile() {
