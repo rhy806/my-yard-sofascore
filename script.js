@@ -131,11 +131,12 @@
     function getRatingColor(rating) {
       const r = parseFloat(rating);
       if (isNaN(r)) return 'var(--accent)';
-      if (r >= 7.5) return '#22c55e'; // Ярко-зеленый
-      if (r >= 6.5) return '#84cc16'; // Салатовый
-      if (r >= 6.0) return '#3b82f6'; // Синий
-      if (r >= 5.0) return '#f59e0b'; // Оранжевый
-      return '#ef4444'; // Красный
+      if (r >= 9.0) return '#374DF5'; // Фиолетовый 9.0+
+      if (r >= 8.0) return '#00ADC4'; // Салатовый
+      if (r >= 7.0) return '#00C424'; // Синий
+      if (r >= 6.5) return '#D9AF00'; // Оранжевый
+      if (r >= 6.0) return '#ED7E07'; // Оранжевый
+      return '#DC0C00'; // Красный
     }
 
     function fileToDataUrl(fileInputId, callback) {
