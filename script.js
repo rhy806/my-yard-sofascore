@@ -1687,7 +1687,7 @@ function renderPlayerMatchesHistory(player) {
   }
 
   // Форматирование карточек под нужный макет
-  container.innerHTML = playerMatches.map(match => {
+container.innerHTML = playerMatches.map(match => {
     const statusText = match.status || (match.score ? 'Завершён' : 'Предстоящий');
     const dateFormatted = match.date ? `${match.date} • ${statusText}` : statusText;
     const scoreOrTime = match.score || match.time || '18:30';
@@ -1703,7 +1703,6 @@ function renderPlayerMatchesHistory(player) {
       </div>
     `;
   }).join('');
-}
 
 // Открытие деталей матча
 window.openMatchDetails = function(matchId) {
