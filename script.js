@@ -1547,43 +1547,64 @@
       }
     }
 
-    function openPlayerProfile(player) {
-      currentPlayerViewing = player;
+  function openPlayerProfile(player) {
+  if (!player) return;
 
-      const avatar = document.getElementById('pp-avatar');
-      if (player.photo_url) {
-        avatar.style.backgroundImage = `url('${player.photo_url}')`;
-        avatar.innerText = '';
-      } else {
-        avatar.style.backgroundImage = 'none';
-        avatar.innerText = player.number || '⚽';
-      }
+  // 1. Сохраняем ссылки на текущего игрока
+  currentPlayerViewing = player;
+  currentPlayerId = player.id; // Фиксируем ID для загрузки постов
 
-      document.getElementById('pp-name').innerText = player.name;
-      document.getElementById('pp-number').innerText = player.number || 'Н/У';
-      document.getElementById('pp-position').innerText = getPlayerPositionsString(player) || player.position || 'FW';
-      document.getElementById('pp-nationality').innerText = player.nationality || '🇷🇺 RUS';
-      document.getElementById('pp-height').innerText = player.height || '180 cm';
-      document.getElementById('pp-foot').innerText = player.foot || 'Правая';
-      
-      const ageStr = calculateAgeFormatted(player.dob);
-      document.getElementById('pp-age').innerText = ageStr || 'Н/У';
+  // 2. Заполнение аватара
+  const avatar = document.getElementById('pp-avatar');
+  if (avatar) {
+    if (player.photo_url) {
+      avatar.style.backgroundImage = `url('${player.photo_url}')`;
+      avatar.innerText = '';
+    } else {
+      avatar.style.backgroundImage = 'none';
+      avatar.innerText = player.number || '⚽';
+    }
+  }
 
-      const starBtn = document.getElementById('pp-star-btn');
-      if (starredPlayers.includes(player.id) || starredPlayers.includes(String(player.id))) {
-        starBtn.innerText = '★';
-        starBtn.classList.add('active');
-      } else {
-        starBtn.innerText = '☆';
-        starBtn.classList.remove('active');
-      }
+  // 3. Заполнение текстовых полей
+  if (document.getElementById('pp-name')) document.getElementById('pp-name').innerText = player.name || '';
+  if (document.getElementById('pp-number')) document.getElementById('pp-number').innerText = player.number || 'Н/У';
+  if (document.getElementById('pp-position')) document.getElementById('pp-position').innerText = (typeof getPlayerPositionsString === 'function' ? getPlayerPositionsString(player) : player.position) || 'FW';
+  if (document.getElementById('pp-nationality')) document.getElementById('pp-nationality').innerText = player.nationality || '🇷🇺 RUS';
+  if (document.getElementById('pp-height')) document.getElementById('pp-height').innerText = player.height || '180 cm';
+  if (document.getElementById('pp-foot')) document.getElementById('pp-foot').innerText = player.foot || 'Правая';
 
-      renderPlayerCareer(player);
-      
-      // Отрисовка списка матчей из массива
-window.renderPlayerMatches = function(matchesList = []) {
-  const container = document.getElementById('player-matches-list');
-  if (!container) return;
+  const ageStr = typeof calculateAgeFormatted === 'function' ? calculateAgeFormatted(player.dob) : null;
+  if (document.getElementById('pp-age')) document.getElementById('pp-age').innerText = ageStr || 'Н/У';
+
+  // 4. Кнопка избранного
+  const starBtn = document.getElementById('pp-star-btn');
+  if (starBtn && typeof starredPlayers !== 'undefined') {
+    if (starredPlayers.includes(player.id) || starredPlayers.includes(String(player.id))) {
+      starBtn.innerText = '★';
+      starBtn.classList.add('active');
+    } else {
+      starBtn.innerText = '☆';
+      starBtn.classList.remove('active');
+    }
+  }
+
+  // 5. Вызов отрисовки карьеры
+  if (typeof renderPlayerCareer === 'function') {
+    renderPlayerCareer(player);
+  }
+
+  // 6. Открытие модального окна профиля
+  const profileModal = document.getElementById('player-profile-modal');
+  if (profileModal) {
+    profileModal.classList.add('active');
+  }
+
+  // 7. Загрузка медиа-постов конкретно для этого игрока
+  if (typeof loadMediaPosts === 'function') {
+    loadMediaPosts(currentPlayerId);
+  }
+}
 
   // Сохраняем матчи в глобальную переменную
   window.allMatches = matchesList;
