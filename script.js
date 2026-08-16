@@ -1238,9 +1238,9 @@
       const goals = parseFloat(document.getElementById('stat-goals').value) || 0;
       const assists = parseFloat(document.getElementById('stat-assists').value) || 0;
       const saves = parseFloat(document.getElementById('stat-saves').value) || 0;
-      const tackles = parseFloat(document.getElementById('stat-tackles').value) || 0;
+      const cleansheet = parseFloat(document.getElementById('stat-clean-sheet').value) || 0;
       const misses = parseFloat(document.getElementById('stat-misses').value) || 0;
-      const badPasses = parseFloat(document.getElementById('stat-bad-passes').value) || 0;
+      const bringing = parseFloat(document.getElementById('stat-bringing').value) || 0;
       const fkFouls = parseFloat(document.getElementById('stat-fk-fouls').value) || 0;
       const penFouls = parseFloat(document.getElementById('stat-pen-fouls').value) || 0;
       const conceded = parseFloat(document.getElementById('stat-conceded').value) || 0;
@@ -1249,10 +1249,10 @@
       let rating = 6.0 
         + (goals * 2.0) 
         + (assists * 1.3) 
-        + (saves * 1.0) 
-        + (tackles * 0.5) 
-        - (misses * 0.5) 
-        - (badPasses * 0.3) 
+        + (saves * 0.5) 
+        + (cleansheet * 1.0) 
+        - (misses * 1.0) 
+        - (bringing * 1.5) 
         - (fkFouls * 0.7) 
         - (penFouls * 1.5) 
         - (conceded * 0.5);
@@ -1260,7 +1260,7 @@
       rating = Math.round(rating * 10) / 10;
       return {
         rating,
-        stats: { goals, assists, saves, tackles, misses, badPasses, fkFouls, penFouls, conceded }
+        stats: { goals, assists, saves, cleansheets, misses, bringing, fkFouls, penFouls, conceded }
       };
     }
 
