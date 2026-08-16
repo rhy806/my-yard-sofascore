@@ -2073,7 +2073,6 @@ renderMediaFeed();
 // ==========================================
 const MEDIA_TABLE = 'media_posts';
 
-let mediaPosts = [];
 let selectedMediaBase64 = null;
 let selectedMediaType = 'image';
 let editingPostId = null;
