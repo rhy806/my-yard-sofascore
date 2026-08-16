@@ -1753,8 +1753,10 @@ window.closeMatchDetails = function() {
   }
 };
 
-// Загружаем посты текущего игрока
-const targetId = player.id || player.player_id;
+// Загружаем посты текущего игрока с безопасным фоллбэком
+const activePlayer = typeof player !== 'undefined' ? player : currentPlayerViewing;
+const targetId = activePlayer ? (activePlayer.id || activePlayer.player_id) : currentPlayerId;
+
 if (typeof loadMediaPosts === 'function' && targetId) {
   loadMediaPosts(targetId);
 }
