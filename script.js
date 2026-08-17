@@ -1214,9 +1214,9 @@
       document.getElementById('stat-goals').value = s.goals || 0;
       document.getElementById('stat-assists').value = s.assists || 0;
       document.getElementById('stat-saves').value = s.saves || 0;
-      document.getElementById('stat-tackles').value = s.tackles || 0;
+      document.getElementById('stat-clean-sheet').value = s.tackles || 0;
       document.getElementById('stat-misses').value = s.misses || 0;
-      document.getElementById('stat-bad-passes').value = s.badPasses || 0;
+      document.getElementById('stat-bringing').value = s.badPasses || 0;
       document.getElementById('stat-fk-fouls').value = s.fkFouls || 0;
       document.getElementById('stat-pen-fouls').value = s.penFouls || 0;
       document.getElementById('stat-conceded').value = s.conceded || 0;
