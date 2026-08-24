@@ -2967,14 +2967,6 @@ function openCareerEditModal(seasonData = null) {
 
 
 // --- СОХРАНЕНИЕ (INSERT / UPDATE) ---
-async function saveCareerStats() {
-  const season = document.getElementById('edit-career-season').value.trim();
-  const mp = parseInt(document.getElementById('edit-career-mp').value) || 0;
-  const gls = parseInt(document.getElementById('edit-career-gls').value) || 0;
-  const ast = parseInt(document.getElementById('edit-career-ast').value) || 0;
-  const saves = parseInt(document.getElementById('edit-career-saves').value) || 0;
-  const asr = parseFloat(document.getElementById('edit-career-asr').value) || 6.0;
-
   if (!season) {
     alert('Пожалуйста, укажите название сезона!');
     return;
