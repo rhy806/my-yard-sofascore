@@ -1260,7 +1260,7 @@
       rating = Math.round(rating * 10) / 10;
       return {
         rating,
-        stats: { goals, assists, saves, cleansheets, misses, bringing, fkFouls, penFouls, conceded }
+        stats: { goals, assists, saves, cleansheet, misses, bringing, fkFouls, penFouls, conceded }
       };
     }
 
