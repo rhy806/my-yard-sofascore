@@ -1851,9 +1851,18 @@ function renderPlayerCareer(player) {
         <td>${c.sv || 0}</td>
         <td><span class="career-asr">${c.asr || '6.0'}</span></td>
       `;
+      
+      // --- НОВЫЕ СТРОЧКИ: ДЕЛАЕМ СТРОКУ КЛИКАБЕЛЬНОЙ ---
+      tr.style.cursor = 'pointer'; 
+      tr.onclick = () => {
+        openCareerEditModal(c); // Передаем данные этого сезона в окно
+      };
+      // ------------------------------------------------
+      
       tbody.appendChild(tr);
     });
   }
+}
 
   const editBtn = document.getElementById('pp-edit-career-btn');
   if (editBtn) editBtn.style.display = (typeof isAdmin !== 'undefined' && isAdmin) ? 'block' : 'none';
@@ -1966,13 +1975,24 @@ async function savePlayerProfileDetails() {
   });
 }
 
-function openCareerEditModal() {
-  document.getElementById('edit-career-season').value = '2026';
-  document.getElementById('edit-career-mp').value = '0';
-  document.getElementById('edit-career-gls').value = '0';
-  document.getElementById('edit-career-ast').value = '0';
-  document.getElementById('edit-career-saves').value = '0';
-  document.getElementById('edit-career-asr').value = '6.0';
+function openCareerEditModal(seasonData = null) {
+  if (seasonData) {
+    // Если передали данные — заполняем поля для редактирования
+    document.getElementById('edit-career-season').value = seasonData.season || '';
+    document.getElementById('edit-career-mp').value = seasonData.mp || '0';
+    document.getElementById('edit-career-gls').value = seasonData.gls || '0';
+    document.getElementById('edit-career-ast').value = seasonData.ast || '0';
+    document.getElementById('edit-career-saves').value = seasonData.sv || '0'; // Обратите внимание: в базе у вас sv, а не saves
+    document.getElementById('edit-career-asr').value = seasonData.asr || '6.0';
+  } else {
+    // Если данных нет — открываем пустое окно для создания
+    document.getElementById('edit-career-season').value = '2026';
+    document.getElementById('edit-career-mp').value = '0';
+    document.getElementById('edit-career-gls').value = '0';
+    document.getElementById('edit-career-ast').value = '0';
+    document.getElementById('edit-career-saves').value = '0';
+    document.getElementById('edit-career-asr').value = '6.0';
+  }
 
   document.getElementById('career-edit-modal').classList.add('active');
 }
