@@ -1861,12 +1861,12 @@ function renderPlayerCareer(player) {
       
       tbody.appendChild(tr);
     });
-  }
-}
+  } // <-- Раньше функция закрывалась здесь, это было ошибкой
 
+  // Проверка прав администратора и показ кнопки теперь ВНУТРИ функции
   const editBtn = document.getElementById('pp-edit-career-btn');
   if (editBtn) editBtn.style.display = (typeof isAdmin !== 'undefined' && isAdmin) ? 'block' : 'none';
-}
+} // <-- Теперь функция закрывается правильно в самом конце
 
 function renderPlayerMatchesHistory(player) {
   const container = document.getElementById('pp-matches-list') || document.getElementById('player-matches-list');
