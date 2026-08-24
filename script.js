@@ -1257,6 +1257,10 @@
         - (penFouls * 1.5) 
         - (conceded * 0.5);
 
+      // 🛑 НОВОЕ: Ограничиваем рейтинг рамками от 2.0 до 10.0
+      if (rating > 10.0) rating = 10.0;
+      if (rating < 2.0) rating = 2.0;
+
       rating = Math.round(rating * 10) / 10;
       return {
         rating,
