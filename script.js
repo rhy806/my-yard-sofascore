@@ -2967,11 +2967,6 @@ function openCareerEditModal(seasonData = null) {
 
 
 // --- СОХРАНЕНИЕ (INSERT / UPDATE) ---
-  if (!season) {
-    alert('Пожалуйста, укажите название сезона!');
-    return;
-  }
-
   // Формируем объект для отправки в базу
   const dbPayload = {
     player_id: currentPlayerId,
