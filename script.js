@@ -2962,7 +2962,7 @@ async function saveCareerStats() {
 
   // Формируем объект для отправки в базу
   const dbPayload = {
-    player_id: currentplayerid,
+    player_id: currentPlayerId,
     season: season,
     mp: mp,
     gls: gls,
