@@ -2913,3 +2913,131 @@ if (r >= 9.0) {
     </div>
   `;
 }
+
+// Переменная для хранения ID редактируемого сезона из базы данных (если это редактирование)
+let currentEditingSeasonId = null; 
+
+// --- ОТКРЫТИЕ И ЗАКРЫТИЕ ---
+function closeCareerEditModal() {
+  document.getElementById('career-edit-modal').classList.remove('active');
+}
+
+// При клике на таблицу передавай сюда объект с данными сезона (id, season, mp, и т.д.)
+function openCareerEditModal(seasonData = null) {
+  if (seasonData) {
+    currentEditingSeasonId = seasonData.id; // ID записи в Supabase
+    document.getElementById('edit-career-season').value = seasonData.season || '';
+    document.getElementById('edit-career-mp').value = seasonData.mp || 0;
+    document.getElementById('edit-career-gls').value = seasonData.gls || 0;
+    document.getElementById('edit-career-ast').value = seasonData.ast || 0;
+    document.getElementById('edit-career-saves').value = seasonData.saves || 0;
+    document.getElementById('edit-career-asr').value = seasonData.asr || '';
+  } else {
+    currentEditingSeasonId = null; // Режим создания нового сезона
+    document.getElementById('edit-career-season').value = 'Лето-Осень 2026'; // Пример по умолчанию
+    document.getElementById('edit-career-mp').value = '';
+    document.getElementById('edit-career-gls').value = '';
+    document.getElementById('edit-career-ast').value = '';
+    document.getElementById('edit-career-saves').value = '';
+    document.getElementById('edit-career-asr').value = '';
+  }
+  
+  document.getElementById('career-edit-modal').classList.add('active');
+}
+
+
+// --- СОХРАНЕНИЕ (INSERT / UPDATE) ---
+async function saveCareerStats() {
+  const season = document.getElementById('edit-career-season').value.trim();
+  const mp = parseInt(document.getElementById('edit-career-mp').value) || 0;
+  const gls = parseInt(document.getElementById('edit-career-gls').value) || 0;
+  const ast = parseInt(document.getElementById('edit-career-ast').value) || 0;
+  const saves = parseInt(document.getElementById('edit-career-saves').value) || 0;
+  const asr = parseFloat(document.getElementById('edit-career-asr').value) || 6.0;
+
+  if (!season) {
+    alert('Пожалуйста, укажите название сезона!');
+    return;
+  }
+
+  // Формируем объект для отправки в базу
+  const dbPayload = {
+    player_id: currentplayerid
+    season: season,
+    mp: mp,
+    gls: gls,
+    ast: ast,
+    saves: saves,
+    asr: asr
+  };
+
+  try {
+    if (currentEditingSeasonId) {
+      // Обновляем существующую запись
+      const { error } = await _supabase
+        .from('career') // Название твоей таблицы в Supabase
+        .update(dbPayload)
+        .eq('id', currentEditingSeasonId);
+        
+      if (error) throw error;
+      console.log('Сезон успешно обновлен!');
+    } else {
+      // Создаем новую запись
+      const { error } = await _supabase
+        .from('career') // Название твоей таблицы в Supabase
+        .insert([dbPayload]);
+        
+      if (error) throw error;
+      console.log('Новый сезон успешно добавлен!');
+    }
+
+    closeCareerEditModal();
+    
+    // ТУТ ВЫЗОВИ СВОЮ ФУНКЦИЮ ОБНОВЛЕНИЯ ИНТЕРФЕЙСА ПРОФИЛЯ
+    // Например: loadPlayerProfile(currentProfilePlayerId);
+
+  } catch (err) {
+    console.error('Ошибка при сохранении в Supabase:', err.message);
+    alert('Не удалось сохранить данные.');
+  }
+}
+
+
+// --- УДАЛЕНИЕ (DELETE) ---
+async function deleteCareerSeason() {
+  if (!currentEditingSeasonId) {
+    // Если мы в режиме создания нового сезона, удалять нечего — просто закрываем
+    closeCareerEditModal();
+    return;
+  }
+  
+  const confirmDelete = confirm('Точно удалить этот сезон? Это действие нельзя отменить.');
+  if (confirmDelete) {
+    try {
+      const { error } = await _supabase
+        .from('career') // Название твоей таблицы
+        .delete()
+        .eq('id', currentEditingSeasonId);
+
+      if (error) throw error;
+      
+      console.log('Сезон удален!');
+      closeCareerEditModal();
+      
+      // ТУТ ВЫЗОВИ СВОЮ ФУНКЦИЮ ОБНОВЛЕНИЯ ИНТЕРФЕЙСА ПРОФИЛЯ
+      
+    } catch (err) {
+      console.error('Ошибка при удалении:', err.message);
+      alert('Не удалось удалить сезон.');
+    }
+  }
+}
+
+
+// --- СБРОС НА АВТО (Опционально) ---
+function resetCareerStats() {
+  // Авторасчет обычно значит, что мы стираем ручную запись из БД и 
+  // заставляем систему заново пересчитать стату по сыгранным матчам в таблице 'matches'
+  alert('Эта функция будет стирать ручные правки и пересчитывать статистику на основе базы матчей.');
+  // Для реализации этого потребуется функция, которая делает SELECT всех матчей этого игрока и суммирует показатели
+}
