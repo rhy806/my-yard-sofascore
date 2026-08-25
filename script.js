@@ -849,9 +849,9 @@
             totalGls += parseInt(c.gls || 0, 10);
             totalAst += parseInt(c.ast || 0, 10);
             totalSv  += parseInt(c.sv  || 0, 10);
-            totalMat += parseInt(c.mat  || 0, 10);
+            totalMat += parseInt(c.mp  || 0, 10);
             // Используем parseFloat, так как рейтинг может быть дробным (например, 8.5)
-            const seasonRating = parseFloat(c.rat || 0);
+            const seasonRating = parseFloat(c.asr || 0);
             if (seasonRating > 0) {
               totalRat += seasonRating;
               ratingCount++; 
