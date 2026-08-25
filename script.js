@@ -828,10 +828,12 @@
       const gCard = document.getElementById('top-goals-card');
       const aCard = document.getElementById('top-assists-card');
       const sCard = document.getElementById('top-saves-card');
+      const mCard = document.getElementById('top-matches-card');
+      const rCard = document.getElementById('top-rating-card');
 
-      if (!gCard || !aCard || !sCard) return;
+      if (!gCard || !aCard || !sCard || !mCard || !rCard) return;
 
-      const playerStatsMap = {};
+        const playerStatsMap = {};
 
       allSquad.forEach(p => {
         let careerArr = [];
@@ -841,12 +843,19 @@
           } catch(e) { careerArr = []; }
         }
 
-        let totalGls = 0, totalAst = 0, totalSv = 0;
+        let totalGls = 0, totalAst = 0, totalSv = 0, totalMat = 0, totalRat = 0;
         if (Array.isArray(careerArr)) {
           careerArr.forEach(c => {
             totalGls += parseInt(c.gls || 0, 10);
             totalAst += parseInt(c.ast || 0, 10);
             totalSv  += parseInt(c.sv  || 0, 10);
+            totalMat += parseInt(c.mat  || 0, 10);
+            // Используем parseFloat, так как рейтинг может быть дробным (например, 8.5)
+            const seasonRating = parseFloat(c.rat || 0);
+            if (seasonRating > 0) {
+              totalRat += seasonRating;
+              ratingCount++; 
+            }
           });
         }
 
@@ -854,7 +863,9 @@
           player: p,
           goals: totalGls,
           assists: totalAst,
-          saves: totalSv
+          saves: totalSv,
+          matches: totalMat,
+          rating: totalRat
         };
       });
 
@@ -873,6 +884,13 @@
             const avatarStyle = p.photo_url ? `background-image: url('${p.photo_url}'); color: transparent;` : '';
             const allPositionsText = getPlayerPositionsString(p);
 
+            // Если выводим рейтинг и он дробный, показываем 1 знак после запятой
+            let displayValue = item[key];
+            if (key === 'rating') {
+               // если рейтинг целое число, toFixed(1) сделает из 8 -> 8.0 (что выглядит лучше)
+               displayValue = Number(item[key]).toFixed(1); 
+            }
+            
             html += `
               <div class="top-player-item clickable-card" onclick="openPlayerProfileByName('${safeName}')">
                 <div style="display:flex; align-items:center; gap:10px;">
@@ -894,6 +912,8 @@
       gCard.innerHTML = renderTopCategory('Лучшие бомбардиры', 'goals', '⚽');
       aCard.innerHTML = renderTopCategory('Лучшие ассистенты', 'assists', '🅰️');
       sCard.innerHTML = renderTopCategory('Лучшие вратари (сейвы)', 'saves', '🧤');
+      mCard.innerHTML = renderTopCategory('Больше всего матчей', 'matches', '🏃‍♂️');
+      rCard.innerHTML = renderTopCategory('Лучший рейтинг', 'rating', '⭐');
     }
 
     /* МОДАЛЬНОЕ ОКНО МАТЧА */
