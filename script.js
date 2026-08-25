@@ -1841,7 +1841,16 @@ function renderPlayerCareer(player) {
     tbody.innerHTML = '<tr><td colspan="7" style="color:var(--hint); text-align:center; padding:16px;">Данные о карьере пока отсутствуют</td></tr>';
   } else {
     careerData.forEach(c => {
+      // 1. Получаем значение рейтинга (или '6.0' по умолчанию)
+      const ratingValue = c.asr || '6.0'; 
+      
+      // 2. Получаем нужный цвет для этого рейтинга
+      const bgColor = getRatingColor(ratingValue);
+
       const tr = document.createElement('tr');
+      
+      // 3. Добавляем style="background-color: ${bgColor};" в наш span
+      // Я также добавил color: #fff; чтобы текст был белым и хорошо читался на темных/ярких фонах
       tr.innerHTML = `
         <td class="left-align">${c.season || '2026'}</td>
         <td class="left-align">${c.team || 'ФК Яйц'}</td>
@@ -1849,8 +1858,14 @@ function renderPlayerCareer(player) {
         <td>${c.gls || 0}</td>
         <td>${c.ast || 0}</td>
         <td>${c.sv || 0}</td>
-        <td><span class="career-asr">${c.asr || '6.0'}</span></td>
+        <td><span class="career-asr" style="background-color: ${bgColor}; color: #fff;">${ratingValue}</span></td>
       `;
+      
+      // (Не забудь добавить эту строку, если её у тебя не было в скопированном куске)
+      tbody.appendChild(tr); 
+    });
+  }
+}
       
       // --- НОВЫЕ СТРОЧКИ: ДЕЛАЕМ СТРОКУ КЛИКАБЕЛЬНОЙ ---
       tr.style.cursor = 'pointer'; 
