@@ -844,6 +844,8 @@
         }
 
         let totalGls = 0, totalAst = 0, totalSv = 0, totalMat = 0, totalRat = 0;
+        let ratingCount = 0;
+        
         if (Array.isArray(careerArr)) {
           careerArr.forEach(c => {
             totalGls += parseInt(c.gls || 0, 10);
