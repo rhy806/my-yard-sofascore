@@ -2967,6 +2967,7 @@ function openCareerEditModal(seasonData = null) {
 
 
 // --- СОХРАНЕНИЕ (INSERT / UPDATE) ---
+async function saveCareerData() {
   // Формируем объект для отправки в базу
   const dbPayload = {
     player_id: currentPlayerId,
