@@ -1860,9 +1860,6 @@ function renderPlayerCareer(player) {
         <td>${c.sv || 0}</td>
         <td><span class="career-asr" style="background-color: ${bgColor}; color: #fff;">${ratingValue}</span></td>
       `;
-      
-      // (Не забудь добавить эту строку, если её у тебя не было в скопированном куске)
-      tbody.appendChild(tr); 
     });
   }
 }
