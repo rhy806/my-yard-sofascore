@@ -1837,20 +1837,19 @@ function renderPlayerCareer(player) {
     } catch(e) { careerData = []; }
   }
 
-  if (!Array.isArray(careerData) || careerData.length === 0) {
+ if (!Array.isArray(careerData) || careerData.length === 0) {
     tbody.innerHTML = '<tr><td colspan="7" style="color:var(--hint); text-align:center; padding:16px;">Данные о карьере пока отсутствуют</td></tr>';
   } else {
     careerData.forEach(c => {
       // 1. Получаем значение рейтинга (или '6.0' по умолчанию)
-      const ratingValue = c.asr || '6.0'; 
+      const ratingValue = c.asr || '6.0';
       
       // 2. Получаем нужный цвет для этого рейтинга
       const bgColor = getRatingColor(ratingValue);
 
       const tr = document.createElement('tr');
       
-      // 3. Добавляем style="background-color: ${bgColor};" в наш span
-      // Я также добавил color: #fff; чтобы текст был белым и хорошо читался на темных/ярких фонах
+      // 3. Заполняем строчку HTML-кодом
       tr.innerHTML = `
         <td class="left-align">${c.season || '2026'}</td>
         <td class="left-align">${c.team || 'ФК Яйц'}</td>
@@ -1860,25 +1859,24 @@ function renderPlayerCareer(player) {
         <td>${c.sv || 0}</td>
         <td><span class="career-asr" style="background-color: ${bgColor}; color: #fff;">${ratingValue}</span></td>
       `;
-    });
-  }
-}
-      
-      // --- НОВЫЕ СТРОЧКИ: ДЕЛАЕМ СТРОКУ КЛИКАБЕЛЬНОЙ ---
-      tr.style.cursor = 'pointer'; 
+
+      // --- Делаем строку кликабельной ---
+      tr.style.cursor = 'pointer';
       tr.onclick = () => {
-        openCareerEditModal(c); // Передаем данные этого сезона в окно
+        openCareerEditModal(c);
       };
-      // ------------------------------------------------
-      
+
+      // Добавляем готовую строку в таблицу
       tbody.appendChild(tr);
     });
-  } // <-- Раньше функция закрывалась здесь, это было ошибкой
+  }
 
-  // Проверка прав администратора и показ кнопки теперь ВНУТРИ функции
+  // Проверка прав администратора и показ кнопки
   const editBtn = document.getElementById('pp-edit-career-btn');
-  if (editBtn) editBtn.style.display = (typeof isAdmin !== 'undefined' && isAdmin) ? 'block' : 'none';
-} // <-- Теперь функция закрывается правильно в самом конце
+  if (editBtn) {
+    editBtn.style.display = (typeof isAdmin !== 'undefined' && isAdmin) ? 'block' : 'none';
+  }
+}
 
 function renderPlayerMatchesHistory(player) {
   const container = document.getElementById('pp-matches-list') || document.getElementById('player-matches-list');
