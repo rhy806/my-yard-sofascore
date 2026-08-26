@@ -791,7 +791,7 @@
       const totalMatches = finishedMatches.length;
       const winPercent = totalMatches > 0 ? Math.round((wins / totalMatches) * 100) : 0;
       const totalGoalsInMatches = goalsScored + goalsConceded;
-      const concededPercent = totalGoalsInMatches > 0 ? Math.round((goalsConceded / totalGoalsInMatches) * 100) : 0;
+      const concededPercent = totalGoalsInMatches > 0 ? Math.round((goalsConceded / goalsScored) * 100) : 0;
 
       container.innerHTML = `
         <div class="team-stats-grid">
