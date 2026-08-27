@@ -1272,7 +1272,7 @@
         + (goals * 0.5) 
         + (assists * 0.3) 
         + (saves * 0.2) 
-        + (cleansheet * 1.0) 
+        + (cleansheet * 2.0) 
         - (misses * 0.3) 
         - (bringing * 0.5) 
         - (fkFouls * 0.2) 
