@@ -1269,15 +1269,15 @@
 
       // Формула авторасчета рейтинга
       let rating = 6.0 
-        + (goals * 2.0) 
-        + (assists * 1.3) 
-        + (saves * 0.5) 
+        + (goals * 0.5) 
+        + (assists * 0.3) 
+        + (saves * 0.2) 
         + (cleansheet * 1.0) 
-        - (misses * 1.0) 
-        - (bringing * 1.5) 
-        - (fkFouls * 0.7) 
-        - (penFouls * 1.5) 
-        - (conceded * 0.5);
+        - (misses * 0.3) 
+        - (bringing * 0.5) 
+        - (fkFouls * 0.2) 
+        - (penFouls * 0.4) 
+        - (conceded * 0.4);
 
       // 🛑 НОВОЕ: Ограничиваем рейтинг рамками от 2.0 до 10.0
       if (rating > 10.0) rating = 10.0;
