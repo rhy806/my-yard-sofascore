@@ -1236,7 +1236,7 @@
       document.getElementById('stat-goals').value = s.goals || 0;
       document.getElementById('stat-assists').value = s.assists || 0;
       document.getElementById('stat-saves').value = s.saves || 0;
-      document.getElementById('stat-clean-sheet').value = s.tackles || 0;
+      document.getElementById('stat-defsaves').value = s.tackles || 0;
       document.getElementById('stat-misses').value = s.misses || 0;
       document.getElementById('stat-bringing').value = s.badPasses || 0;
       document.getElementById('stat-fk-fouls').value = s.fkFouls || 0;
@@ -1260,7 +1260,7 @@
       const goals = parseFloat(document.getElementById('stat-goals').value) || 0;
       const assists = parseFloat(document.getElementById('stat-assists').value) || 0;
       const saves = parseFloat(document.getElementById('stat-saves').value) || 0;
-      const cleansheet = parseFloat(document.getElementById('stat-clean-sheet').value) || 0;
+      const defsaves = parseFloat(document.getElementById('stat-defsaves').value) || 0;
       const misses = parseFloat(document.getElementById('stat-misses').value) || 0;
       const bringing = parseFloat(document.getElementById('stat-bringing').value) || 0;
       const fkFouls = parseFloat(document.getElementById('stat-fk-fouls').value) || 0;
@@ -1271,8 +1271,8 @@
       let rating = 6.0 
         + (goals * 0.5) 
         + (assists * 0.3) 
-        + (saves * 0.2) 
-        + (cleansheet * 2.0) 
+        + (saves * 0.3) 
+        + (defsaves * 0.2) 
         - (misses * 0.3) 
         - (bringing * 0.5) 
         - (fkFouls * 0.2) 
@@ -1286,7 +1286,7 @@
       rating = Math.round(rating * 10) / 10;
       return {
         rating,
-        stats: { goals, assists, saves, cleansheet, misses, bringing, fkFouls, penFouls, conceded }
+        stats: { goals, assists, saves, defsaves, misses, bringing, fkFouls, penFouls, conceded }
       };
     }
 
